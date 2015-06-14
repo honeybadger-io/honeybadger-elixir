@@ -1,0 +1,2 @@
+defmodule Honeybadger do
+end
