@@ -14,7 +14,7 @@ defmodule Honeybadger.Mixfile do
   #
   # Type `mix help compile.app` for more information
   def application do
-    [applications: [:logger]]
+    [applications: [:httpoison, :logger]]
   end
 
   # Dependencies can be Hex packages:
@@ -27,6 +27,11 @@ defmodule Honeybadger.Mixfile do
   #
   # Type `mix help deps` for more examples and options
   defp deps do
-    []
+    [{:httpoison, "~> 0.7"},
+     {:poison, "~> 1.4"},
+     {:plug, "~> 0.13"},
+   
+     # Test dependencies
+     {:mock, "~> 0.1.1"}]
   end
 end
