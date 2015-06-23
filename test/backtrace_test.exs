@@ -3,8 +3,10 @@ defmodule Honeybadger.BacktraceTest do
   use ExUnit.Case
   
   test "converting a stacktrace to the format Honeybadger expects" do
-    stacktrace = [{Honeybadger, :notify, [], [file: 'lib/honeybadger.ex', line: 38]},
-                  {Honeybadger.Backtrace, :from_stacktrace, [], [file: 'lib/honeybadger/backtrace.ex', line: 4]}]
+    stacktrace = [{Honeybadger, :notify, [], 
+                  [file: 'lib/honeybadger.ex', line: 38]},
+                  {Honeybadger.Backtrace, :from_stacktrace, [], 
+                  [file: 'lib/honeybadger/backtrace.ex', line: 4]}]
 
     backtrace = Backtrace.from_stacktrace stacktrace
 
