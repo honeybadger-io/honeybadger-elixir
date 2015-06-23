@@ -32,6 +32,6 @@ defmodule Honeybadger.Mixfile do
      {:plug, "~> 0.13"},
    
      # Test dependencies
-     {:mock, "~> 0.1.1"}]
+     {:mock, "~> 0.1.1", only: :test}]
   end
 end
