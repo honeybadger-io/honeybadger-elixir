@@ -26,7 +26,14 @@ defmodule Honeybadger.Notice do
       backtrace: backtrace
     }
     request = %{
-      context: Dict.get(metadata, :context, %{})
+      context: Dict.get(metadata, :context, %{}),
+      url: Dict.get(metadata, :url, ""),
+      component: Dict.get(metadata, :component, ""),
+      action: Dict.get(metadata, :action, ""),
+      params: Dict.get(metadata, :params, %{}),
+      session: Dict.get(metadata, :session, %{}),
+
+      cgi_data: Dict.get(metadata, :cgi_data, %{})
     }
 
     %__MODULE__{error: error, request: request}
