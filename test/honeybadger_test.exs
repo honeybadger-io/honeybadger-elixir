@@ -6,7 +6,7 @@ defmodule HoneybadgerTest do
   import Mock
 
   test "sending a notice" do
-    with_mock HTTP, [post: fn(_url, _data, _headers) -> :ok end] do
+    with_mock HTTP, [post: fn(_url, _data, _headers) -> %HTTP.Response{} end] do
       exception = %RuntimeError{message: "Oops"}
       url = Application.get_env(:honeybadger, :endpoint) <> "/v1/notices"
       body = JSON.encode! Notice.new(exception, [])
