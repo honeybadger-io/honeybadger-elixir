@@ -10,7 +10,7 @@ defmodule Honeybadger.BacktraceTest do
 
     backtrace = Backtrace.from_stacktrace stacktrace
 
-    assert [%{file: "lib/honeybadger.ex", line: 38, method: "notify"},
-            %{file: "lib/honeybadger/backtrace.ex", line: 4, method: "from_stacktrace"}] == backtrace
+    assert [%{file: "lib/honeybadger.ex", number: 38, method: "notify"},
+            %{file: "lib/honeybadger/backtrace.ex", number: 4, method: "from_stacktrace"}] == backtrace
   end
 end
