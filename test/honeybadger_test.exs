@@ -14,7 +14,6 @@ defmodule HoneybadgerTest do
                  {"Content-Type", "application/json"},
                  {"X-API-Key", "at3stk3y"}]
 
-
       Honeybadger.notify exception
 
       assert called HTTP.post(url, body, headers)

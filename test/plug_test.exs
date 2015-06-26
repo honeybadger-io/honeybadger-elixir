@@ -16,7 +16,7 @@ defmodule Honeybadger.PlugTest do
     end
   end
 
-  test "asdf" do
+  test "exception in a plug pipeline notifies Honeybadger" do
     with_mock Honeybadger, [notify: fn(_exception, _data) -> :ok end] do
       exception = %RuntimeError{message: "Oops"}
       metadata = %{}
