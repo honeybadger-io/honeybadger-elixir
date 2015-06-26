@@ -25,6 +25,7 @@ defmodule Honeybadger.Notice do
       tags: Dict.get(metadata, :tags, []),
       backtrace: backtrace
     }
+
     request = %{
       context: Dict.get(metadata, :context, %{}),
       url: Dict.get(metadata, :url, ""),
@@ -32,7 +33,6 @@ defmodule Honeybadger.Notice do
       action: Dict.get(metadata, :action, ""),
       params: Dict.get(metadata, :params, %{}),
       session: Dict.get(metadata, :session, %{}),
-
       cgi_data: Dict.get(metadata, :cgi_data, %{})
     }
 
