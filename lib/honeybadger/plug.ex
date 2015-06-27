@@ -55,7 +55,7 @@ defmodule Honeybadger.Plug do
         Map.merge rack_env_http_vars, cgi_data
       end
 
-      defp get_remote_addr(addr), do: :inet.ntoa addr
+      defp get_remote_addr(addr), do: :inet.ntoa(addr) |> List.to_string
       defp get_remote_port({_, port}), do: port
 
       defp header_to_rack_format({header, value}, acc) do
