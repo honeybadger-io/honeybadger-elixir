@@ -46,7 +46,7 @@ defmodule Honeybadger.Plug do
           "REMOTE_ADDR" => get_remote_addr(conn.remote_ip),
           "REMOTE_PORT" => get_remote_port(conn.peer),
           "SERVER_ADDR" => "127.0.0.1",
-          "SERVER_NAME" => "localhost",
+          "SERVER_NAME" => Application.get_env(:honeybadger, :hostname),
           "SERVER_PORT" => conn.port,
           "CONTENT_LENGTH" => get_req_header(conn, "content-length"),
           "ORIGINAL_FULLPATH" => full_path(conn)
@@ -55,7 +55,7 @@ defmodule Honeybadger.Plug do
         Map.merge rack_env_http_vars, cgi_data
       end
 
-      defp get_remote_addr(addr), do: Tuple.to_list(addr) |> Enum.join(".")
+      defp get_remote_addr(addr), do: :inet.ntoa addr
       defp get_remote_port({_, port}), do: port
 
       defp header_to_rack_format({header, value}, acc) do
