@@ -1,4 +1,6 @@
 defmodule Honeybadger.Notice do
+  alias Honeybadger.Utils
+
   @hostname Application.get_env(:honeybadger, :hostname)
   @project_root Application.get_env(:honeybadger, :project_root)
 
@@ -20,7 +22,7 @@ defmodule Honeybadger.Notice do
 
   def new(exception, backtrace, metadata \\ %{}) do
     error = %{
-      class: exception.__struct__,
+      class: Utils.strip_elixir_prefix(exception.__struct__),
       message: exception.message,
       tags: Dict.get(metadata, :tags, []),
       backtrace: backtrace
