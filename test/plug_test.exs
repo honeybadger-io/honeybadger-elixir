@@ -19,12 +19,10 @@ defmodule Honeybadger.PlugTest do
   test "exception in a plug pipeline notifies Honeybadger" do
     with_mock Honeybadger, [notify: fn(_exception, _data) -> :ok end] do
       exception = %RuntimeError{message: "Oops"}
-      metadata = %{}
-
       conn = conn(:get, "/bang")
-      PlugApp.call conn, []
 
-      assert called Honeybadger.notify(exception, metadata)
+      assert exception == catch_error(PlugApp.call conn, [])
+      assert called Honeybadger.notify(exception, :_)
     end
   end
 end
