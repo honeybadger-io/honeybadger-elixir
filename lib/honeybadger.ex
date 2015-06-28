@@ -10,8 +10,8 @@ defmodule Honeybadger do
             {"Content-Type", "application/json"},
             {"X-API-Key", @api_key}]
 
-  def notify(exception, metadata \\ %{}) do
-    backtrace = Backtrace.from_stacktrace System.stacktrace
+  def notify(exception, metadata \\ %{}, stacktrace \\ System.stacktrace) do
+    backtrace = Backtrace.from_stacktrace stacktrace
     {:ok, body} = JSON.encode Notice.new(exception, backtrace, metadata)
 
     HTTP.post @api_url, body, @headers

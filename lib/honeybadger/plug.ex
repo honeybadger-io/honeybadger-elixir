@@ -26,7 +26,7 @@ defmodule Honeybadger.Plug do
           cgi_data: build_cgi_data(conn)
         }
 
-        Honeybadger.notify reason, metadata
+        Honeybadger.notify reason, metadata, stack
       end
 
       defp get_component_from_module do
