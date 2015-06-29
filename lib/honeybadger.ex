@@ -4,8 +4,9 @@ defmodule Honeybadger do
   alias HTTPoison, as: HTTP
   alias Poison, as: JSON
 
-  @api_url Application.get_env(:honeybadger, :endpoint) <> "/v1/notices"
   @api_key Application.get_env(:honeybadger, :api_key)
+  @api_origin Application.get_env(:honeybadger, :origin)
+  @api_url Enum.join([@api_origin, "/v1/notices"])
   @headers [{"Accept", "application/json"},
             {"Content-Type", "application/json"},
             {"X-API-Key", @api_key}]
