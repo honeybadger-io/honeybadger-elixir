@@ -1,24 +1,7 @@
 defmodule Honeybadger.Notice do
   alias Honeybadger.Utils
 
-  @hostname Application.get_env(:honeybadger, :hostname)
-  @project_root Application.get_env(:honeybadger, :project_root)
-
-  @notifier_info %{
-    name: "Honeybadger Elixir Notifier",
-    url: get_in(Honeybadger.Mixfile.project, [:package, :links, "GitHub"]),
-    version: Honeybadger.Mixfile.project[:version]
-  }
-
-  @server_info %{
-    environment_name: Mix.env,
-    hostname: @hostname,
-    project_root: %{
-      path: @project_root
-    }
-  }
-
-  defstruct notifier: @notifier_info, server: @server_info, error: %{}, request: %{}
+  defstruct notifier: %{}, server: %{}, error: %{}, request: %{}
 
   def new(exception, backtrace, metadata \\ %{}) do
     error = %{
@@ -38,6 +21,32 @@ defmodule Honeybadger.Notice do
       cgi_data: Dict.get(metadata, :cgi_data, %{})
     }
 
-    %__MODULE__{error: error, request: request}
+    %__MODULE__{error: error, request: request, notifier: notifier, server: server}
+  end
+
+  defp notifier do
+    %{
+      name: "Honeybadger Elixir Notifier",
+      url: get_in(Honeybadger.Mixfile.project, [:package, :links, "GitHub"]),
+      version: Honeybadger.Mixfile.project[:version]
+    }
+  end
+
+  defp server do 
+    %{
+      environment_name: Mix.env,
+      hostname: hostname,
+      project_root: %{
+        path: project_root
+      }
+    }
+  end
+
+  defp hostname do
+    Application.get_env(:honeybadger, :hostname)
+  end
+   
+  defp project_root do
+    Application.get_env(:honeybadger, :project_root)
   end
 end
