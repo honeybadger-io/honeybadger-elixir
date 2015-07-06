@@ -11,7 +11,7 @@ defmodule Honeybadger.Plug do
           session = conn.session
           conn
         rescue
-          ArgumentError ->
+          e in [ArgumentError, KeyError] ->
             fetch_cookies conn
         end
 
