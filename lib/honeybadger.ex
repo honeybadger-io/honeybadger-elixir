@@ -4,6 +4,23 @@ defmodule Honeybadger do
   alias HTTPoison, as: HTTP
   alias Poison, as: JSON
 
+  def start(_type, _opts) do 
+    defaults = [
+      api_key: System.get_env("HONEYBADGER_API_KEY"),
+      hostname: :inet.gethostname |> elem(1) |> List.to_string,
+      origin: "https://api.honeybadger.io",
+      project_root: System.cwd
+    ]
+    app_config = Application.get_all_env(:honeybadger)
+    config = Keyword.merge(defaults, app_config)
+
+    Enum.map config, fn({key, value}) ->
+      Application.put_env(:honeybadger, key, value)
+    end
+
+    {Application.ensure_started(:httpoison), self}
+  end
+
   def notify(exception, metadata \\ %{}, stacktrace \\ System.stacktrace) do
     backtrace = Backtrace.from_stacktrace stacktrace
     notice = Notice.new(exception, backtrace, metadata)

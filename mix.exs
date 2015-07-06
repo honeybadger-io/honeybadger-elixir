@@ -17,15 +17,7 @@ defmodule Honeybadger.Mixfile do
 
   def application do
     [applications: [:httpoison, :logger],
-     env: [api_key: System.get_env("HONEYBADGER_API_KEY"),
-           hostname: hostname,
-           origin: "https://api.honeybadger.io",
-           project_root: System.cwd]]
-  end
-
-  def hostname do
-    {:ok, hostname} = :inet.gethostname
-    List.to_string hostname
+     mod: {Honeybadger, []}]
   end
 
   defp deps do
