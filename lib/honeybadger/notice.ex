@@ -32,20 +32,18 @@ defmodule Honeybadger.Notice do
     }
   end
 
-  defp server do 
+  defp server do
     %{
       environment_name: Mix.env,
       hostname: hostname,
-      project_root: %{
-        path: project_root
-      }
+      project_root: project_root
     }
   end
 
   defp hostname do
     Application.get_env(:honeybadger, :hostname)
   end
-   
+
   defp project_root do
     Application.get_env(:honeybadger, :project_root)
   end
