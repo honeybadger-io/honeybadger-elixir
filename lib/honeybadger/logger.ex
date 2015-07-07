@@ -9,8 +9,8 @@ defmodule Honeybadger.Logger do
     {:ok, context_keys}
   end
 
-  def handle_call({:configure, _options}, context_keys) do
-    {:ok, :ok, context_keys}
+  def handle_call({:configure, new_keys}, _context_keys) do
+    {:ok, :ok, new_keys}
   end
 
   def handle_event({level, _gl, _event}, context_keys)
@@ -23,15 +23,21 @@ defmodule Honeybadger.Logger do
     {:ok, context_keys}
   end
 
-  def handle_event({:error, _gl, {Logger, msg, _ts, [pid: pid] = pdict}}, context_keys) do
-    exception = exception_from_message msg
-    {:current_stacktrace, stacktrace} = Process.info(pid, :current_stacktrace)
+  def handle_event({:error, _gl, {Logger, message, _ts, pdict}}, context_keys) do
+    exception = exception_from_message message
     context = Dict.take(pdict, context_keys)
     plug_env = Dict.take(pdict, [:plug_env]) 
     metadata = Dict.merge(plug_env, context) |> Enum.into(Map.new)
 
-    Honeybadger.notify exception, metadata, stacktrace
+    Honeybadger.notify exception, metadata, System.stacktrace
     {:ok, context_keys}
+  end
+
+  defp exception_from_message(message)
+  when is_list(message) do
+    message
+    |> exception_from_ranch_message
+    |> exception_from_message
   end
 
   defp exception_from_message(message) do
@@ -41,5 +47,12 @@ defmodule Honeybadger.Logger do
     |> Module.safe_concat
 
     struct type, Dict.drop(error, ["exception"])
+  end
+
+  defp exception_from_ranch_message(message) do
+    message
+    |> IO.iodata_to_binary
+    |> String.split("\n")
+    |> Enum.at(4)
   end
 end
