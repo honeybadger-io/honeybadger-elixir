@@ -4,6 +4,9 @@ defmodule Honeybadger do
   alias HTTPoison, as: HTTP
   alias Poison, as: JSON
 
+  @doc """
+    This is here as a callback to Application to configure and start the Honeybadger client's dependencies. You'll likely never need to call this function yourself.
+  """
   def start(_type, _opts) do 
     defaults = [
       api_key: System.get_env("HONEYBADGER_API_KEY"),
