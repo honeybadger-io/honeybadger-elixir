@@ -1,9 +1,11 @@
 defmodule Honeybadger.Notice do
   alias Honeybadger.Utils
 
-  defstruct notifier: %{}, server: %{}, error: %{}, request: %{}
+  defstruct [:notifier, :server, :error, :request]
 
-  def new(exception, backtrace, metadata \\ %{}) do
+  @known_fields [:plug_env, :tags]
+
+  def new(exception, metadata \\ %{}, backtrace) do
     error = %{
       class: Utils.strip_elixir_prefix(exception.__struct__),
       message: exception.message,
@@ -11,15 +13,11 @@ defmodule Honeybadger.Notice do
       backtrace: backtrace
     }
 
-    request = %{
-      context: Dict.get(metadata, :context, %{}),
-      url: Dict.get(metadata, :url, ""),
-      component: Dict.get(metadata, :component, ""),
-      action: Dict.get(metadata, :action, ""),
-      params: Dict.get(metadata, :params, %{}),
-      session: Dict.get(metadata, :session, %{}),
-      cgi_data: Dict.get(metadata, :cgi_data, %{})
-    }
+    context = Dict.drop(metadata, @known_fields)
+    request = metadata
+    |> Dict.get([:plug_env], %{})
+    |> Dict.merge([context: context])
+    |> Enum.into(Map.new)
 
     %__MODULE__{error: error, request: request, notifier: notifier, server: server}
   end
