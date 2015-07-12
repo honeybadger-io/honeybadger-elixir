@@ -24,9 +24,9 @@ defmodule Honeybadger do
     {Application.ensure_started(:httpoison), self}
   end
 
-  def notify(exception, metadata \\ %{}, stacktrace \\ System.stacktrace) do
+  def notify(exception, context \\ %{}, stacktrace \\ System.stacktrace) do
     backtrace = Backtrace.from_stacktrace stacktrace
-    notice = Notice.new(exception, backtrace, metadata)
+    notice = Notice.new(exception, context, backtrace)
     {:ok, body} = JSON.encode notice
 
     HTTP.post api_url, body, headers
