@@ -1,6 +1,6 @@
 # honeybadger-elixir
 
-Elixir client and Plug for :zap: [Honeybadger](https://www.honeybadger.io/).
+Elixir client and Plug for the :zap: [Honeybadger error notifier](https://www.honeybadger.io/).
 
 ## Installation
 
