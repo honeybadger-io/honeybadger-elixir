@@ -7,6 +7,6 @@ defmodule Honeybadger.Backtrace do
   defp format_line({_mod, fun, _args, [file: file, line: line]}) do
       file = List.to_string file
       fun = Atom.to_string fun
-      %{number: line, file: file, method: fun}
+      %{file: file, method: fun, number: line}
   end
 end

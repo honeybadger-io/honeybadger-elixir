@@ -14,10 +14,9 @@ defmodule Honeybadger.Notice do
     }
 
     context = Dict.drop(metadata, @known_fields)
-    request = metadata
-    |> Dict.get([:plug_env], %{})
-    |> Dict.merge([context: context])
-    |> Enum.into(Map.new)
+    request = metadata 
+              |> Dict.take([:plug_env])
+              |> Dict.merge(%{context: context})
 
     %__MODULE__{error: error, request: request, notifier: notifier, server: server}
   end
