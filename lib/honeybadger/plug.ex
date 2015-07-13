@@ -2,6 +2,7 @@ defmodule Honeybadger.Plug do
   defmacro __using__(_env) do
     quote do
       import Honeybadger.Plug
+      alias Honeybadger.Utils
       use Plug.ErrorHandler
 
       # Exceptions raised on non-existant routes are ignored
@@ -24,7 +25,7 @@ defmodule Honeybadger.Plug do
 
         metadata = %{
           url: Plug.Conn.full_path(conn),
-          component: get_component_from_module,
+          component: Utils.strip_elixir_prefix(__MODULE__), 
           action: "",
           params: conn.params,
           session: session,
@@ -34,13 +35,6 @@ defmodule Honeybadger.Plug do
         Honeybadger.notify reason, %{plug_env: metadata}, stack
       end
     end
-  end
-
-  def get_component_from_module do
-    __MODULE__ 
-    |> Atom.to_string
-    |> String.split(".") 
-    |> List.last
   end
 
   def build_cgi_data(%Plug.Conn{} = conn) do
