@@ -4,6 +4,11 @@ defmodule Honeybadger.Plug do
       import Plug.Conn
       use Plug.ErrorHandler
 
+      # Exceptions raised on non-existant routes are ignored
+      defp handle_errors(conn, %{reason: %FunctionClauseError{function: :do_match}} = ex) do
+        nil
+      end
+
       defp handle_errors(conn, %{kind: kind, reason: reason, stack: stack}) do
         session = %{}
         conn = try do
