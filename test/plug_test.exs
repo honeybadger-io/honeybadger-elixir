@@ -25,4 +25,13 @@ defmodule Honeybadger.PlugTest do
       assert called Honeybadger.notify(exception, :_, :_)
     end
   end
+
+  test "exception on a non-existant route does not notify Honeybadger" do
+    with_mock Honeybadger, [notify: fn(_exception, _data, _stack) -> :ok end] do
+      conn = conn(:get, "/not_found")
+      catch_error(PlugApp.call conn, [])
+
+      refute called Honeybadger.notify
+    end
+  end
 end
