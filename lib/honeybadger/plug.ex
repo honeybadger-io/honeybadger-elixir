@@ -1,4 +1,10 @@
 defmodule Honeybadger.Plug do
+  import Plug.Conn, only: [fetch_session: 1, 
+                           fetch_cookies: 1,
+                           fetch_query_params: 1,
+                           full_path: 1,
+                           get_req_header: 2]
+
   defmacro __using__(_env) do
     quote do
       import Plug.Conn
