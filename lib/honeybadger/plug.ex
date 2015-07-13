@@ -1,10 +1,4 @@
 defmodule Honeybadger.Plug do
-  import Plug.Conn, only: [fetch_session: 1, 
-                           fetch_cookies: 1,
-                           fetch_query_params: 1,
-                           full_path: 1,
-                           get_req_header: 2]
-
   defmacro __using__(_env) do
     quote do
       import Plug.Conn
@@ -18,18 +12,18 @@ defmodule Honeybadger.Plug do
       defp handle_errors(conn, %{kind: kind, reason: reason, stack: stack}) do
         session = %{}
         conn = try do
-          fetch_session conn
+          Plug.Conn.fetch_session conn
           session = conn.session
           conn
         rescue
           e in [ArgumentError, KeyError] ->
-            fetch_cookies conn
+            Plug.Conn.fetch_cookies conn
         end
 
-        conn = fetch_query_params conn
+        conn = Plug.Conn.fetch_query_params conn
 
         metadata = %{
-          url: full_path(conn),
+          url: Plug.Conn.full_path(conn),
           component: get_component_from_module,
           action: "",
           params: conn.params,
