@@ -24,6 +24,13 @@ defmodule Honeybadger.Logger do
     {:ok, context_keys}
   end
 
+  # Error messages from Ranch/Cowboy come in the form of iodata. We ignore
+  # these because they should already be reported by Honeybadger.Plug.
+  def handle_event({:error, _gl, {_mod, message, _ts, _pdict}}, context_keys) 
+  when is_list(message) do
+    {:ok, context_keys}
+  end
+
   def handle_event({:error, _gl, {Logger, message, _ts, pdict}}, context_keys) do
     try do
       exception = exception_from_message message
@@ -42,13 +49,6 @@ defmodule Honeybadger.Logger do
     {:ok, context_keys}
   end
 
-  defp exception_from_message(message)
-  when is_list(message) do
-    message
-    |> exception_from_ranch_message
-    |> exception_from_message
-  end
-
   defp exception_from_message(message) do
     error = Regex.named_captures @exception_format, message
     type = error["exception"]
@@ -56,12 +56,5 @@ defmodule Honeybadger.Logger do
     |> Module.safe_concat
 
     struct type, Dict.drop(error, ["exception"])
-  end
-
-  defp exception_from_ranch_message(message) do
-    message
-    |> IO.iodata_to_binary
-    |> String.split("\n")
-    |> Enum.at(4)
   end
 end
