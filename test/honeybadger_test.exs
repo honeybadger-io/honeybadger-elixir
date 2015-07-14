@@ -1,8 +1,6 @@
 defmodule HoneybadgerTest do
   use ExUnit.Case
   alias HTTPoison, as: HTTP
-  alias Poison, as: JSON
-  alias Honeybadger.Notice
   import Mock
 
   setup do
@@ -19,14 +17,13 @@ defmodule HoneybadgerTest do
     with_mock HTTP, [post: fn(_url, _data, _headers) -> %HTTP.Response{} end] do
       exception = %RuntimeError{message: "Oops"}
       url = Application.get_env(:honeybadger, :origin) <> "/v1/notices"
-      body = JSON.encode! Notice.new(exception, [])
       headers = [{"Accept", "application/json"},
                  {"Content-Type", "application/json"},
                  {"X-API-Key", "at3stk3y"}]
 
       Honeybadger.notify exception
 
-      assert called HTTP.post(url, body, headers)
+      assert called HTTP.post(url, :_, headers)
     end
   end
 end
