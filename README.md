@@ -1,6 +1,6 @@
 # honeybadger-elixir
 
-Elixir client and Plug for :zap: [Honeybadger](https://www.honeybadger.io/).
+Elixir client and Plug for the :zap: [Honeybadger error notifier](https://www.honeybadger.io/).
 
 ## Installation
 
@@ -69,3 +69,23 @@ rescue
     Honeybadger.notify(exception, context)
 end
 ```
+
+## Changelog
+
+See https://github.com/honeybadger-io/honeybadger-elixir/releases
+
+## Contributing
+
+If you're adding a new feature, please [submit an issue](https://github.com/honeybadger-io/honeybadger-elixir/issues/new) as a preliminary step; that way you can be (moderately) sure that your pull request will be accepted.
+
+### To contribute your code:
+
+1. Fork it.
+2. Create a topic branch `git checkout -b my_branch`
+3. Commit your changes `git commit -am "Boom"`
+3. Push to your branch `git push origin my_branch`
+4. Send a [pull request](https://github.com/honeybadger-io/honeybadger-elixir/pulls)
+
+### License
+
+This library is MIT licensed. See the [LICENSE](https://raw.github.com/honeybadger-io/honeybadger-elixir/master/LICENSE) file in this repository for details.
