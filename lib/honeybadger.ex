@@ -8,14 +8,8 @@ defmodule Honeybadger do
     This is here as a callback to Application to configure and start the Honeybadger client's dependencies. You'll likely never need to call this function yourself.
   """
   def start(_type, _opts) do 
-    defaults = [
-      api_key: System.get_env("HONEYBADGER_API_KEY"),
-      hostname: :inet.gethostname |> elem(1) |> List.to_string,
-      origin: "https://api.honeybadger.io",
-      project_root: System.cwd
-    ]
     app_config = Application.get_all_env(:honeybadger)
-    config = Keyword.merge(defaults, app_config)
+    config = Keyword.merge(default_config, app_config)
 
     Enum.map config, fn({key, value}) ->
       Application.put_env(:honeybadger, key, value)
@@ -44,5 +38,12 @@ defmodule Honeybadger do
     [{"Accept", "application/json"},
     {"Content-Type", "application/json"},
     {"X-API-Key", api_key}]
+  end
+
+  defp default_config do
+     [api_key: System.get_env("HONEYBADGER_API_KEY"),
+      hostname: :inet.gethostname |> elem(1) |> List.to_string,
+      origin: "https://api.honeybadger.io",
+      project_root: System.cwd]
   end
 end
