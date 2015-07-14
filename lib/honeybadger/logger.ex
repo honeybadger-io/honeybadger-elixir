@@ -1,4 +1,5 @@
 defmodule Honeybadger.Logger do
+  require Logger
 
   @exception_format ~r/\((?<exception>.*?)\) (?<message>(.*))/
 
@@ -24,12 +25,20 @@ defmodule Honeybadger.Logger do
   end
 
   def handle_event({:error, _gl, {Logger, message, _ts, pdict}}, context_keys) do
-    exception = exception_from_message message
-    context = Dict.take(pdict, context_keys)
-    plug_env = Dict.take(pdict, [:plug_env]) 
-    metadata = Dict.merge(plug_env, context) |> Enum.into(Map.new)
+    try do
+      exception = exception_from_message message
+      context = Dict.take(pdict, context_keys)
+      plug_env = Dict.take(pdict, [:plug_env]) 
+      metadata = Dict.merge(plug_env, context) |> Enum.into(Map.new)
 
-    Honeybadger.notify exception, metadata, System.stacktrace
+      Honeybadger.notify exception, metadata, System.stacktrace
+    rescue
+      ex ->
+        error_type = Utils.strip_elixir_prefix(ex.__struct__)
+        message = "Unable to notify Honeybadger! #{error_type}: #{ex.message}"
+        Logger.error(message)
+    end
+
     {:ok, context_keys}
   end
 
