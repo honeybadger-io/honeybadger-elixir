@@ -12,6 +12,7 @@ defmodule Honeybadger.PlugTest do
     plug :dispatch
 
     get "/bang" do
+      _ = conn
       raise RuntimeError, "Oops"
     end
   end
