@@ -21,7 +21,7 @@ defmodule Honeybadger.LoggerTest do
       Logger.remove_backend(:console)
     end)
 
-    assert message =~ "Unable to notify Honeybadger! HTTPoison.Error: Oops"
+    assert message =~ "Unable to notify Honeybadger! HTTPoison.Error: 500"
     assert :meck.called(Honeybadger, :notify, [:_, :_, :_])
 
     :meck.unload(Honeybadger)

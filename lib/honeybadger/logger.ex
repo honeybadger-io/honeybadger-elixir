@@ -39,7 +39,8 @@ defmodule Honeybadger.Logger do
     rescue
       ex ->
         error_type = Utils.strip_elixir_prefix(ex.__struct__)
-        message = "Unable to notify Honeybadger! #{error_type}: #{ex.message}"
+        reason = exception_reason(ex)
+        message = "Unable to notify Honeybadger! #{error_type}: #{reason}"
         Logger.warn(message)
     end
 
@@ -54,4 +55,8 @@ defmodule Honeybadger.Logger do
 
     struct type, Dict.drop(error, ["exception"])
   end
+
+  defp exception_reason(%{message: reason}), do: reason
+  defp exception_reason(%{reason: reason}), do: reason
+  defp exception_reason(_exception), do: "No reason given."
 end
