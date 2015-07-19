@@ -32,9 +32,10 @@ defmodule Honeybadger.Logger do
 
   def handle_event({:error, _gl, {Logger, message, _ts, pdict}}, state) do
     try do
+      stack = System.stacktrace
       exception = exception_from_message(message)
       context = Dict.drop(pdict, @ignored_keys) |> Enum.into(Map.new)
-      Honeybadger.notify exception, context, System.stacktrace
+      Honeybadger.notify(exception, context, stack)
     rescue
       ex ->
         error_type = Utils.strip_elixir_prefix(ex.__struct__)
