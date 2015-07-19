@@ -3,7 +3,7 @@ defmodule Honeybadger.Logger do
   alias Honeybadger.Utils
 
   @exception_format ~r/\((?<exception>.*?)\) (?<message>(.*))/
-  @ignored_keys [:pid]
+  @ignored_keys [:pid, :function, :line, :module]
 
   use GenEvent
 
