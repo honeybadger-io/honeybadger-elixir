@@ -1,5 +1,6 @@
 defmodule Honeybadger.Logger do
   require Logger
+  alias Honeybadger.Utils
 
   @exception_format ~r/\((?<exception>.*?)\) (?<message>(.*))/
   @ignored_keys [:pid]

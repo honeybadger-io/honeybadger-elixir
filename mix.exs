@@ -27,7 +27,8 @@ defmodule Honeybadger.Mixfile do
    
      # Test dependencies
      {:cowboy, "~> 1.0.0", only: :test},
-     {:mock, "~> 0.1.1", only: :test}]
+     {:mock, "~> 0.1.1", only: :test},
+     {:meck, "~> 0.8.3", only: :test}]
   end
 
   defp package do
