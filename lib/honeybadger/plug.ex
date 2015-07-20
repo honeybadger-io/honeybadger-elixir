@@ -10,7 +10,7 @@ defmodule Honeybadger.Plug do
         nil
       end
 
-      defp handle_errors(conn, %{kind: kind, reason: reason, stack: stack}) do
+      defp handle_errors(conn, %{kind: _kind, reason: exception, stack: stack}) do
         session = %{}
         conn = try do
           Plug.Conn.fetch_session conn
@@ -23,7 +23,7 @@ defmodule Honeybadger.Plug do
 
         conn = Plug.Conn.fetch_query_params conn
 
-        metadata = %{
+        plug_env = %{
           url: Plug.Conn.full_path(conn),
           component: Utils.strip_elixir_prefix(__MODULE__), 
           action: "",
@@ -32,7 +32,7 @@ defmodule Honeybadger.Plug do
           cgi_data: build_cgi_data(conn)
         }
 
-        Honeybadger.notify reason, %{plug_env: metadata}, stack
+        Honeybadger.notify exception, %{plug_env: plug_env}, stack
       end
     end
   end

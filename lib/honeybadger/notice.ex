@@ -6,9 +6,11 @@ defmodule Honeybadger.Notice do
   @known_fields [:plug_env, :tags]
 
   def new(exception, metadata \\ %{}, backtrace) do
+    exception_mod = exception.__struct__
+
     error = %{
-      class: Utils.strip_elixir_prefix(exception.__struct__),
-      message: exception.message,
+      class: Utils.strip_elixir_prefix(exception_mod),
+      message: exception_mod.message(exception),
       tags: Dict.get(metadata, :tags, []),
       backtrace: backtrace
     }
