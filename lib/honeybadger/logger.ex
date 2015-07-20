@@ -32,8 +32,8 @@ defmodule Honeybadger.Logger do
   def handle_event({:error, _gl, {Logger, message, _ts, pdict}}, state) do
     try do
       stack = System.stacktrace
+      context = Dict.get(pdict, :honeybadger_context, %{})
       exception = Utils.exception_from_message(message)
-      context = Dict.drop(pdict, @ignored_keys) |> Enum.into(Map.new)
       Honeybadger.notify(exception, context, stack)
     rescue
       ex ->

@@ -4,6 +4,8 @@ defmodule Honeybadger do
   alias HTTPoison, as: HTTP
   alias Poison, as: JSON
 
+  @context :honeybadger_context
+
   @doc """
     This is here as a callback to Application to configure and start the Honeybadger client's dependencies. You'll likely never need to call this function yourself.
   """
@@ -31,6 +33,14 @@ defmodule Honeybadger do
     HTTP.post api_url, body, headers
 
     :ok
+  end
+
+  def context do
+    Process.get(@context) || []
+  end
+
+  def context(dict) do
+    Process.put(@context, Keyword.merge(context, dict))
   end
 
   defp api_url do

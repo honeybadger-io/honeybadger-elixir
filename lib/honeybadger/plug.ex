@@ -31,8 +31,9 @@ defmodule Honeybadger.Plug do
           session: session,
           cgi_data: build_cgi_data(conn)
         }
+        metadata = Dict.merge(%{plug_env: plug_env}, Honeybadger.context())
 
-        Honeybadger.notify exception, %{plug_env: plug_env}, stack
+        Honeybadger.notify exception, metadata, stack
       end
     end
   end

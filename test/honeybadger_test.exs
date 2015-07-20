@@ -26,4 +26,12 @@ defmodule HoneybadgerTest do
       assert called HTTP.post(url, :_, headers)
     end
   end
+
+  test "getting and setting the context" do
+    assert [] == Honeybadger.context()
+
+    Honeybadger.context(user_id: 1)
+
+    assert [user_id: 1] == Honeybadger.context()
+  end
 end
