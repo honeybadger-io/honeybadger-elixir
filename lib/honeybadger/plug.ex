@@ -1,8 +1,9 @@
 defmodule Honeybadger.Plug do
+  alias Honeybadger.Utils
+
   defmacro __using__(_env) do
     quote do
       import Honeybadger.Plug
-      alias Honeybadger.Utils
       use Plug.ErrorHandler
 
       # Exceptions raised on non-existant routes are ignored
@@ -25,8 +26,8 @@ defmodule Honeybadger.Plug do
 
         plug_env = %{
           url: Plug.Conn.full_path(conn),
-          component: Utils.strip_elixir_prefix(__MODULE__), 
-          action: "",
+          component: component_name(conn, __MODULE__), 
+          action: action_name(conn),
           params: conn.params,
           session: session,
           cgi_data: build_cgi_data(conn)
@@ -63,5 +64,21 @@ defmodule Honeybadger.Plug do
   def header_to_rack_format({header, value}, acc) do
     header = "HTTP_" <> String.upcase(header) |> String.replace("-", "_")
     Map.put acc, header, value
+  end
+
+  def action_name(conn) do
+    if :code.is_loaded(Phoenix.Controller) do
+      Phoenix.Controller.action_name(conn)
+    else
+      ""
+    end
+  end
+
+  def component_name(conn, mod) do
+    if :code.is_loaded(Phoenix.Controller) do
+      Phoenix.Controller.controller_module(conn)
+    else
+      Utils.strip_elixir_prefix(mod) 
+    end
   end
 end
