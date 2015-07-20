@@ -2,7 +2,6 @@ defmodule Honeybadger.Logger do
   require Logger
   alias Honeybadger.Utils
 
-  @exception_format ~r/\((?<exception>.*?)\) (?<message>(.*))/
   @ignored_keys [:pid, :function, :line, :module]
 
   use GenEvent
@@ -33,30 +32,17 @@ defmodule Honeybadger.Logger do
   def handle_event({:error, _gl, {Logger, message, _ts, pdict}}, state) do
     try do
       stack = System.stacktrace
-      exception = exception_from_message(message)
+      exception = Utils.exception_from_message(message)
       context = Dict.drop(pdict, @ignored_keys) |> Enum.into(Map.new)
       Honeybadger.notify(exception, context, stack)
     rescue
       ex ->
         error_type = Utils.strip_elixir_prefix(ex.__struct__)
-        reason = exception_reason(ex)
+        reason = Exception.message(ex)
         message = "Unable to notify Honeybadger! #{error_type}: #{reason}"
         Logger.warn(message)
     end
 
     {:ok, state}
   end
-
-  defp exception_from_message(message) do
-    error = Regex.named_captures @exception_format, message
-    type = error["exception"]
-    |> String.split(".") 
-    |> Module.safe_concat
-
-    struct type, Dict.drop(error, ["exception"])
-  end
-
-  defp exception_reason(%{message: reason}), do: reason
-  defp exception_reason(%{reason: reason}), do: reason
-  defp exception_reason(_exception), do: "No reason given."
 end
