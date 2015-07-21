@@ -7,7 +7,7 @@ defmodule Honeybadger.Backtrace do
   defp format_line({mod, fun, _args, [file: file, line: line]}) do
       file = List.to_string file
       fun = Atom.to_string fun
-      %{file: file, method: fun, number: line, app: get_app(mod)}
+      %{file: file, method: fun, number: line, context: get_context(otp_app, get_app(mod))}
   end
 
   defp get_app(module) do
@@ -16,4 +16,11 @@ defmodule Honeybadger.Backtrace do
       :undefined -> nil
     end
   end
+
+  defp otp_app do
+    Application.get_env(:honeybadger, :app)
+  end
+
+  defp get_context(app, app) when app != nil, do: "app"
+  defp get_context(_app, app),                do: "all"
 end
