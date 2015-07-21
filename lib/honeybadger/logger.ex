@@ -6,15 +6,10 @@ defmodule Honeybadger.Logger do
 
   use GenEvent
 
-  def init(_mod), do: {:ok, []}
+  def init(_mod, []), do: {:ok, []}
 
   def handle_call({:configure, new_keys}, _state) do
     {:ok, :ok, new_keys}
-  end
-
-  def handle_event({level, _gl, _event}, state)
-  when level != :error do
-    {:ok, state}
   end
 
   def handle_event({_level, gl, _event}, state)
@@ -22,19 +17,22 @@ defmodule Honeybadger.Logger do
     {:ok, state}
   end
 
-  # Error messages from Ranch/Cowboy come in the form of iodata. We ignore
-  # these because they should already be reported by Honeybadger.Plug.
-  def handle_event({:error, _gl, {_mod, message, _ts, _pdict}}, state) 
-  when is_list(message) do
+  def handle_event({level, _gl, _event}, state)
+  when level != :error_report do
     {:ok, state}
   end
 
-  def handle_event({:error, _gl, {Logger, message, _ts, pdict}}, state) do
+  def handle_event({error, _gl, {_pid, type, [[{:initial_call, _},
+                                              {:pid, _},
+                                              {:registered_name, _},
+                                              {:error_info, {:error, exception, stacktrace}},
+                                              {:ancestors, _},
+                                              {:messages, _},
+                                              {:links, _},
+                                              {:dictionary, pdict} | _] | _]}}, state) do
     try do
-      stack = System.stacktrace
       context = Dict.get(pdict, :honeybadger_context, %{})
-      exception = Utils.exception_from_message(message)
-      Honeybadger.notify(exception, context, stack)
+      Honeybadger.notify(exception, context, stacktrace)
     rescue
       ex ->
         error_type = Utils.strip_elixir_prefix(ex.__struct__)

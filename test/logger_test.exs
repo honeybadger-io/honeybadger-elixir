@@ -3,12 +3,26 @@ defmodule Honeybadger.LoggerTest do
   import ExUnit.CaptureIO
   require Logger
 
-  setup do
-    Logger.add_backend(Honeybadger.Logger)
+  setup_all do
+    :error_logger.add_report_handler(Honeybadger.Logger)
 
     on_exit fn ->
-      Logger.remove_backend(Honeybadger.Logger)
+      :error_logger.delete_report_handler(Honeybadger.Logger)
     end
+  end
+
+  test "logging a crash" do
+    :meck.expect(Honeybadger, :notify, fn(_ex, _c, _s) -> :ok end)
+
+    :proc_lib.spawn(fn ->
+      Honeybadger.context(user_id: 1)
+      raise RuntimeError, "Oops"
+    end)
+    :timer.sleep 10
+    
+    assert :meck.called(Honeybadger, :notify, [:_, :_, :_])
+
+    :meck.unload(Honeybadger)
   end
 
   test "crashes do not cause recursive logging" do
