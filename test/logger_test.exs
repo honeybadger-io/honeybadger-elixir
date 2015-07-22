@@ -28,28 +28,26 @@ defmodule Honeybadger.LoggerTest do
   test "crashes do not cause recursive logging" do
     :meck.expect(Honeybadger, :notify, fn(_ex, _c, _s) -> raise %HTTPoison.Error{reason: 500} end)
 
-    message = capture_log(fn ->
-      Logger.add_backend(:console)
-      Logger.error("** (RuntimeError) This is the initial error")
-      :timer.sleep 10
-      Logger.remove_backend(:console)
-    end)
+    error_report = [[error_info: {:error, %RuntimeError{message: "Oops"}, []},
+                    dictionary: [honeybadger_context: [user_id: 1]]], []]
+    :error_logger.error_report(error_report)
+    :timer.sleep 10
 
-    assert message =~ "Unable to notify Honeybadger! HTTPoison.Error: 500"
-    assert :meck.called(Honeybadger, :notify, [:_, :_, :_])
+    assert :meck.called(Honeybadger, :notify, [%RuntimeError{message: "Oops"}, 
+                                               %{honeybadger_context: [user_id: 1]}, 
+                                               []])
 
     :meck.unload(Honeybadger)
   end
 
-  test "log levels lower than error are ignored" do
+  test "log levels lower than :error_report are ignored" do
     :meck.expect(Honeybadger, :notify, fn(_ex, _c, _s) -> :ok end)
+    message_types = [:info_msg, :info_report, :warning_msg, :error_msg]
 
-    Logger.debug("Ignore me")
-    refute :meck.called(Honeybadger, :notify, [])
-    Logger.info("Ignore me")
-    refute :meck.called(Honeybadger, :notify, [])
-    Logger.warn("Ignore me")
-    refute :meck.called(Honeybadger, :notify, [])
+    Enum.each(message_types, fn(type) ->
+      apply(:error_logger, type, ["Ignore me"]) 
+      refute :meck.called(Honeybadger, :notify, [:_, :_, :_])
+    end)
 
     :meck.unload(Honeybadger)
   end

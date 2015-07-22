@@ -2,8 +2,6 @@ defmodule Honeybadger.Logger do
   require Logger
   alias Honeybadger.Utils
 
-  @ignored_keys [:pid, :function, :line, :module]
-
   use GenEvent
 
   def init(_mod, []), do: {:ok, []}
@@ -22,16 +20,11 @@ defmodule Honeybadger.Logger do
     {:ok, state}
   end
 
-  def handle_event({error, _gl, {_pid, type, [[{:initial_call, _},
-                                              {:pid, _},
-                                              {:registered_name, _},
-                                              {:error_info, {:error, exception, stacktrace}},
-                                              {:ancestors, _},
-                                              {:messages, _},
-                                              {:links, _},
-                                              {:dictionary, pdict} | _] | _]}}, state) do
+  def handle_event({error, _gl, {_pid, type, [message | _]}}, state) do
     try do
-      context = Dict.get(pdict, :honeybadger_context, %{})
+      dict = Dict.take(message, [:error_info, :dictionary])
+      context = Dict.take(dict[:dictionary], [:honeybadger_context]) |> Enum.into(Map.new)
+      {:error, exception, stacktrace} = Dict.get(dict, :error_info)
       Honeybadger.notify(exception, context, stacktrace)
     rescue
       ex ->
