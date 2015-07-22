@@ -3,8 +3,6 @@ defmodule Honeybadger.Notice do
 
   defstruct [:notifier, :server, :error, :request]
 
-  @known_fields [:plug_env, :tags]
-
   def new(exception, metadata \\ %{}, backtrace) do
     exception_mod = exception.__struct__
 
@@ -15,7 +13,7 @@ defmodule Honeybadger.Notice do
       backtrace: backtrace
     }
 
-    context = Dict.drop(metadata, @known_fields)
+    context = Dict.get(metadata, :honeybadger_context, %{}) |> Enum.into(Map.new)
     request = metadata 
               |> Dict.get(:plug_env, %{})
               |> Dict.merge(%{context: context})

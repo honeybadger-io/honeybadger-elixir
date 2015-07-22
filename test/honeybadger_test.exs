@@ -28,10 +28,10 @@ defmodule HoneybadgerTest do
   end
 
   test "getting and setting the context" do
-    assert [] == Honeybadger.context()
+    assert %{} == Honeybadger.context()
 
     Honeybadger.context(user_id: 1)
 
-    assert [user_id: 1] == Honeybadger.context()
+    assert %{user_id: 1} == Honeybadger.context()
   end
 end

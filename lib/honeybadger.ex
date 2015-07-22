@@ -36,11 +36,11 @@ defmodule Honeybadger do
   end
 
   def context do
-    Process.get(@context) || []
+    (Process.get(@context) || %{}) |> Enum.into(Map.new)
   end
 
   def context(dict) do
-    Process.put(@context, Keyword.merge(context, dict))
+    Process.put(@context, Dict.merge(context, dict))
   end
 
   defp api_url do

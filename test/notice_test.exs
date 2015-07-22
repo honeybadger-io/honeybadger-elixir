@@ -11,7 +11,7 @@ defmodule Honeybadger.NoticeTest do
       action: :show,
       params: %{page: 1}
     }
-    metadata = %{plug_env: plug_env, tags: [:test], user_id: 1, account_id: 1}
+    metadata = %{plug_env: plug_env, tags: [:test], honeybadger_context: %{user_id: 1, account_id: 1}}
     stack = [{Kernel, :+, [1], [file: 'lib/elixir/lib/kernel.ex', line: 321]}]
     backtrace = Backtrace.from_stacktrace(stack)
 
