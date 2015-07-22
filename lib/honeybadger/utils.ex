@@ -4,8 +4,8 @@ defmodule Honeybadger.Utils do
   """
 
   @doc """
-    Internally all modules are prefixed with Elixir. This
-    function removes the Elixir prefix.
+    Internally all modules are prefixed with Elixir. This function removes the
+    Elixir prefix from the module when it is converted to a string.
   """
   def strip_elixir_prefix(module) do
     module
