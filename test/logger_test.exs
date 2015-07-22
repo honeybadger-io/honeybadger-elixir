@@ -51,24 +51,4 @@ defmodule Honeybadger.LoggerTest do
 
     :meck.unload(Honeybadger)
   end
-
-  test "iodata and charlist messages are ignored" do
-    :meck.expect(Honeybadger, :notify, fn(_ex, _c, _s) -> :ok end)
-
-    Logger.error(["this", 'will', "be ignord"])
-    :timer.sleep 10
-    refute :meck.called(Honeybadger, :notify, [])
-    Logger.error('this will also be ignored')
-    :timer.sleep 10
-    refute :meck.called(Honeybadger, :notify, [])
-
-    :meck.unload(Honeybadger)
-  end
-
-  def capture_log(fun) do
-    capture_io(:user, fn ->
-      fun.()
-      Logger.flush()
-    end)
-  end
 end
