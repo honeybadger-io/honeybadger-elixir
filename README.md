@@ -4,9 +4,14 @@ Elixir client and Plug for the :zap: [Honeybadger error notifier](https://www.ho
 
 ## Installation
 
-Add the Honeybadger package to `deps/1` in your application's `mix.exs` file and run `mix do deps.get, deps.compile`
+Add the Honeybadger package to `deps/1` and `application/1` in your
+application's `mix.exs` file and run `mix do deps.get, deps.compile`
 
 ```elixir
+defp application do
+ [applications: [:honeybadger, :logger]]
+end
+
 defp deps do
   [{:honeybadger, "~> 0.1"}]
 end
@@ -14,22 +19,46 @@ end
 
 ## Configuration
 
-By default we will use the environment variable `HONEYBADGER_API_KEY` to find your API key to the Honeybadger API. If you would like to specify your key a different way, you can do so in the `config.exs` (or any `config/{{env}}.exs` file):
+By default the environment variable `HONEYBADGER_API_KEY` will be used to find
+your API key to the Honeybadger API. If you would like to specify your key or
+any other configuration options a different way, you can do so in the
+`config.exs`:
 
 ```elixir
 config :honeybadger,
   api_key: "sup3rs3cr3tk3y"
 ```
 
-You can also pass `hostname`, `origin`, and `api_origin` keys to `config`. Honeybadger uses these settings to add helpful information to exception reports. These settings default to `:inet.gethostname/0`, `System.cwd/0` and `https://api.honeybadger.io` respectively.
+Here are all of the options you can pass in the keyword list:
+
+- `api_key` - Your app's Honeybadger API key `(default:
+  System.get_env("HONEYBADGER_API_KEY"))`
+- `app` - Name of your app's OTP Application `(default: nil)`
+- `use_logger` - Whether you also want to use the Honeybadger Logger for
+  handling errors outside of web requests `(default: false)`
+- `exclude_envs`- Environments that you want to disable Honeybadger
+  notifications `(default: [:dev, :test])`
+- `hostname` - Hostname of the computer your application is running on
+  `(default: :inet.gethostname)`
+- `origin` - URL for the Honeybadger API `(default:
+  "https://api.honeybadger.io")`
+- `project_root` - Directory root for where your application is running
+  `(default: System.cwd)`
 
 ## Usage
 
-The Honeybadger package can be used as a Plug alongside your Phoenix applications as well as a standlone client for sprinkling in exception notifications where they are needed.
+The Honeybadger package can be used as a Plug alongside your Phoenix
+applications, as a logger backend, or as a standalone client for sprinkling in
+exception notifications where they are needed.
 
 ## Phoenix and Plug
 
-The Honeybadger Plug adds a [Plug.ErrorHandler](https://github.com/elixir-lang/plug/blob/master/lib/plug/error_handler.ex) to your pipeline. Simply `use` the `Honeybadger.Plug` module inside of a Plug, Phoenix.Controller or Phoenix.Router and any crashes will be automatically reported to Honeybadger.
+The Honeybadger Plug adds a
+[Plug.ErrorHandler](https://github.com/elixir-lang/plug/blob/master/lib/plug/error_handler.ex)
+to your pipeline. Simply `use` the `Honeybadger.Plug` module inside of a Plug
+or Phoenix.Router and any crashes will be automatically reported to
+Honeybadger. It's best to `use Honeybadger.Plug` **after the Router plugs** so that
+exceptions due to non-matching routes are not reported to Honeybadger.
 
 ```elixir
 defmodule MyPlugApp do
@@ -37,13 +66,6 @@ defmodule MyPlugApp do
   use Honeybadger.Plug
   
   [... the rest of your plug ...]
-end
-
-defmodule MyPhoenixApp.PageController do
-  use MyPhoenixApp.Web, :controller
-  use Honeybadger.Plug
-  
-  [... the rest of your controller actions ...]
 end
 
 defmodule MyPhoenixApp.Router do
@@ -56,15 +78,28 @@ defmodule MyPhoenixApp.Router do
 end
 ```
 
+## Logger
+
+Just set the `use_logger` option to `true` in your application's `config.exs`
+and you're good to go! Any
+[SASL](http://www.erlang.org/doc/apps/sasl/error_logging.html) compliant
+processes that crash will send an error report to the `Honeybadger.Logger`.
+After the error reaches the logger we take care of notifying Honeybadger for
+you!
+
 ## Standalone Client
 
-Use `Honeybadger.notify/3` to send exception information to the collector API. The first parameter is the exception, the second parameter is the context/metadata and the third paramter is the stacktrace. The stacktrace defaults to the stacktrace of the current process.
+Use the `Honeybadger.notify/2` macro to send exception information to the
+collector API.  The first parameter is the exception and the second parameter
+is the context/metadata.
 
 ```elixir
+
 try do
   File.read! "this_file_really_should_exist_dang_it.txt"
 rescue
   exception ->
+    require Honeybadger
     context = %{user_id: 5, account_name: "Foo"}
     Honeybadger.notify(exception, context)
 end
@@ -76,7 +111,10 @@ See https://github.com/honeybadger-io/honeybadger-elixir/releases
 
 ## Contributing
 
-If you're adding a new feature, please [submit an issue](https://github.com/honeybadger-io/honeybadger-elixir/issues/new) as a preliminary step; that way you can be (moderately) sure that your pull request will be accepted.
+If you're adding a new feature, please [submit an
+issue](https://github.com/honeybadger-io/honeybadger-elixir/issues/new) as a
+preliminary step; that way you can be (moderately) sure that your pull request
+will be accepted.
 
 ### To contribute your code:
 
@@ -88,4 +126,6 @@ If you're adding a new feature, please [submit an issue](https://github.com/hone
 
 ### License
 
-This library is MIT licensed. See the [LICENSE](https://raw.github.com/honeybadger-io/honeybadger-elixir/master/LICENSE) file in this repository for details.
+This library is MIT licensed. See the
+[LICENSE](https://raw.github.com/honeybadger-io/honeybadger-elixir/master/LICENSE)
+file in this repository for details.
