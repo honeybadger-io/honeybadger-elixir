@@ -1,6 +1,6 @@
 # honeybadger-elixir
 
-Elixir client and Plug for the :zap: [Honeybadger error notifier](https://www.honeybadger.io/).
+Elixir Plug, Logger and client for the :zap: [Honeybadger error notifier](https://www.honeybadger.io/).
 
 ## Installation
 
@@ -31,7 +31,7 @@ config :honeybadger,
 
 Here are all of the options you can pass in the keyword list:
 
-- `api_key` - Your app's Honeybadger API key `(default:
+- `api_key` - Your Honeybadger API key `(default:
   System.get_env("HONEYBADGER_API_KEY"))`
 - `app` - Name of your app's OTP Application `(default: nil)`
 - `use_logger` - Whether you also want to use the Honeybadger Logger for
