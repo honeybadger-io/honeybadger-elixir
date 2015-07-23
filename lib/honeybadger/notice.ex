@@ -14,7 +14,7 @@ defmodule Honeybadger.Notice do
     }
 
     context = Dict.get(metadata, :honeybadger_context, %{}) |> Enum.into(Map.new)
-    request = metadata 
+    request = metadata
               |> Dict.get(:plug_env, %{})
               |> Dict.merge(%{context: context})
 

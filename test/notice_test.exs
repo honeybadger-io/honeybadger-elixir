@@ -38,7 +38,7 @@ defmodule Honeybadger.NoticeTest do
     assert "RuntimeError" == error[:class]
     assert "Oops"         == error[:message]
     assert [:test]        == error[:tags]
-    assert [%{file: "lib/elixir/lib/kernel.ex", method: "+", number: 321}] == error[:backtrace]
+    assert [%{file: "lib/elixir/lib/kernel.ex", method: "+", number: 321, context: "all"}] == error[:backtrace]
   end
 
   test "request information", %{notice: %Notice{request: request}} do
