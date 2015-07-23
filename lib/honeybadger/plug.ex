@@ -26,8 +26,8 @@ defmodule Honeybadger.Plug do
 
         plug_env = %{
           url: Plug.Conn.full_path(conn),
-          component: component_name(conn, __MODULE__), 
-          action: action_name(conn),
+          component: get_component_name(conn, __MODULE__), 
+          action: get_action_name(conn),
           params: conn.params,
           session: session,
           cgi_data: build_cgi_data(conn)
@@ -66,7 +66,7 @@ defmodule Honeybadger.Plug do
     Map.put acc, header, value
   end
 
-  def action_name(conn) do
+  def get_action_name(conn) do
     if :code.is_loaded(Phoenix.Controller) do
       Phoenix.Controller.action_name(conn)
     else
@@ -74,7 +74,7 @@ defmodule Honeybadger.Plug do
     end
   end
 
-  def component_name(conn, mod) do
+  def get_component_name(conn, mod) do
     if :code.is_loaded(Phoenix.Controller) do
       Phoenix.Controller.controller_module(conn)
     else
