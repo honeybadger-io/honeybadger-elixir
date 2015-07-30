@@ -20,19 +20,47 @@ defmodule Honeybadger do
     {Application.ensure_started(:httpoison), self}
   end
 
-  def notify(exception, context \\ %{}) do
-    {:current_stacktrace, stacktrace} = Process.info(self, :current_stacktrace)
-    notify(exception, context, stacktrace)
+  defmacro notify(exception) do
+    macro_notify(exception, {:%{}, [], []}, [])
   end
 
-  def notify(exception, context, stacktrace) do
-    backtrace = Backtrace.from_stacktrace stacktrace
+  defmacro notify(exception, context) do
+    macro_notify(exception, context, [])
+  end
+
+  defmacro notify(exception, context, stacktrace) do
+    macro_notify(exception, context, stacktrace)
+  end
+
+  defp macro_notify(exception, context, stacktrace) do
+    excluded_envs = Application.get_env(:honeybadger, :excluded_envs, [:dev, :test])
+    
+    case Mix.env in excluded_envs do
+      false ->
+        quote do
+          Honeybadger.do_notify(unquote(exception), unquote(context), unquote(stacktrace))
+        end
+      _ ->
+        :ok
+    end
+  end
+
+  def do_notify(exception, context, stacktrace) do
+    if Enum.count(stacktrace) == 0 do
+      {:current_stacktrace, stacktrace} = Process.info(self, :current_stacktrace)
+    end
+
+    backtrace = Backtrace.from_stacktrace(stacktrace)
     notice = Notice.new(exception, context, backtrace)
-    {:ok, body} = JSON.encode notice
+    {:ok, body} = JSON.encode(notice)
 
-    HTTP.post api_url, body, headers
+    api_url = Application.get_env(:honeybadger, :origin) <> "/v1/notices"
+    api_key = Application.get_env(:honeybadger, :api_key)
+    headers = [{"Accept", "application/json"},
+                {"Content-Type", "application/json"},
+                {"X-API-Key", api_key}]
 
-    :ok
+    HTTP.post(api_url, body, headers)
   end
 
   def context do
@@ -43,20 +71,9 @@ defmodule Honeybadger do
     Process.put(@context, Dict.merge(context, dict))
   end
 
-  defp api_url do
-    Application.get_env(:honeybadger, :origin) <> "/v1/notices"
-  end
-
-  defp headers do
-    api_key = Application.get_env(:honeybadger, :api_key)
-
-    [{"Accept", "application/json"},
-    {"Content-Type", "application/json"},
-    {"X-API-Key", api_key}]
-  end
-
   defp default_config do
      [api_key: System.get_env("HONEYBADGER_API_KEY"),
+      excluded_envs: [:dev, :test],
       hostname: :inet.gethostname |> elem(1) |> List.to_string,
       origin: "https://api.honeybadger.io",
       project_root: System.cwd]

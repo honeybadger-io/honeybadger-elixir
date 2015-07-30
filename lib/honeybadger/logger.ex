@@ -1,6 +1,7 @@
 defmodule Honeybadger.Logger do
   require Logger
   alias Honeybadger.Utils
+  require Honeybadger
 
   use GenEvent
 

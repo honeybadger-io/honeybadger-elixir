@@ -1,7 +1,8 @@
 defmodule HoneybadgerTest do
   use ExUnit.Case
   alias HTTPoison, as: HTTP
-  import Mock
+  alias Honeybadger.Notice
+  require Honeybadger
 
   setup do
     before = Application.get_env :honeybadger, :api_key
@@ -14,24 +15,39 @@ defmodule HoneybadgerTest do
   end
 
   test "sending a notice" do
-    with_mock HTTP, [post: fn(_url, _data, _headers) -> %HTTP.Response{} end] do
-      exception = %RuntimeError{message: "Oops"}
-      url = Application.get_env(:honeybadger, :origin) <> "/v1/notices"
-      headers = [{"Accept", "application/json"},
-                 {"Content-Type", "application/json"},
-                 {"X-API-Key", "at3stk3y"}]
+    :meck.expect(HTTP, :post, fn(_url, _data, _headers) -> %HTTP.Response{} end)
+    Application.put_env(:honeybadger, :excluded_envs, [])
 
-      Honeybadger.notify exception
+    url = Application.get_env(:honeybadger, :origin) <> "/v1/notices"
+    headers = [{"Accept", "application/json"},
+               {"Content-Type", "application/json"},
+               {"X-API-Key", "at3stk3y"}]
 
-      assert called HTTP.post(url, :_, headers)
+    defmodule Sample do
+      def notify do
+        Honeybadger.notify(%RuntimeError{}, %{})
+      end
     end
+
+    Sample.notify
+
+    assert :meck.called(HTTP, :post, [url, :_, headers])
+  after
+    Application.put_env(:honeybadger, :excluded_envs, [:dev, :test])
   end
 
   test "getting and setting the context" do
     assert %{} == Honeybadger.context()
 
     Honeybadger.context(user_id: 1)
-
     assert %{user_id: 1} == Honeybadger.context()
+
+    Honeybadger.context(%{user_id: 2})
+    assert %{user_id: 2} == Honeybadger.context()
+  end
+
+  test "calls at compile time are removed in excluded environments" do
+    assert [:dev, :test] == Application.get_env(:honeybadger, :excluded_envs)
+    assert :ok == Honeybadger.notify(%RuntimeError{})
   end
 end
