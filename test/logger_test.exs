@@ -6,6 +6,8 @@ defmodule Honeybadger.LoggerTest do
   setup_all do
     :error_logger.add_report_handler(Honeybadger.Logger)
     Application.put_env(:honeybadger, :exclude_envs, [])
+    # We re-require this file so the module will be re-compiled
+    # to reflect the new `exclude_envs` setting
     Code.require_file("lib/honeybadger/logger.ex")
 
     on_exit fn ->
@@ -40,12 +42,12 @@ defmodule Honeybadger.LoggerTest do
   end
 
   test "log levels lower than :error_report are ignored" do
-    :meck.expect(HTTP, :post, fn(_ex, _c, _s) -> %HTTP.Response{} end)
     message_types = [:info_msg, :info_report, :warning_msg, :error_msg]
 
     Enum.each(message_types, fn(type) ->
+      :meck.expect(HTTP, :post, fn(_ex, _c, _s) -> %HTTP.Response{} end)
       apply(:error_logger, type, ["Ignore me"]) 
-      :timer.sleep 50
+      :timer.sleep 100
       refute :meck.called(HTTP, :post, [:_, :_, :_])
     end)
 
