@@ -16,7 +16,7 @@ defmodule HoneybadgerTest do
 
   test "sending a notice" do
     :meck.expect(HTTP, :post, fn(_url, _data, _headers) -> %HTTP.Response{} end)
-    Application.put_env(:honeybadger, :excluded_envs, [])
+    Application.put_env(:honeybadger, :exclude_envs, [])
 
     url = Application.get_env(:honeybadger, :origin) <> "/v1/notices"
     headers = [{"Accept", "application/json"},
@@ -33,7 +33,7 @@ defmodule HoneybadgerTest do
 
     assert :meck.called(HTTP, :post, [url, :_, headers])
   after
-    Application.put_env(:honeybadger, :excluded_envs, [:dev, :test])
+    Application.put_env(:honeybadger, :exclude_envs, [:dev, :test])
   end
 
   test "getting and setting the context" do
@@ -46,8 +46,8 @@ defmodule HoneybadgerTest do
     assert %{user_id: 2} == Honeybadger.context()
   end
 
-  test "calls at compile time are removed in excluded environments" do
-    assert [:dev, :test] == Application.get_env(:honeybadger, :excluded_envs)
+  test "calls at compile time are removed in exclude environments" do
+    assert [:dev, :test] == Application.get_env(:honeybadger, :exclude_envs)
     assert :ok == Honeybadger.notify(%RuntimeError{})
   end
 end

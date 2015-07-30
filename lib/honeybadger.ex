@@ -33,9 +33,9 @@ defmodule Honeybadger do
   end
 
   defp macro_notify(exception, context, stacktrace) do
-    excluded_envs = Application.get_env(:honeybadger, :excluded_envs, [:dev, :test])
+    exclude_envs = Application.get_env(:honeybadger, :exclude_envs, [:dev, :test])
     
-    case Mix.env in excluded_envs do
+    case Mix.env in exclude_envs do
       false ->
         quote do
           Honeybadger.do_notify(unquote(exception), unquote(context), unquote(stacktrace))
@@ -73,7 +73,7 @@ defmodule Honeybadger do
 
   defp default_config do
      [api_key: System.get_env("HONEYBADGER_API_KEY"),
-      excluded_envs: [:dev, :test],
+      exclude_envs: [:dev, :test],
       hostname: :inet.gethostname |> elem(1) |> List.to_string,
       origin: "https://api.honeybadger.io",
       project_root: System.cwd]
