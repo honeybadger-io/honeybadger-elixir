@@ -26,8 +26,6 @@ defmodule Honeybadger.Mixfile do
      {:plug, "~> 0.13"},
 
      # Test dependencies
-     {:cowboy, "~> 1.0.0", only: :test},
-     {:mock, "~> 0.1.1", only: :test},
      {:meck, "~> 0.8.3", only: :test}]
   end
 
