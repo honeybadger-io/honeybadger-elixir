@@ -24,7 +24,7 @@ defmodule Honeybadger.Mixfile do
     [{:httpoison, "~> 0.7"},
      {:poison, "~> 1.4"},
      {:plug, "~> 0.13"},
-   
+
      # Test dependencies
      {:cowboy, "~> 1.0.0", only: :test},
      {:mock, "~> 0.1.1", only: :test},

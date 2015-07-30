@@ -25,7 +25,7 @@ defmodule Honeybadger.Plug do
         conn = Plug.Conn.fetch_query_params conn
 
         plug_env = %{
-          url: Plug.Conn.full_path(conn),
+          url: conn.request_path,
           component: get_component_name(__MODULE__), 
           action: "",
           params: conn.params,
@@ -52,8 +52,8 @@ defmodule Honeybadger.Plug do
       "SERVER_NAME" => Application.get_env(:honeybadger, :hostname),
       "SERVER_PORT" => conn.port,
       "CONTENT_LENGTH" => Plug.Conn.get_req_header(conn, "content-length"),
-      "ORIGINAL_FULLPATH" => Plug.Conn.full_path(conn)
-    } 
+      "ORIGINAL_FULLPATH" => conn.request_path
+    }
 
     Map.merge rack_env_http_vars, cgi_data
   end
