@@ -17,6 +17,10 @@ defmodule Honeybadger do
       Application.put_env(:honeybadger, key, value)
     end
 
+    if config[:use_logger] do
+      :error_logger.add_report_handler(Honeybadger.Logger)
+    end
+
     {Application.ensure_started(:httpoison), self}
   end
 
@@ -57,8 +61,8 @@ defmodule Honeybadger do
     api_url = Application.get_env(:honeybadger, :origin) <> "/v1/notices"
     api_key = Application.get_env(:honeybadger, :api_key)
     headers = [{"Accept", "application/json"},
-                {"Content-Type", "application/json"},
-                {"X-API-Key", api_key}]
+               {"Content-Type", "application/json"},
+               {"X-API-Key", api_key}]
 
     HTTP.post(api_url, body, headers)
   end
@@ -76,6 +80,7 @@ defmodule Honeybadger do
       exclude_envs: [:dev, :test],
       hostname: :inet.gethostname |> elem(1) |> List.to_string,
       origin: "https://api.honeybadger.io",
-      project_root: System.cwd]
+      project_root: System.cwd,
+      use_logger: false]
   end
 end
