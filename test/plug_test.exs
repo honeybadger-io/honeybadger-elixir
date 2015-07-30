@@ -1,7 +1,6 @@
 defmodule Honeybadger.PlugTest do
   use ExUnit.Case
   use Plug.Test
-  import Mock
 
   defmodule PlugApp do
     import Plug.Conn
@@ -17,22 +16,54 @@ defmodule Honeybadger.PlugTest do
     end
   end
 
-  test "exception in a plug pipeline notifies Honeybadger" do
-    with_mock Honeybadger, [:passthrough], [notify: fn(_exception, _data, _stack) -> :ok end] do
-      exception = %RuntimeError{message: "Oops"}
-      conn = conn(:get, "/bang")
+  test "exceptions on a non-existant route are ignored" do
+    exception = %FunctionClauseError{arity: 4, 
+                                     function: :do_match, 
+                                     module: Honeybadger.PlugTest.PlugApp}
 
-      assert exception == catch_error(PlugApp.call conn, [])
-      assert called Honeybadger.notify(exception, :_, :_)
-    end
+    conn = conn(:get, "/not_found")
+
+    assert exception == catch_error(PlugApp.call conn, [])
   end
 
-  test "exception on a non-existant route does not notify Honeybadger" do
-    with_mock Honeybadger, [notify: fn(_exception, _data, _stack) -> :ok end] do
-      conn = conn(:get, "/not_found")
-      catch_error(PlugApp.call conn, [])
+  test "build_plug_env/2" do
+    conn = conn(:get, "/bang?foo=bar")
+    plug_env = %{action: "",
+                 cgi_data: Honeybadger.Plug.build_cgi_data(conn),
+                 component: "Honeybadger.PlugTest.PlugApp",
+                 params: %{"foo" => "bar"},
+                 session: %{},
+                 url: "/bang"}
 
-      refute called Honeybadger.notify
-    end
+    assert plug_env == Honeybadger.Plug.build_plug_env(conn, PlugApp)
+  end
+
+  test "build_cgi_data/1" do
+    conn = conn(:get, "/bang")
+    {_, remote_port} = conn.peer
+    cgi_data = %{"CONTENT_LENGTH" => [], 
+                  "ORIGINAL_FULLPATH" => "/bang", 
+                  "PATH_INFO" => "bang",
+                  "QUERY_STRING" => "", 
+                  "REMOTE_ADDR" => "127.0.0.1", 
+                  "REMOTE_PORT" => remote_port,
+                  "REQUEST_METHOD" => "GET", 
+                  "SCRIPT_NAME" => "", 
+                  "SERVER_ADDR" => "127.0.0.1",
+                  "SERVER_NAME" => "rb", 
+                  "SERVER_PORT" => 80}
+
+    assert cgi_data == Honeybadger.Plug.build_cgi_data(conn)
+  end
+
+  test "get_remote_addr/1" do
+    assert "127.0.0.1" == Honeybadger.Plug.get_remote_addr({127, 0, 0, 1})
+  end
+
+  test "header_to_rack_format/2" do
+    header = {"content-type", "application/json"}
+    rack_format = %{"HTTP_CONTENT_TYPE" => "application/json"}
+    
+    assert rack_format == Honeybadger.Plug.header_to_rack_format(header, %{})
   end
 end

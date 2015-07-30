@@ -5,6 +5,7 @@ defmodule Honeybadger.Plug do
     quote do
       import Honeybadger.Plug
       use Plug.ErrorHandler
+      require Honeybadger
 
       # Exceptions raised on non-existant routes are ignored
       defp handle_errors(conn, %{reason: %FunctionClauseError{function: :do_match}} = ex) do
@@ -12,31 +13,34 @@ defmodule Honeybadger.Plug do
       end
 
       defp handle_errors(conn, %{kind: _kind, reason: exception, stack: stack}) do
-        session = %{}
-        conn = try do
-          Plug.Conn.fetch_session conn
-          session = conn.session
-          conn
-        rescue
-          e in [ArgumentError, KeyError] ->
-            Plug.Conn.fetch_cookies conn
-        end
-
-        conn = Plug.Conn.fetch_query_params conn
-
-        plug_env = %{
-          url: conn.request_path,
-          component: get_component_name(__MODULE__), 
-          action: "",
-          params: conn.params,
-          session: session,
-          cgi_data: build_cgi_data(conn)
-        }
-        metadata = %{plug_env: plug_env, honeybadger_context: Honeybadger.context()}
-
-        Honeybadger.notify exception, metadata, stack
+        metadata = %{plug_env: build_plug_env(conn, __MODULE__), 
+                     honeybadger_context: Honeybadger.context()}
+        Honeybadger.notify(exception, metadata, stack)
       end
     end
+  end
+
+  def build_plug_env(%Plug.Conn{} = conn, mod) do
+    session = %{}
+    conn = try do
+      Plug.Conn.fetch_session(conn)
+      session = conn.session
+    rescue
+      e in [ArgumentError, KeyError] ->
+        # just return conn and move on
+        conn
+    end
+
+    conn = conn
+           |> Plug.Conn.fetch_cookies
+           |> Plug.Conn.fetch_query_params
+
+    %{url: conn.request_path,
+      component: Utils.strip_elixir_prefix(mod),
+      action: "",
+      params: conn.params,
+      session: session,
+      cgi_data: build_cgi_data(conn)}
   end
 
   def build_cgi_data(%Plug.Conn{} = conn) do
@@ -55,7 +59,7 @@ defmodule Honeybadger.Plug do
       "ORIGINAL_FULLPATH" => conn.request_path
     }
 
-    Map.merge rack_env_http_vars, cgi_data
+    Map.merge(rack_env_http_vars, cgi_data)
   end
 
   def get_remote_addr(addr), do: :inet.ntoa(addr) |> List.to_string
@@ -63,10 +67,6 @@ defmodule Honeybadger.Plug do
 
   def header_to_rack_format({header, value}, acc) do
     header = "HTTP_" <> String.upcase(header) |> String.replace("-", "_")
-    Map.put acc, header, value
-  end
-
-  def get_component_name(mod) do
-    Utils.strip_elixir_prefix(mod) 
+    Map.put(acc, header, value)
   end
 end
