@@ -1,7 +1,7 @@
 defmodule Honeybadger.Logger do
-  require Logger
   alias Honeybadger.Utils
   require Honeybadger
+  require Logger
 
   use GenEvent
 
@@ -21,7 +21,7 @@ defmodule Honeybadger.Logger do
     {:ok, state}
   end
 
-  def handle_event({error, _gl, {_pid, type, [message | _]}}, state) do
+  def handle_event({_error, _gl, {_pid, _type, [message | _]}}, state) do
     try do
       dict = Dict.take(message, [:error_info, :dictionary])
       context = Dict.take(dict[:dictionary], [:honeybadger_context]) |> Enum.into(Map.new)

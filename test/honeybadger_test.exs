@@ -1,7 +1,6 @@
 defmodule HoneybadgerTest do
   use ExUnit.Case
   alias HTTPoison, as: HTTP
-  alias Honeybadger.Notice
   require Honeybadger
 
   setup do
