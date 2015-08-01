@@ -101,6 +101,24 @@ rescue
 end
 ```
 
+## Setting Context
+
+`Honeybadger.context/1` is provided for adding extra data to the notification that gets sent to Honeybadger. You can make use of this in places such as a Plug in your Phoenix Router or Controller to ensure useful debugging data is sent along.
+
+```elixir
+def MyPhoenixApp.Controller
+  use MyPhoenixApp.Web, :controller
+
+  plug :set_honeybadger_context
+
+  def set_honeybadger_context(conn, _opts) do
+    user = get_user(conn)
+    Honeybadger.context(user_id: user.id, account: user.account.name)
+    conn
+  end
+end
+```
+
 ## Changelog
 
 See https://github.com/honeybadger-io/honeybadger-elixir/releases
