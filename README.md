@@ -31,19 +31,14 @@ config :honeybadger,
 
 Here are all of the options you can pass in the keyword list:
 
-- `api_key` - Your Honeybadger API key `(default:
-  System.get_env("HONEYBADGER_API_KEY"))`
-- `app` - Name of your app's OTP Application `(default: nil)`
-- `use_logger` - Whether you also want to use the Honeybadger Logger for
-  handling errors outside of web requests `(default: false)`
-- `exclude_envs`- Environments that you want to disable Honeybadger
-  notifications `(default: [:dev, :test])`
-- `hostname` - Hostname of the computer your application is running on
-  `(default: :inet.gethostname)`
-- `origin` - URL for the Honeybadger API `(default:
-  "https://api.honeybadger.io")`
-- `project_root` - Directory root for where your application is running
-  `(default: System.cwd)`
+| Name         | Description                                                               | Default |
+| api_key      | Your application's Honeybadger API key                                    | System.get_env("HONEYBADGER_API_KEY"))` |
+| app          | Name of your app's OTP Application as an atom                             | Mix.Project.config[:app] |
+| use_logger   | Enable the Honeybadger Logger for handling errors outside of web requests | false |
+| exclude_envs | Environments that you want to disable Honeybadger notifications           | [:dev, :test] |
+| hostname     | Hostname of the system your application is running on                     | :inet.gethostname |
+| origin       | URL for the Honeybadger API                                               | "https://api.honeybadger.io" |
+| project_root | Directory root for where your application is running                      | System.cwd |
 
 ## Usage
 
