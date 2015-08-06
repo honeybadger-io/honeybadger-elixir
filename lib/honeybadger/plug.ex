@@ -7,8 +7,13 @@ defmodule Honeybadger.Plug do
       use Plug.ErrorHandler
       require Honeybadger
 
-      # Exceptions raised on non-existant routes are ignored
+      # Exceptions raised on non-existant Plug routes are ignored
       defp handle_errors(conn, %{reason: %FunctionClauseError{function: :do_match}} = ex) do
+        nil
+      end
+
+      # Exceptions raised on non-existant Phoenix routes are ignored
+      defp handle_errors(conn, %{reason: %Phoenix.Router.NoRouteError{}} = ex) do
         nil
       end
 
