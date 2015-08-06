@@ -2,6 +2,19 @@
 
 Elixir Plug, Logger and client for the :zap: [Honeybadger error notifier](https://www.honeybadger.io/).
 
+## Try it out
+
+To deploy a sample Phoenix application which uses this library to report errors
+to Honeybadger.io:
+
+[![Deploy](https://www.herokucdn.com/deploy/button.png)](https://heroku.com/deploy?template=https://github.com/honeybadger-io/crywolf-elixir)
+
+Don't forget to destroy the Heroku app after you're done so that you aren't
+charged for usage.
+
+You can also [download the sample
+application](https://github.com/honeybadger-io/crywolf-elixir) and run it locally.
+
 ## Installation
 
 Add the Honeybadger package to `deps/1` and `application/1` in your
