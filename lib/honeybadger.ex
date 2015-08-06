@@ -22,7 +22,7 @@ defmodule Honeybadger do
           hostname: "myserver.domain.com",
           origin: "https://api.honeybadger.io",
           project_root: "/home/skynet",
-          use_logger: true,
+          use_logger: true
 
     ### Notifying
     Honeybadger.notify is a macro so that it can be wiped away in environments
