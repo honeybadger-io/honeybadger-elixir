@@ -3,7 +3,7 @@ defmodule Honeybadger.Mixfile do
 
   def project do
     [app: :honeybadger,
-     version: "0.0.1",
+     version: "0.1.0",
      elixir: "~> 1.0",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
@@ -12,7 +12,7 @@ defmodule Honeybadger.Mixfile do
      name: "Honeybadger",
      source_url: "https://github.com/honeybadger-io/honeybadger-elixir",
      homepage_url: "https://honeybadger.io",
-     description: "Elixir client, plug and logger for integrating with Honeybadger exception tracker"]
+     description: "Elixir client, Plug and error_logger for integrating with the Honeybadger.io exception tracker"]
   end
 
   def application do
@@ -30,11 +30,8 @@ defmodule Honeybadger.Mixfile do
   end
 
   defp package do
-    %{
-      licenses: ["MIT"],
-      contributors: ["Richard Bishop"],
-      links: %{
-        "GitHub" => "https://github.com/honeybadger-io/honeybadger-elixir"}
-    }
+    [licenses: ["MIT"],
+     contributors: ["Richard Bishop, Josh Wood"],
+     links: %{"GitHub" => "https://github.com/honeybadger-io/honeybadger-elixir"}]
   end
 end
