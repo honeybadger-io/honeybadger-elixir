@@ -21,8 +21,7 @@ end
 
 By default the environment variable `HONEYBADGER_API_KEY` will be used to find
 your API key to the Honeybadger API. If you would like to specify your key or
-any other configuration options a different way, you can do so in the
-`config.exs`:
+any other configuration options a different way, you can do so in `config.exs`:
 
 ```elixir
 config :honeybadger,
