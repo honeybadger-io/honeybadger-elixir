@@ -21,12 +21,16 @@ defmodule Honeybadger.Logger do
     {:ok, state}
   end
 
-  def handle_event({_error, _gl, {_pid, _type, [message | _]}}, state) do
+  def handle_event({error, _gl, {_pid, _type, [message | _]}}, state) do
     try do
       dict = Dict.take(message, [:error_info, :dictionary])
       context = Dict.take(dict[:dictionary], [:honeybadger_context]) |> Enum.into(Map.new)
-      {:error, exception, stacktrace} = Dict.get(dict, :error_info)
-      Honeybadger.notify(exception, context, stacktrace)
+      case Dict.get(dict, :error_info) do
+        {_kind, {exception, _stack}, stacktrace} ->
+          Honeybadger.notify(exception, context, stacktrace)
+        {_kind, exception, stacktrace} ->
+          Honeybadger.notify(exception, context, stacktrace)
+      end
     rescue
       ex ->
         error_type = Utils.strip_elixir_prefix(ex.__struct__)
