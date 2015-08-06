@@ -17,8 +17,8 @@ defmodule Honeybadger.PlugTest do
   end
 
   test "exceptions on a non-existant route are ignored" do
-    exception = %FunctionClauseError{arity: 4, 
-                                     function: :do_match, 
+    exception = %FunctionClauseError{arity: 4,
+                                     function: :do_match,
                                      module: Honeybadger.PlugTest.PlugApp}
 
     conn = conn(:get, "/not_found")
@@ -41,14 +41,14 @@ defmodule Honeybadger.PlugTest do
   test "build_cgi_data/1" do
     conn = conn(:get, "/bang")
     {_, remote_port} = conn.peer
-    cgi_data = %{"CONTENT_LENGTH" => [], 
-                  "ORIGINAL_FULLPATH" => "/bang", 
+    cgi_data = %{"CONTENT_LENGTH" => [],
+                  "ORIGINAL_FULLPATH" => "/bang",
                   "PATH_INFO" => "bang",
-                  "QUERY_STRING" => "", 
-                  "REMOTE_ADDR" => "127.0.0.1", 
+                  "QUERY_STRING" => "",
+                  "REMOTE_ADDR" => "127.0.0.1",
                   "REMOTE_PORT" => remote_port,
-                  "REQUEST_METHOD" => "GET", 
-                  "SCRIPT_NAME" => "", 
+                  "REQUEST_METHOD" => "GET",
+                  "SCRIPT_NAME" => "",
                   "SERVER_ADDR" => "127.0.0.1",
                   "SERVER_NAME" => Application.get_env(:honeybadger, :hostname),
                   "SERVER_PORT" => 80}
@@ -63,7 +63,7 @@ defmodule Honeybadger.PlugTest do
   test "header_to_rack_format/2" do
     header = {"content-type", "application/json"}
     rack_format = %{"HTTP_CONTENT_TYPE" => "application/json"}
-    
+
     assert rack_format == Honeybadger.Plug.header_to_rack_format(header, %{})
   end
 end
