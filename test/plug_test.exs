@@ -50,7 +50,7 @@ defmodule Honeybadger.PlugTest do
                   "REQUEST_METHOD" => "GET", 
                   "SCRIPT_NAME" => "", 
                   "SERVER_ADDR" => "127.0.0.1",
-                  "SERVER_NAME" => "rb", 
+                  "SERVER_NAME" => Application.get_env(:honeybadger, :hostname),
                   "SERVER_PORT" => 80}
 
     assert cgi_data == Honeybadger.Plug.build_cgi_data(conn)
