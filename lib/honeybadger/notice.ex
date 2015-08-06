@@ -18,23 +18,25 @@ defmodule Honeybadger.Notice do
               |> Dict.get(:plug_env, %{})
               |> Dict.merge(%{context: context})
 
-    %__MODULE__{error: error, request: request, notifier: notifier, server: server}
+    %__MODULE__{error: error, 
+                request: request, 
+                notifier: notifier, 
+                server: server}
   end
 
+  url = get_in(Honeybadger.Mixfile.project, [:package, :links, "GitHub"])
+  version = Honeybadger.Mixfile.project[:version]
+
   defp notifier do
-    %{
-      name: "Honeybadger Elixir Notifier",
-      url: get_in(Honeybadger.Mixfile.project, [:package, :links, "GitHub"]),
-      version: Honeybadger.Mixfile.project[:version]
-    }
+    %{name: "Honeybadger Elixir Notifier",
+      url: unquote(url),
+      version: unquote(version)}
   end
 
   defp server do
-    %{
-      environment_name: Mix.env,
+    %{environment_name: Mix.env,
       hostname: hostname,
-      project_root: project_root
-    }
+      project_root: project_root}
   end
 
   defp hostname do
