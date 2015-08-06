@@ -1,4 +1,4 @@
-# honeybadger-elixir
+# honeybadger-elixir [![Build Status](https://travis-ci.org/honeybadger-io/honeybadger-elixir.svg?branch=master)](https://travis-ci.org/honeybadger-io/honeybadger-elixir)
 
 Elixir Plug, Logger and client for the :zap: [Honeybadger error notifier](https://www.honeybadger.io/).
 
