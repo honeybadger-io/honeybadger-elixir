@@ -12,9 +12,11 @@ defmodule Honeybadger.Plug do
         nil
       end
 
-      # Exceptions raised on non-existant Phoenix routes are ignored
-      defp handle_errors(conn, %{reason: %Phoenix.Router.NoRouteError{}} = ex) do
-        nil
+      if :code.is_loaded(Phoenix) do
+        # Exceptions raised on non-existant Phoenix routes are ignored
+        defp handle_errors(conn, %{reason: %Phoenix.Router.NoRouteError{}} = ex) do
+          nil
+        end
       end
 
       defp handle_errors(conn, %{kind: _kind, reason: exception, stack: stack}) do
