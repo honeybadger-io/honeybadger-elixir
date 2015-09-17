@@ -114,11 +114,10 @@ defmodule Honeybadger do
     macro_notify(exception, context, stacktrace)
   end
 
-  @mix_env Mix.env
   defp macro_notify(exception, context, stacktrace) do
     exclude_envs = Application.get_env(:honeybadger, :exclude_envs, [:dev, :test])
 
-    case @mix_env in exclude_envs do
+    case Mix.env in exclude_envs do
       false ->
         quote do
           Honeybadger.do_notify(unquote(exception), unquote(context), unquote(stacktrace))
