@@ -1,12 +1,12 @@
 defmodule Honeybadger.Mixfile do
   use Mix.Project
-
+  @mix_env Mix.env
   def project do
     [app: :honeybadger,
      version: "0.1.2",
      elixir: "~> 1.0",
-     build_embedded: Mix.env == :prod,
-     start_permanent: Mix.env == :prod,
+     build_embedded: @mix_env == :prod,
+     start_permanent: @mix_env == :prod,
      deps: deps,
      package: package,
      name: "Honeybadger",

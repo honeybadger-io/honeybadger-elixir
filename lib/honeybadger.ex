@@ -6,14 +6,14 @@ defmodule Honeybadger do
 
   @moduledoc """
     This module contains the notify macro and context function you can use in
-    your applications. 
-    
+    your applications.
+
     ### Configuring
     By default the HONEYBADGER_API_KEY environment variable is used to find
     your API key for Honeybadger. You can also manually set your API key by
     configuring the :honeybadger application. You can see the default
     configuration in the default_config/0 private function at the bottom of
-    this file. 
+    this file.
 
         config :honeybadger,
           api_key: "mysupersecretkey",
@@ -40,7 +40,7 @@ defmodule Honeybadger do
     Honeybadger API when/if an exception occurs in that process. Do keep in
     mind the process dictionary is used for retrieving this context so try not
     to put large data structures in the context.
-        
+
         Honeybadger.context(user_id: 1, account: "My Favorite Customer")
         Honeybadger.context(%{user_id: 2, account: "That Needy Customer")
 
@@ -87,7 +87,7 @@ defmodule Honeybadger do
     Honeybadger client's dependencies. You'll likely never need to call this
     function yourself.
   """
-  def start(_type, _opts) do 
+  def start(_type, _opts) do
     app_config = Application.get_all_env(:honeybadger)
     config = Keyword.merge(default_config, app_config)
 
@@ -114,10 +114,11 @@ defmodule Honeybadger do
     macro_notify(exception, context, stacktrace)
   end
 
+  @mix_env Mix.env
   defp macro_notify(exception, context, stacktrace) do
     exclude_envs = Application.get_env(:honeybadger, :exclude_envs, [:dev, :test])
-    
-    case Mix.env in exclude_envs do
+
+    case @mix_env in exclude_envs do
       false ->
         quote do
           Honeybadger.do_notify(unquote(exception), unquote(context), unquote(stacktrace))

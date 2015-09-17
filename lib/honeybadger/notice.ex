@@ -18,9 +18,9 @@ defmodule Honeybadger.Notice do
               |> Dict.get(:plug_env, %{})
               |> Dict.merge(%{context: context})
 
-    %__MODULE__{error: error, 
-                request: request, 
-                notifier: notifier, 
+    %__MODULE__{error: error,
+                request: request,
+                notifier: notifier,
                 server: server}
   end
 
@@ -33,8 +33,9 @@ defmodule Honeybadger.Notice do
       version: unquote(version)}
   end
 
+  @mix_env Mix.env
   defp server do
-    %{environment_name: Mix.env,
+    %{environment_name: @mix_env,
       hostname: hostname,
       project_root: project_root}
   end
