@@ -1,5 +1,6 @@
 defmodule Honeybadger.Mixfile do
   use Mix.Project
+
   def project do
     [app: :honeybadger,
      version: "0.1.2",
