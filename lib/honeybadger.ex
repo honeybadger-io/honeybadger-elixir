@@ -1,7 +1,8 @@
 defmodule Honeybadger do
+  use Application
   alias Honeybadger.Backtrace
+  alias Honeybadger.Client
   alias Honeybadger.Notice
-  alias HTTPoison, as: HTTP
   alias Poison, as: JSON
 
   defmodule MissingEnvironmentNameError do
@@ -102,6 +103,8 @@ defmodule Honeybadger do
     function yourself.
   """
   def start(_type, _opts) do
+    import Supervisor.Spec
+
     require_environment_name!
 
     app_config = Application.get_all_env(:honeybadger)
@@ -112,7 +115,7 @@ defmodule Honeybadger do
       :error_logger.add_report_handler(Honeybadger.Logger)
     end
 
-    {Application.ensure_started(:httpoison), self}
+    Honeybadger.Metrics.Supervisor.start_link
   end
 
   defmacro notify(exception) do
@@ -148,17 +151,10 @@ defmodule Honeybadger do
   end
 
   def do_notify(exception, %{context: _} = metadata, stacktrace) do
+    client = Client.new
     backtrace = Backtrace.from_stacktrace(stacktrace)
     notice = Notice.new(exception, metadata, backtrace)
-    {:ok, body} = JSON.encode(notice)
-
-    api_url = Application.get_env(:honeybadger, :origin) <> "/v1/notices"
-    api_key = Application.get_env(:honeybadger, :api_key)
-    headers = [{"Accept", "application/json"},
-               {"Content-Type", "application/json"},
-               {"X-API-Key", api_key}]
-
-    HTTP.post(api_url, body, headers)
+    Client.send_notice(client, notice)
   end
 
   def do_notify(exception, metadata, stacktrace) do

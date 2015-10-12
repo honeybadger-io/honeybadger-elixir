@@ -7,6 +7,22 @@ defmodule Honeybadger.Plug do
       use Plug.ErrorHandler
       require Honeybadger
 
+      def call(conn, opts) do
+        try do
+          before_response = :erlang.monotonic_time
+
+          conn = super(conn, opts)
+
+          after_response = :erlang.monotonic_time
+          response_time = :erlang.convert_time_unit(after_response - before_response, :nano_seconds, :milli_seconds)
+          Honeybadger.Metrics.Server.timing(response_time)
+          conn
+        catch
+          kind, reason ->
+            Plug.ErrorHandler.__catch__(conn, kind, reason, &handle_errors/2)
+        end
+      end
+
       # Exceptions raised on non-existant Plug routes are ignored
       defp handle_errors(conn, %{reason: %FunctionClauseError{function: :do_match}} = ex) do
         nil
