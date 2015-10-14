@@ -159,6 +159,6 @@ defmodule Honeybadger do
       hostname: :inet.gethostname |> elem(1) |> List.to_string,
       origin: "https://api.honeybadger.io",
       project_root: System.cwd,
-      use_logger: false]
+      use_logger: true]
   end
 end
