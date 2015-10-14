@@ -4,6 +4,7 @@ defmodule Honeybadger.Notice do
   defstruct [:notifier, :server, :error, :request]
 
   def new(exception, metadata \\ %{}, backtrace) do
+    exception = Exception.normalize(:error, exception)
     exception_mod = exception.__struct__
 
     error = %{

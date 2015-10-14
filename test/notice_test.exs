@@ -52,4 +52,9 @@ defmodule Honeybadger.NoticeTest do
     assert %{user_id: 1, account_id: 1} == request[:context]
     refute [:test] == request[:tags]
   end
+
+  test "erlang error normalization", _ do
+    %{error: %{class: class}} = Notice.new(:badarg, %{}, nil)
+    assert class == "ArgumentError"
+  end
 end
