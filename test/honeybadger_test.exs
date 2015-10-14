@@ -29,6 +29,7 @@ defmodule HoneybadgerTest do
     end
 
     Sample.notify
+    :timer.sleep 250
 
     assert :meck.called(HTTP, :post, [url, :_, headers])
   after

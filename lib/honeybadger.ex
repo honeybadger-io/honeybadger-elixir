@@ -120,7 +120,9 @@ defmodule Honeybadger do
     case Mix.env in exclude_envs do
       false ->
         quote do
-          Honeybadger.do_notify(unquote(exception), unquote(context), unquote(stacktrace))
+          Task.start fn ->
+            Honeybadger.do_notify(unquote(exception), unquote(context), unquote(stacktrace))
+          end
         end
       _ ->
         :ok
