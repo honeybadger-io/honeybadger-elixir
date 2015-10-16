@@ -117,7 +117,7 @@ Here are all of the options you can pass in the keyword list:
 |--------------|---------------------------------------------------------------------------|---------|
 | api_key      | Your application's Honeybadger API key                                    | System.get_env("HONEYBADGER_API_KEY"))` |
 | app          | Name of your app's OTP Application as an atom                             | Mix.Project.config[:app] |
-| use_logger   | Enable the Honeybadger Logger for handling errors outside of web requests | false |
+| use_logger   | Enable the Honeybadger Logger for handling errors outside of web requests | true |
 | exclude_envs | Environments that you want to disable Honeybadger notifications           | [:dev, :test] |
 | hostname     | Hostname of the system your application is running on                     | :inet.gethostname |
 | origin       | URL for the Honeybadger API                                               | "https://api.honeybadger.io" |
