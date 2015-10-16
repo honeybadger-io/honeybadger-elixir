@@ -25,7 +25,7 @@ defmodule Honeybadger.Backtrace do
   end
 
   defp get_context(app, app) when app != nil, do: "app"
-  defp get_context(_app, app),                do: "all"
+  defp get_context(_app1, _app2),             do: "all"
 
   defp convert_string(""), do: nil
   defp convert_string(string) when is_binary(string), do: string
