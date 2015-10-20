@@ -16,12 +16,8 @@ defmodule Honeybadger.Logger do
     {:ok, state}
   end
 
-  def handle_event({level, _gl, _event}, state)
-  when level != :error_report do
-    {:ok, state}
-  end
-
-  def handle_event({error, _gl, {_pid, _type, [message | _]}}, state) do
+  def handle_event({:error_report, _gl, {_pid, _type, [message | _]}}, state) 
+  when is_list(message) do
     try do
       dict = Dict.take(message, [:error_info, :dictionary])
       context = Dict.take(dict[:dictionary], [:honeybadger_context]) |> Enum.into(Map.new)
@@ -39,6 +35,10 @@ defmodule Honeybadger.Logger do
         Logger.warn(message)
     end
 
+    {:ok, state}
+  end
+
+  def handle_event({_level, _gl, _event}, state) do
     {:ok, state}
   end
 end
