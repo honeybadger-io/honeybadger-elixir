@@ -22,7 +22,7 @@ defmodule Honeybadger.Logger do
       dict = Dict.take(message, [:error_info, :dictionary])
       context = Dict.take(dict[:dictionary], [:honeybadger_context]) |> Enum.into(Map.new)
       case Dict.get(dict, :error_info) do
-        {_kind, {exception, _stack}, stacktrace} ->
+        {_kind, {exception, stacktrace}, _stack} ->
           Honeybadger.notify(exception, context, stacktrace)
         {_kind, exception, stacktrace} ->
           Honeybadger.notify(exception, context, stacktrace)
