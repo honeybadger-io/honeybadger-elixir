@@ -12,7 +12,7 @@ Elixir Plug, Logger and client for the :zap: [Honeybadger error notifier](https:
 
 ### 1. Install the package
 
-Add the Honeybadger package to `deps/1` and `application/1` in your
+Add the Honeybadger package to `deps/0` and `application/0` in your
 application's `mix.exs` file and run `mix do deps.get, deps.compile`
 
 ```elixir
