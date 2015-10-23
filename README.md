@@ -4,11 +4,11 @@
 
 Elixir Plug, Logger and client for the :zap: [Honeybadger error notifier](https://www.honeybadger.io/).
 
+## Getting Started
+
 [<img src="http://docs-honeybadger.s3.amazonaws.com/elixirsips.jpg" alt="ElixirSips" width=600/>](https://josh-rubyist.wistia.com/medias/pggpan0f9j)
 
 [Watch our screencast](https://josh-rubyist.wistia.com/medias/pggpan0f9j) by Josh Adams of [ElixirSips](http://elixirsips.com/)!
-
-## Getting Started
 
 ### 1. Install the package
 
