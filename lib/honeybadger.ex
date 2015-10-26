@@ -117,7 +117,7 @@ defmodule Honeybadger do
   defp macro_notify(exception, context, stacktrace) do
     exclude_envs = Application.get_env(:honeybadger, :exclude_envs, [:dev, :test])
 
-    case Mix.env in exclude_envs do
+    case Application.get_env(:honeybadger, :environment_name) in exclude_envs do
       false ->
         quote do
           Task.start fn ->
@@ -161,6 +161,7 @@ defmodule Honeybadger do
       hostname: :inet.gethostname |> elem(1) |> List.to_string,
       origin: "https://api.honeybadger.io",
       project_root: System.cwd,
-      use_logger: true]
+      use_logger: true,
+      environment_name: nil]
   end
 end

@@ -125,6 +125,7 @@ Here are all of the options you can pass in the keyword list:
 | hostname     | Hostname of the system your application is running on                     | :inet.gethostname |
 | origin       | URL for the Honeybadger API                                               | "https://api.honeybadger.io" |
 | project_root | Directory root for where your application is running                      | System.cwd |
+| environment_name | The name of the environment your app is running in.                   | Mix.env |
 
 ## Public Interface
 

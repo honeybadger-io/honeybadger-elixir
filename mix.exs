@@ -18,6 +18,7 @@ defmodule Honeybadger.Mixfile do
 
   def application do
     [applications: [:httpoison, :logger],
+     env: [environment_name: Mix.env],
      mod: {Honeybadger, []}]
   end
 
