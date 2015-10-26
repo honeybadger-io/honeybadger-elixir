@@ -34,6 +34,14 @@ defmodule Honeybadger.NoticeTest do
     assert System.cwd == server[:project_root]
   end
 
+  test "server information config", _ do
+    before = Application.get_env(:honeybadger, :environment_name)
+    Application.put_env(:honeybadger, :environment_name, "foo")
+    %Notice{server: server} = Notice.new(%RuntimeError{message: "Oops"}, %{}, [])
+    Application.put_env(:honeybadger, :environment_name, before)
+    assert "foo" == server[:environment_name]
+  end
+
   test "error information", %{notice: %Notice{error: error}} do
     assert "RuntimeError" == error[:class]
     assert "Oops"         == error[:message]
