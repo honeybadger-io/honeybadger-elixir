@@ -34,6 +34,15 @@ defmodule Honeybadger.NoticeTest do
     assert System.cwd == server[:project_root]
   end
 
+  test "server env from config" do
+    Application.put_env(:honeybadger, :mix_env, :prod)
+    server = Notice.server
+
+    assert :prod      == server[:environment_name]
+
+    Application.put_env(:honeybadger, :mix_env, Mix.env)
+  end
+
   test "error information", %{notice: %Notice{error: error}} do
     assert "RuntimeError" == error[:class]
     assert "Oops"         == error[:message]

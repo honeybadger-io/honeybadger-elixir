@@ -17,7 +17,7 @@ defmodule Honeybadger.Mixfile do
   end
 
   def application do
-    [applications: [:httpoison, :logger],
+    [applications: [:httpoison, :logger, :poison],
      mod: {Honeybadger, []}]
   end
 
