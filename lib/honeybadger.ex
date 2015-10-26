@@ -1,4 +1,5 @@
 defmodule Honeybadger do
+  alias Honeybadger.Utils
   alias Honeybadger.Backtrace
   alias Honeybadger.Notice
   alias HTTPoison, as: HTTP
@@ -118,7 +119,7 @@ defmodule Honeybadger do
   defp macro_notify(exception, context, stacktrace) do
     exclude_envs = Application.get_env(:honeybadger, :exclude_envs, [:dev, :test])
 
-    case Honeybadger.Utils.environment_name in exclude_envs do
+    case Utils.environment_name in exclude_envs do
       false ->
         quote do
           Task.start fn ->
@@ -163,6 +164,6 @@ defmodule Honeybadger do
       origin: "https://api.honeybadger.io",
       project_root: System.cwd,
       use_logger: true,
-      mix_env: Mix.env]
+      mix_env: Utils.environment_name]
   end
 end
