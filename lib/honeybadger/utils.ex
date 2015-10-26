@@ -14,4 +14,17 @@ defmodule Honeybadger.Utils do
     |> tl
     |> Enum.join(".")
   end
+
+  @doc """
+  Resolve environment name from Application configuration or from Mix.env
+  """
+  def environment_name do
+    case Application.get_env(:honeybadger, :mix_env, nil) do
+      nil ->
+        Mix.env
+      name ->
+        name
+    end
+  end
+
 end

@@ -34,9 +34,8 @@ defmodule Honeybadger.Notice do
       version: unquote(version)}
   end
 
-  @mix_env Mix.env
-  defp server do
-    %{environment_name: @mix_env,
+  def server do
+    %{environment_name: Utils.environment_name,
       hostname: hostname,
       project_root: project_root}
   end
