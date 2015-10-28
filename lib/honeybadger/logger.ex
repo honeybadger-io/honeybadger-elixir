@@ -20,7 +20,8 @@ defmodule Honeybadger.Logger do
   when is_list(message) do
     try do
       error_info = message[:error_info]
-      context = message[:dictionary]
+      context = get_in(message, [:dictionary, :honeybadger_context])
+      context = %{context: context}
 
       case error_info do
         {_kind, {exception, stacktrace}, _stack} when is_list(stacktrace) ->

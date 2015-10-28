@@ -106,22 +106,22 @@ defmodule Honeybadger do
     macro_notify(exception, {:%{}, [], []}, [])
   end
 
-  defmacro notify(exception, context) do
-    macro_notify(exception, context, [])
+  defmacro notify(exception, metadata) do
+    macro_notify(exception, metadata, [])
   end
 
-  defmacro notify(exception, context, stacktrace) do
-    macro_notify(exception, context, stacktrace)
+  defmacro notify(exception, metadata, stacktrace) do
+    macro_notify(exception, metadata, stacktrace)
   end
 
-  defp macro_notify(exception, context, stacktrace) do
+  defp macro_notify(exception, metadata, stacktrace) do
     exclude_envs = Application.get_env(:honeybadger, :exclude_envs, [:dev, :test])
 
     case Application.get_env(:honeybadger, :environment_name) in exclude_envs do
       false ->
         quote do
           Task.start fn ->
-            Honeybadger.do_notify(unquote(exception), unquote(context), unquote(stacktrace))
+            Honeybadger.do_notify(unquote(exception), unquote(metadata), unquote(stacktrace))
           end
         end
       _ ->
@@ -129,13 +129,14 @@ defmodule Honeybadger do
     end
   end
 
-  def do_notify(exception, context, stacktrace) do
-    if Enum.count(stacktrace) == 0 do
+  def do_notify(exception, metadata, []) do
       {:current_stacktrace, stacktrace} = Process.info(self, :current_stacktrace)
-    end
+      do_notify(exception, metadata, stacktrace)
+  end
 
+  def do_notify(exception, %{context: _} = metadata, stacktrace) do
     backtrace = Backtrace.from_stacktrace(stacktrace)
-    notice = Notice.new(exception, context, backtrace)
+    notice = Notice.new(exception, metadata, backtrace)
     {:ok, body} = JSON.encode(notice)
 
     api_url = Application.get_env(:honeybadger, :origin) <> "/v1/notices"
@@ -145,6 +146,11 @@ defmodule Honeybadger do
                {"X-API-Key", api_key}]
 
     HTTP.post(api_url, body, headers)
+  end
+
+  def do_notify(exception, metadata, stacktrace) do
+    metadata = %{context: metadata}
+    do_notify(exception, metadata, stacktrace)
   end
 
   def context do
