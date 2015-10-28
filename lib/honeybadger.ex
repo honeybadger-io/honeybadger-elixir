@@ -153,6 +153,7 @@ defmodule Honeybadger do
 
   def context(dict) do
     Process.put(@context, Dict.merge(context, dict))
+    context
   end
 
   defp default_config do
