@@ -1,6 +1,6 @@
 defmodule Honeybadger.BacktraceTest do
   alias Honeybadger.Backtrace
-  use ExUnit.Case
+  use ExUnit.Case, async: true
 
   test "converting a stacktrace to the format Honeybadger expects" do
     stacktrace = [{:erlang, :some_func, [], []},

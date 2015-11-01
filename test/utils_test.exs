@@ -1,5 +1,5 @@
 defmodule Honeybadger.UtilsTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
   import Honeybadger.Utils
 
   test "strip_elixir_prefix removes Elixir from a module name" do

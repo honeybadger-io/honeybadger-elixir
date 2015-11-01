@@ -1,7 +1,7 @@
 defmodule Honeybadger.NoticeTest do
   alias Honeybadger.Backtrace
   alias Honeybadger.Notice
-  use ExUnit.Case
+  use ExUnit.Case, async: true
 
   setup do
     exception = %RuntimeError{message: "Oops"}
