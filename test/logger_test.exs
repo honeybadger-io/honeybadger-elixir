@@ -47,14 +47,14 @@ defmodule Honeybadger.LoggerTest do
     Enum.each(message_types, fn(type) ->
       :meck.expect(HTTP, :post, fn(_ex, _c, _s) -> %HTTP.Response{} end)
       apply(:error_logger, type, ["Ignore me"])
-      :timer.sleep 100
+      :timer.sleep 250
       refute :meck.called(HTTP, :post, [:_, :_, :_])
     end)
 
     :meck.unload(HTTP)
   end
 
-  test "logging erlang exceptions" do
+  test "logging exceptions from special processes" do
     :meck.expect(HTTP, :post, fn(_ex, _c, _s) -> %HTTP.Response{} end)
 
     :proc_lib.spawn(fn ->
@@ -65,4 +65,28 @@ defmodule Honeybadger.LoggerTest do
     assert :meck.called(HTTP, :post, [:_, :_, :_])
     :meck.unload(HTTP)
   end
+
+  test "logging exceptions from Tasks" do
+    :meck.expect(HTTP, :post, fn(_ex, _c, _s) -> %HTTP.Response{} end)
+
+    Task.start(fn ->
+      Float.parse("12.345e308")
+    end)
+    :timer.sleep 250
+
+    assert :meck.called(HTTP, :post, [:_, :_, :_])
+    :meck.unload(HTTP)
+  end
+
+  test "logging exceptions from GenServers" do
+    :meck.expect(HTTP, :post, fn(_ex, _c, _s) -> %HTTP.Response{} end)
+
+    {:ok, pid} = ErrorServer.start
+    GenServer.cast(pid, :fail)
+    :timer.sleep 250
+
+    assert :meck.called(HTTP, :post, [:_, :_, :_])
+    :meck.unload(HTTP)
+  end
+
 end
