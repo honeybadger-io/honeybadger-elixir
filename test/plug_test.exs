@@ -42,16 +42,16 @@ defmodule Honeybadger.PlugTest do
     conn = conn(:get, "/bang")
     {_, remote_port} = conn.peer
     cgi_data = %{"CONTENT_LENGTH" => [],
-                  "ORIGINAL_FULLPATH" => "/bang",
-                  "PATH_INFO" => "bang",
-                  "QUERY_STRING" => "",
-                  "REMOTE_ADDR" => "127.0.0.1",
-                  "REMOTE_PORT" => remote_port,
-                  "REQUEST_METHOD" => "GET",
-                  "SCRIPT_NAME" => "",
-                  "SERVER_ADDR" => "127.0.0.1",
-                  "SERVER_NAME" => Application.get_env(:honeybadger, :hostname),
-                  "SERVER_PORT" => 80}
+                 "ORIGINAL_FULLPATH" => "/bang",
+                 "PATH_INFO" => "bang",
+                 "QUERY_STRING" => "",
+                 "REMOTE_ADDR" => "127.0.0.1",
+                 "REMOTE_PORT" => remote_port,
+                 "REQUEST_METHOD" => "GET",
+                 "SCRIPT_NAME" => "",
+                 "SERVER_ADDR" => "127.0.0.1",
+                 "SERVER_NAME" => Application.get_env(:honeybadger, :hostname),
+                 "SERVER_PORT" => 80}
 
     assert cgi_data == Honeybadger.Plug.build_cgi_data(conn)
   end
