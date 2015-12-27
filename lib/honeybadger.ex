@@ -4,6 +4,17 @@ defmodule Honeybadger do
   alias HTTPoison, as: HTTP
   alias Poison, as: JSON
 
+  defmodule MissingEnvironmentNameError do
+    defexception message: """
+      The environment_name setting is required so that we can report the
+      correct environment name to Honeybadger. Please configure
+      environment_name in your config.exs and environment specific config files
+      to have accurate reporting of errors.
+
+      config :honeybadger, :environment_name, :dev
+    """
+  end
+
   @moduledoc """
     This module contains the notify macro and context function you can use in
     your applications.
@@ -91,9 +102,8 @@ defmodule Honeybadger do
     app_config = Application.get_all_env(:honeybadger)
     config = Keyword.merge(default_config, app_config)
 
-    Enum.map config, fn({key, value}) ->
-      Application.put_env(:honeybadger, key, value)
-    end
+    require_environment_name!(config)
+    update_application_config!(config)
 
     if config[:use_logger] do
       :error_logger.add_report_handler(Honeybadger.Logger)
@@ -168,7 +178,18 @@ defmodule Honeybadger do
       hostname: :inet.gethostname |> elem(1) |> List.to_string,
       origin: "https://api.honeybadger.io",
       project_root: System.cwd,
-      use_logger: true,
-      environment_name: nil]
+      use_logger: true]
+  end
+
+  defp require_environment_name!(config) do
+    if is_nil(config[:environment_name]) do
+      raise MissingEnvironmentNameError
+    end
+  end
+
+  defp update_application_config!(config) do
+    Enum.map(config, fn({key, value}) ->
+      Application.put_env(:honeybadger, key, value)
+    end)
   end
 end
