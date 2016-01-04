@@ -6,18 +6,13 @@ defmodule Honeybadger.Notice do
   def new(exception, metadata \\ %{}, backtrace) do
     exception = Exception.normalize(:error, exception)
     exception_mod = exception.__struct__
-
     error = %{
       class: Utils.strip_elixir_prefix(exception_mod),
       message: exception_mod.message(exception),
       tags: Dict.get(metadata, :tags, []),
       backtrace: backtrace
     }
-
-    context = Dict.get(metadata, :honeybadger_context, %{}) |> Enum.into(Map.new)
-    request = metadata
-              |> Dict.get(:plug_env, %{})
-              |> Dict.merge(%{context: context})
+    request = Dict.take(metadata, [:plug_env, :context])
 
     %__MODULE__{error: error,
                 request: request,

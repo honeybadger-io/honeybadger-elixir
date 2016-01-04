@@ -21,7 +21,7 @@ defmodule Honeybadger.Plug do
 
       defp handle_errors(conn, %{kind: _kind, reason: exception, stack: stack}) do
         metadata = %{plug_env: build_plug_env(conn, __MODULE__), 
-                     honeybadger_context: Honeybadger.context()}
+                     context: Honeybadger.context()}
         Honeybadger.notify(exception, metadata, stack)
       end
     end

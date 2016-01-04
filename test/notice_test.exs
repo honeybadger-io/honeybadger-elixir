@@ -11,7 +11,7 @@ defmodule Honeybadger.NoticeTest do
       action: :show,
       params: %{page: 1}
     }
-    metadata = %{plug_env: plug_env, tags: [:test], honeybadger_context: %{user_id: 1, account_id: 1}}
+    metadata = %{plug_env: plug_env, tags: [:test], context: %{user_id: 1, account_id: 1}}
     stack = [{Kernel, :+, [1], [file: 'lib/elixir/lib/kernel.ex', line: 321]}]
     backtrace = Backtrace.from_stacktrace(stack)
 
@@ -51,10 +51,12 @@ defmodule Honeybadger.NoticeTest do
 
   test "request information", %{notice: %Notice{request: request}} do
     assert %{
-      action: :show,
-      component: SomeApp.PageController,
-      params: %{page: 1},
-      url: "/pages/1"
+      plug_env: %{
+        action: :show,
+        component: SomeApp.PageController,
+        params: %{page: 1},
+        url: "/pages/1"
+      }
     } == Dict.drop(request, [:context])
 
     assert %{user_id: 1, account_id: 1} == request[:context]

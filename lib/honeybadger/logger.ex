@@ -19,9 +19,11 @@ defmodule Honeybadger.Logger do
   def handle_event({:error_report, _gl, {_pid, _type, [message | _]}}, state) 
   when is_list(message) do
     try do
-      dict = Dict.take(message, [:error_info, :dictionary])
-      context = Dict.take(dict[:dictionary], [:honeybadger_context]) |> Enum.into(Map.new)
-      case Dict.get(dict, :error_info) do
+      error_info = message[:error_info]
+      context = get_in(message, [:dictionary, :honeybadger_context])
+      context = %{context: context}
+
+      case error_info do
         {_kind, {exception, stacktrace}, _stack} when is_list(stacktrace) ->
           Honeybadger.notify(exception, context, stacktrace)
         {_kind, exception, stacktrace} ->
