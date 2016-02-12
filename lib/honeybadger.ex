@@ -99,10 +99,9 @@ defmodule Honeybadger do
     function yourself.
   """
   def start(_type, _opts) do
-    app_config = Application.get_all_env(:honeybadger)
+    app_config = Application.get_all_env(:honeybadger) |> get_and_set_environment_name!
     config = Keyword.merge(default_config, app_config)
 
-    require_environment_name!(config)
     update_application_config!(config)
 
     if config[:use_logger] do
@@ -181,14 +180,22 @@ defmodule Honeybadger do
       use_logger: true]
   end
 
-  defp require_environment_name!(config) do
-    if is_nil(config[:environment_name]) do
-      raise MissingEnvironmentNameError
+  defp get_and_set_environment_name!(config) do
+    case System.get_env("MIX_ENV") do
+      nil ->
+        if is_nil(config[:environment_name]) do
+          raise MissingEnvironmentNameError
+        else
+          config
+        end
+
+      env ->
+        Keyword.put(config, :environment_name, env)
     end
   end
 
   defp update_application_config!(config) do
-    Enum.map(config, fn({key, value}) ->
+    Enum.each(config, fn({key, value}) ->
       Application.put_env(:honeybadger, key, value)
     end)
   end
