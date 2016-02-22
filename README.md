@@ -37,12 +37,21 @@ config :honeybadger,
 ```
 
 We also need to set the name of the environment for each environment. This
-ensures that we can accurately report the environment that an error occurs in. You can add something like the following to each of your `#{env}.exs` files:
+ensures that we can accurately report the environment that an error occurs in.
+You can add something like the following to each of your `#{env}.exs` files:
 
 ```elixir
 config :honeybadger,
   environment_name: :dev
 ```
+
+If `environment_name` is not set we will fall back to the `MIX_ENV` environment
+variable. If neither `MIX_ENV` or the `environment_name` config are set then
+you will get an exception informing you to set one of them. It is preferred
+that you set `environment_name` in your `config.exs` files for each
+environment. This ensures that we can give you accurate environment information
+even during compile time. Explicitly setting the `environment_name` config
+takes higher precedence over the `MIX_ENV` environment variable.
 
 ### 3. Enable error reporting
 
