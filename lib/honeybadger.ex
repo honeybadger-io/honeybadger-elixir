@@ -28,6 +28,7 @@ defmodule Honeybadger do
 
         config :honeybadger,
           api_key: "mysupersecretkey",
+          environment_name: :prod,
           app: :my_app_name,
           exclude_envs: [:dev, :test],
           hostname: "myserver.domain.com",
@@ -37,7 +38,7 @@ defmodule Honeybadger do
 
     ### Notifying
     Honeybadger.notify is a macro so that it can be wiped away in environments
-    that you don't need error tracking in such as dev and test. If you use the
+    that you don't need exception monitoring in such as dev and test. If you use the
     Plug and Logger included in this library you won't need to use
     Honeybadger.notify very often. Here is an example:
 
@@ -85,10 +86,12 @@ defmodule Honeybadger do
 
 
     ### Using the error logger
-    To use the logger all you need to do is set the `use_logger` configuration
-    option to true. This will automatically receive any error reports for SASL
-    compliant processes such as GenServers, GenEvents, Agents, Tasks and any
-    process spawned using `proc_lib`.
+    By default the logger is enabled. The logger will
+    automatically receive any error reports for SASL compliant
+    processes such as GenServers, GenEvents, Agents, Tasks and
+    any process spawned using `proc_lib`. You can disable the
+    logger by setting `use_logger` to false in your
+    Honeybadger config.
   """
 
   @context :honeybadger_context
@@ -99,9 +102,10 @@ defmodule Honeybadger do
     function yourself.
   """
   def start(_type, _opts) do
-    app_config = Application.get_all_env(:honeybadger) |> get_and_set_environment_name!
-    config = Keyword.merge(default_config, app_config)
+    require_environment_name!
 
+    app_config = Application.get_all_env(:honeybadger)
+    config = Keyword.merge(default_config, app_config)
     update_application_config!(config)
 
     if config[:use_logger] do
@@ -180,17 +184,14 @@ defmodule Honeybadger do
       use_logger: true]
   end
 
-  defp get_and_set_environment_name!(config) do
-    case System.get_env("MIX_ENV") do
-      nil ->
-        if is_nil(config[:environment_name]) do
+  defp require_environment_name! do
+    if is_nil(Application.get_env(:honeybadger, :environment_name)) do
+      case System.get_env("MIX_ENV") do
+        nil ->
           raise MissingEnvironmentNameError
-        else
-          config
-        end
-
-      env ->
-        Keyword.put(config, :environment_name, env)
+        env ->
+          Application.put_env(:honeybadger, :environment_name, String.to_atom(env))
+      end
     end
   end
 
