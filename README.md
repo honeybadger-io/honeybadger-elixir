@@ -25,14 +25,33 @@ defp deps do
 end
 ```
 
-### 2. Set your API key
+### 2. Set your API key and environment name
 
-By default the environment variable `HONEYBADGER_API_KEY` will be used to find your API key to the Honeybadger API. If you would like to specify your key or any other configuration options a different way, you can do so in `config.exs`:
+By default the environment variable `HONEYBADGER_API_KEY` will be used to find
+your API key to the Honeybadger API. If you would like to specify your key or
+any other configuration options a different way, you can do so in `config.exs`:
 
 ```elixir
 config :honeybadger,
   api_key: "sup3rs3cr3tk3y"
 ```
+
+We also need to set the name of the environment for each environment. This
+ensures that we can accurately report the environment that an error occurs in.
+You can add something like the following to each of your `#{env}.exs` files:
+
+```elixir
+config :honeybadger,
+  environment_name: :dev
+```
+
+If `environment_name` is not set we will fall back to the `MIX_ENV` environment
+variable. If neither `MIX_ENV` or the `environment_name` config are set then
+you will get an exception informing you to set one of them. It is preferred
+that you set `environment_name` in your `config.exs` files for each
+environment. This ensures that we can give you accurate environment information
+even during compile time. Explicitly setting the `environment_name` config
+takes higher precedence over the `MIX_ENV` environment variable.
 
 ### 3. Enable error reporting
 
@@ -111,7 +130,8 @@ You can set configuration options in `config.exs`. It looks like this:
 
 ```elixir
 config :honeybadger,
-  api_key: "sup3rs3cr3tk3y"
+  api_key: "sup3rs3cr3tk3y",
+  environment_name: :prod
 ```
 
 Here are all of the options you can pass in the keyword list:
@@ -119,13 +139,13 @@ Here are all of the options you can pass in the keyword list:
 | Name         | Description                                                               | Default |
 |--------------|---------------------------------------------------------------------------|---------|
 | api_key      | Your application's Honeybadger API key                                    | System.get_env("HONEYBADGER_API_KEY"))` |
+| environment_name | (required) The name of the environment your app is running in.                   | nil |
 | app          | Name of your app's OTP Application as an atom                             | Mix.Project.config[:app] |
 | use_logger   | Enable the Honeybadger Logger for handling errors outside of web requests | true |
 | exclude_envs | Environments that you want to disable Honeybadger notifications           | [:dev, :test] |
 | hostname     | Hostname of the system your application is running on                     | :inet.gethostname |
 | origin       | URL for the Honeybadger API                                               | "https://api.honeybadger.io" |
 | project_root | Directory root for where your application is running                      | System.cwd |
-| environment_name | The name of the environment your app is running in.                   | Mix.env |
 
 ## Public Interface
 

@@ -4,6 +4,17 @@ defmodule Honeybadger do
   alias HTTPoison, as: HTTP
   alias Poison, as: JSON
 
+  defmodule MissingEnvironmentNameError do
+    defexception message: """
+      The environment_name setting is required so that we can report the
+      correct environment name to Honeybadger. Please configure
+      environment_name in your config.exs and environment specific config files
+      to have accurate reporting of errors.
+
+      config :honeybadger, :environment_name, :dev
+    """
+  end
+
   @moduledoc """
     This module contains the notify macro and context function you can use in
     your applications.
@@ -17,6 +28,7 @@ defmodule Honeybadger do
 
         config :honeybadger,
           api_key: "mysupersecretkey",
+          environment_name: :prod,
           app: :my_app_name,
           exclude_envs: [:dev, :test],
           hostname: "myserver.domain.com",
@@ -26,7 +38,7 @@ defmodule Honeybadger do
 
     ### Notifying
     Honeybadger.notify is a macro so that it can be wiped away in environments
-    that you don't need error tracking in such as dev and test. If you use the
+    that you don't need exception monitoring in such as dev and test. If you use the
     Plug and Logger included in this library you won't need to use
     Honeybadger.notify very often. Here is an example:
 
@@ -74,10 +86,12 @@ defmodule Honeybadger do
 
 
     ### Using the error logger
-    To use the logger all you need to do is set the `use_logger` configuration
-    option to true. This will automatically receive any error reports for SASL
-    compliant processes such as GenServers, GenEvents, Agents, Tasks and any
-    process spawned using `proc_lib`.
+    By default the logger is enabled. The logger will
+    automatically receive any error reports for SASL compliant
+    processes such as GenServers, GenEvents, Agents, Tasks and
+    any process spawned using `proc_lib`. You can disable the
+    logger by setting `use_logger` to false in your
+    Honeybadger config.
   """
 
   @context :honeybadger_context
@@ -88,12 +102,11 @@ defmodule Honeybadger do
     function yourself.
   """
   def start(_type, _opts) do
+    require_environment_name!
+
     app_config = Application.get_all_env(:honeybadger)
     config = Keyword.merge(default_config, app_config)
-
-    Enum.map config, fn({key, value}) ->
-      Application.put_env(:honeybadger, key, value)
-    end
+    update_application_config!(config)
 
     if config[:use_logger] do
       :error_logger.add_report_handler(Honeybadger.Logger)
@@ -168,7 +181,23 @@ defmodule Honeybadger do
       hostname: :inet.gethostname |> elem(1) |> List.to_string,
       origin: "https://api.honeybadger.io",
       project_root: System.cwd,
-      use_logger: true,
-      environment_name: nil]
+      use_logger: true]
+  end
+
+  defp require_environment_name! do
+    if is_nil(Application.get_env(:honeybadger, :environment_name)) do
+      case System.get_env("MIX_ENV") do
+        nil ->
+          raise MissingEnvironmentNameError
+        env ->
+          Application.put_env(:honeybadger, :environment_name, String.to_atom(env))
+      end
+    end
+  end
+
+  defp update_application_config!(config) do
+    Enum.each(config, fn({key, value}) ->
+      Application.put_env(:honeybadger, key, value)
+    end)
   end
 end

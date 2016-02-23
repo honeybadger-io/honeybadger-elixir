@@ -3,7 +3,7 @@ defmodule Honeybadger.Mixfile do
 
   def project do
     [app: :honeybadger,
-     version: "0.3.1",
+     version: "0.4.0",
      elixir: "~> 1.0",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
@@ -18,14 +18,14 @@ defmodule Honeybadger.Mixfile do
 
   def application do
     [applications: [:httpoison, :logger, :poison],
-     env: [environment_name: Mix.env],
+     env: [],
      mod: {Honeybadger, []}]
   end
 
   defp deps do
     [{:httpoison, "~> 0.7"},
-     {:poison, "~> 1.4"},
-     {:plug, "~> 0.13 or ~> 1.0"},
+     {:poison, ">= 1.4.0 and < 3.0.0"},
+     {:plug, ">= 0.13.0 and < 2.0.0"},
 
      # Dev dependencies
      {:ex_doc, "~> 0.7", only: :dev},
