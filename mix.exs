@@ -11,9 +11,10 @@ defmodule Honeybadger.Mixfile do
      package: package,
      name: "Honeybadger",
      homepage_url: "https://honeybadger.io",
+     source_url: "https://github.com/honeybadger-io/honeybadger-elixir",
      description: "Elixir client, Plug and error_logger for integrating with the Honeybadger.io exception tracker",
-     docs: [readme: "README.md", main: "README",
-            source_url: "https://github.com/honeybadger-io/honeybadger-elixir"]]
+     docs: [extras: ["README.md", "CHANGELOG.md"],
+            main: "readme"]]
   end
 
   def application do
