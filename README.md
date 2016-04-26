@@ -21,7 +21,7 @@ defp application do
 end
 
 defp deps do
-  [{:honeybadger, "~> 0.3"}]
+  [{:honeybadger, "~> 0.5"}]
 end
 ```
 

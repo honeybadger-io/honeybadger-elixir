@@ -1,5 +1,11 @@
 # Honeybadger-Elixir Changelog
 
+## v0.5.0
+
+Honeybadger now collects successful response times, aggregates them and sends
+them to the Honeybadger API! You can see request metric data from the metrics
+tab on Honeybadger.io!
+
 ## v0.4.0
 
 Due to the `Mix.env/0` function always being set to `prod` for dependencies and
