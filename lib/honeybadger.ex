@@ -138,7 +138,10 @@ defmodule Honeybadger do
           end
         end
       _ ->
-        :ok
+        quote do
+          [_, _, _] = [unquote(exception), unquote(metadata), unquote(stacktrace)]
+          :ok
+        end
     end
   end
 
