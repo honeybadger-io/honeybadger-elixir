@@ -14,7 +14,7 @@ defmodule Honeybadger.Plug do
           conn = super(conn, opts)
 
           after_response = :erlang.monotonic_time
-          response_time = :erlang.convert_time_unit(after_response - before_response, :nano_seconds, :milli_seconds)
+          response_time = :erlang.convert_time_unit(after_response - before_response, :micro_seconds)
           Honeybadger.Metrics.Server.timing(response_time)
           conn
         catch
