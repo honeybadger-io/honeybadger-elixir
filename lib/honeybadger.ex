@@ -3,7 +3,6 @@ defmodule Honeybadger do
   alias Honeybadger.Backtrace
   alias Honeybadger.Client
   alias Honeybadger.Notice
-  alias Poison, as: JSON
 
   defmodule MissingEnvironmentNameError do
     defexception message: """
@@ -103,8 +102,6 @@ defmodule Honeybadger do
     function yourself.
   """
   def start(_type, _opts) do
-    import Supervisor.Spec
-
     require_environment_name!
 
     app_config = Application.get_all_env(:honeybadger)
@@ -141,7 +138,10 @@ defmodule Honeybadger do
           end
         end
       _ ->
-        :ok
+        quote do
+          [_, _, _] = [unquote(exception), unquote(metadata), unquote(stacktrace)]
+          :ok
+        end
     end
   end
 

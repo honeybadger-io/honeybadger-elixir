@@ -44,14 +44,14 @@ defmodule Honeybadger.Plug do
   end
 
   def build_plug_env(%Plug.Conn{} = conn, mod) do
-    session = %{}
-    conn = try do
+    {conn, session} = try do
       Plug.Conn.fetch_session(conn)
       session = conn.session
+      {conn, session}
     rescue
-      e in [ArgumentError, KeyError] ->
+      _e in [ArgumentError, KeyError] ->
         # just return conn and move on
-        conn
+        {conn, %{}}
     end
 
     conn = conn
