@@ -23,7 +23,7 @@ defp application do
 end
 
 defp deps do
-  [{:honeybadger, "~> 0.5"}]
+  [{:honeybadger, "~> 0.6"}]
 end
 ```
 
@@ -74,14 +74,14 @@ exceptions due to non-matching routes are not reported to Honeybadger.
 defmodule MyPlugApp do
   use Plug.Router
   use Honeybadger.Plug
-  
+
   [... the rest of your plug ...]
 end
 
 defmodule MyPhoenixApp.Router do
   use Crywolf.Web, :router
   use Honeybadger.Plug
-  
+
   pipeline :browser do
     [...]
   end
