@@ -16,8 +16,8 @@ defmodule Honeybadger.Notice do
 
     %__MODULE__{error: error,
                 request: request,
-                notifier: notifier,
-                server: server}
+                notifier: notifier(),
+                server: server()}
   end
 
   url = get_in(Honeybadger.Mixfile.project, [:package, :links, "GitHub"])
@@ -30,9 +30,9 @@ defmodule Honeybadger.Notice do
   end
 
   defp server do
-    %{environment_name: environment_name,
-      hostname: hostname,
-      project_root: project_root}
+    %{environment_name: environment_name(),
+      hostname: hostname(),
+      project_root: project_root()}
   end
 
   defp hostname do

@@ -53,6 +53,6 @@ defmodule Honeybadger.Metrics.Server do
   ## Private API
 
   defp schedule_flush_message(flush_interval) do
-    Process.send_after(self, :flush, flush_interval)
+    Process.send_after(self(), :flush, flush_interval)
   end
 end

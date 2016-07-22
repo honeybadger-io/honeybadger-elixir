@@ -10,7 +10,7 @@ defmodule Honeybadger.Backtrace do
 
   defp format_line({mod, fun, _args, [file: file, line: line]}) do
     %{file: file |> convert_string, method: fun |> convert_string, number:
-      line, context: get_context(otp_app, get_app(mod))}
+      line, context: get_context(otp_app(), get_app(mod))}
   end
 
   defp get_app(module) do

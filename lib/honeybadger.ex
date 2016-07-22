@@ -102,10 +102,10 @@ defmodule Honeybadger do
     function yourself.
   """
   def start(_type, _opts) do
-    require_environment_name!
+    require_environment_name!()
 
     app_config = Application.get_all_env(:honeybadger)
-    config = Keyword.merge(default_config, app_config)
+    config = Keyword.merge(default_config(), app_config)
     update_application_config!(config)
 
     if config[:use_logger] do
@@ -146,7 +146,7 @@ defmodule Honeybadger do
   end
 
   def do_notify(exception, metadata, []) do
-      {:current_stacktrace, stacktrace} = Process.info(self, :current_stacktrace)
+      {:current_stacktrace, stacktrace} = Process.info(self(), :current_stacktrace)
       do_notify(exception, metadata, stacktrace)
   end
 
@@ -167,8 +167,8 @@ defmodule Honeybadger do
   end
 
   def context(dict) do
-    Process.put(@context, Dict.merge(context, dict))
-    context
+    Process.put(@context, Dict.merge(context(), dict))
+    context()
   end
 
   defp default_config do
