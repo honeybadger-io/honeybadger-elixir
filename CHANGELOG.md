@@ -1,5 +1,12 @@
 # Honeybadger-Elixir Changelog
 
+## v0.6.0
+
+This release removes warnings for Elixir 1.3.0 and covers v1.4.0-dev as of
+2016-07-22. There was also a switch to using `:native` `FromUnits` to match
+the `Plug.Logger` usage of `:erlang.convert_time_unit`. This maintains
+consistency between `Honeybadger.Logger` and `Plug.Logger`.
+
 ## v0.5.0
 
 Honeybadger now collects successful response times, aggregates them and sends
