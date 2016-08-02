@@ -1,5 +1,9 @@
 # Honeybadger-Elixir Changelog
 
+## v0.6.1
+
+Reformatting the plug environment data sent to Honeybadger.
+
 ## v0.6.0
 
 This release removes warnings for Elixir 1.3.0 and covers v1.4.0-dev as of
