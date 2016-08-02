@@ -12,7 +12,9 @@ defmodule Honeybadger.Notice do
       tags: Dict.get(metadata, :tags, []),
       backtrace: backtrace
     }
-    request = Dict.take(metadata, [:plug_env, :context])
+    context = Dict.get(metadata, :context, %{})
+    request = Dict.get(metadata, :plug_env, %{})
+              |> Dict.put(:context, context)
 
     %__MODULE__{error: error,
                 request: request,

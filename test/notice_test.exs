@@ -51,12 +51,10 @@ defmodule Honeybadger.NoticeTest do
 
   test "request information", %{notice: %Notice{request: request}} do
     assert %{
-      plug_env: %{
-        action: :show,
-        component: SomeApp.PageController,
-        params: %{page: 1},
-        url: "/pages/1"
-      }
+      action: :show,
+      component: SomeApp.PageController,
+      params: %{page: 1},
+      url: "/pages/1"
     } == Dict.drop(request, [:context])
 
     assert %{user_id: 1, account_id: 1} == request[:context]
