@@ -1,5 +1,5 @@
 defmodule Honeybadger.PlugTest do
-  use ExUnit.Case, async: true
+  use ExUnit.Case, async: false
   use Plug.Test
 
   defmodule PlugApp do
@@ -13,6 +13,63 @@ defmodule Honeybadger.PlugTest do
     get "/bang" do
       _ = conn
       raise RuntimeError, "Oops"
+    end
+  end
+
+  describe "with bypass" do
+    setup do
+      honeybadger_origin = Application.fetch_env!(:honeybadger, :origin)
+      honeybadger_excludes = Application.fetch_env!(:honeybadger, :exclude_envs)
+
+      bypass = Bypass.open()
+
+      on_exit fn () ->
+        Application.put_env(:honeybadger, :origin, honeybadger_origin)
+        Application.put_env(:honeybadger, :exclude_envs, honeybadger_excludes)
+      end
+
+      Application.put_env(
+        :honeybadger,
+        :origin,
+        "http://localhost:#{bypass.port}"
+      )
+
+      Application.put_env(:honeybadger, :exclude_envs, [])
+
+      {:ok, bypass: bypass}
+    end
+
+    test "notifies honeybadger api only once on failure", %{bypass: bypass} do
+      parent = self
+
+      defmodule WillSendPlug do
+        use Plug.Router
+        use Honeybadger.Plug
+
+        plug :match
+        plug :dispatch
+
+        get "/bang" do
+          _ = conn
+          raise RuntimeError, "Oops"
+        end
+      end
+
+      Bypass.expect(bypass, fn conn ->
+        send parent, :badgered
+
+        Plug.Conn.resp(conn, 200, "ok")
+      end)
+
+      try do
+        conn = conn(:get, "/bang")
+        _ = WillSendPlug.call(conn, [])
+      catch
+        _, _ -> IO.inspect("There was an error")
+      end
+
+      assert_receive :badgered
+      refute_receive :badgered
     end
   end
 
