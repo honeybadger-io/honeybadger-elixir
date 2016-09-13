@@ -3,7 +3,20 @@ defmodule Honeybadger.Notice do
 
   defstruct [:notifier, :server, :error, :request]
 
-  def new(exception, metadata \\ %{}, backtrace) do
+
+  def new(error, metadata \\ %{}, backtrace)
+
+  def new(%{class: class, message: message}, metadata, backtrace) do
+    error = %{
+      class: class,
+      message: message,
+      tags: Dict.get(metadata, :tags, []),
+      backtrace: backtrace
+    }
+    create(error, metadata)
+  end
+
+  def new(exception, metadata, backtrace) do
     exception = Exception.normalize(:error, exception)
     exception_mod = exception.__struct__
     error = %{
@@ -12,6 +25,10 @@ defmodule Honeybadger.Notice do
       tags: Dict.get(metadata, :tags, []),
       backtrace: backtrace
     }
+    create(error, metadata)
+  end
+
+  defp create(error, metadata) do
     context = Dict.get(metadata, :context, %{})
     request = Dict.get(metadata, :plug_env, %{})
               |> Dict.put(:context, context)
