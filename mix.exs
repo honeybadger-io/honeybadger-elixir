@@ -32,6 +32,7 @@ defmodule Honeybadger.Mixfile do
      {:ex_doc, "~> 0.7", only: :dev},
 
      # Test dependencies
+     {:bypass, "~> 0.5", only: :test},
      {:meck, "~> 0.8.3", only: :test}]
   end
 
