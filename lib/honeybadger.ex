@@ -105,7 +105,7 @@ defmodule Honeybadger do
           filter: MyApp.MyFilter
 
     Then implement the module and define a mthod, `filter(notice)` that
-    takes a `%Honeybagder.Notic{}` struct and returns the possibly filtered
+    takes a `%Honeybagder.Notice{}` struct and returns the possibly filtered
     struct.  There is a convenience module, `Honeybadger.Filter`, that
     defines some convenience methods to access parts of the notice.  An
     example filter:
@@ -116,9 +116,9 @@ defmodule Honeybadger do
           # drop password fields out of the context Map
           def filter_context(context), do: Map.drop(context, [:password])
 
-          # remove "Secret Data" from an error message
+          # remove secrets from an error message
           def filter_error_message(message),
-            do: Regex.replace(~r/(Secret Data: )(\w+)/, message, "\\1 xxx")
+            do: Regex.replace(~r/Secret: \w+/, message, "Secret: ***")
         end
   """
 

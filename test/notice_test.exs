@@ -71,7 +71,7 @@ defmodule Honeybadger.NoticeTest do
       use Honeybadger.Filter
       def filter_context(context), do: Map.drop(context, [:password])
       def filter_error_message(message),
-        do: Regex.replace(~r/(Secret Data: )(\w+)/, message, "\\1 xxx")
+        do: Regex.replace(~r/(Secret data: )(\w+)/, message, "\\1 xxx")
       def filter_params(params), do: Map.drop(params, ["token"])
     end
 
@@ -86,7 +86,7 @@ defmodule Honeybadger.NoticeTest do
 
     assert get_in(notice.request, [:context, :foo])
     refute get_in(notice.request, [:context, :password])
-    refute notice.error.message == "XYZZY"
+    refute notice.error.message =~ "XYZZY"
     refute get_in(notice.request, [:params, "token"])
     on_exit(fn ->
       Application.put_env :honeybadger, :filter, orig_filter
