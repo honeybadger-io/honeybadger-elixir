@@ -34,7 +34,8 @@ defmodule Honeybadger do
           hostname: "myserver.domain.com",
           origin: "https://api.honeybadger.io",
           project_root: "/home/skynet",
-          use_logger: true
+          use_logger: true,
+          filter: MyApp.MyFilter
 
     ### Notifying
     Honeybadger.notify is a macro so that it can be wiped away in environments
@@ -92,6 +93,33 @@ defmodule Honeybadger do
     any process spawned using `proc_lib`. You can disable the
     logger by setting `use_logger` to false in your
     Honeybadger config.
+
+    ### Using a notification filter
+
+    Before data is sent to Honeybadger, it can be run through an
+    application defined filter, which can remove sensitive fields or do
+    other processing on the data.  To use a filter, set the `filter` option
+    to the name of a module that implements a filter function, e.g., `
+
+        config :honeybadger,
+          filter: MyApp.MyFilter
+
+    Then implement the module and define a mthod, `filter(notice)` that
+    takes a `%Honeybagder.Notic{}` struct and returns the possibly filtered
+    struct.  There is a convenience module, `Honeybadger.Filter`, that
+    defines some convenience methods to access parts of the notice.  An
+    example filter:
+
+        defmodule MyApp.MyFilter do
+          use Honeybadger.Filter
+
+          # drop password fields out of the context Map
+          def filter_context(context), do: Map.drop(context, [:password])
+
+          # remove "Secret Data" from an error message
+          def filter_error_message(message),
+            do: Regex.replace(~r/(Secret Data: )(\w+)/, message, "\\1 xxx")
+        end
   """
 
   @context :honeybadger_context
@@ -177,7 +205,8 @@ defmodule Honeybadger do
       hostname: :inet.gethostname |> elem(1) |> List.to_string,
       origin: "https://api.honeybadger.io",
       project_root: System.cwd,
-      use_logger: true]
+      use_logger: true,
+      filter: nil]
   end
 
   defp require_environment_name! do

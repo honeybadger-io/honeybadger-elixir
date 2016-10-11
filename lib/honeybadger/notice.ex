@@ -37,10 +37,14 @@ defmodule Honeybadger.Notice do
                 request: request,
                 notifier: notifier(),
                 server: server()}
+    |> filter(Application.get_env(:honeybadger, :filter))
   end
 
   url = get_in(Honeybadger.Mixfile.project, [:package, :links, "GitHub"])
   version = Honeybadger.Mixfile.project[:version]
+
+  defp filter(notice, nil), do: notice
+  defp filter(notice, app_filter), do: app_filter.filter(notice)
 
   defp notifier do
     %{name: "Honeybadger Elixir Notifier",

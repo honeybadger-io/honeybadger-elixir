@@ -65,4 +65,31 @@ defmodule Honeybadger.NoticeTest do
     %{error: %{class: class}} = Notice.new(:badarg, %{}, nil)
     assert class == "ArgumentError"
   end
+
+  test "filter works on context, message and params", %{notice: n} do
+    defmodule TestFilter do
+      use Honeybadger.Filter
+      def filter_context(context), do: Map.drop(context, [:password])
+      def filter_error_message(message),
+        do: Regex.replace(~r/(Secret Data: )(\w+)/, message, "\\1 xxx")
+      def filter_params(params), do: Map.drop(params, ["token"])
+    end
+
+    orig_filter = Application.get_env :honeybadger, :filter
+    Application.put_env :honeybadger, :filter, TestFilter
+
+    exception = %RuntimeError{message: "Secret data: XYZZY"}
+    metadata = %{plug_env: %{params: %{"token" => "123456"}},
+                 tags: [],
+                 context: %{password: "123", foo: "foo"}}
+    notice = Notice.new(exception, metadata, [])
+
+    assert get_in(notice.request, [:context, :foo])
+    refute get_in(notice.request, [:context, :password])
+    refute notice.error.message == "XYZZY"
+    refute get_in(notice.request, [:params, "token"])
+    on_exit(fn ->
+      Application.put_env :honeybadger, :filter, orig_filter
+    end)
+  end
 end
