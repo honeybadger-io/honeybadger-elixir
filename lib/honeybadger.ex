@@ -104,10 +104,10 @@ defmodule Honeybadger do
         config :honeybadger,
           filter: MyApp.MyFilter
 
-    Then implement the module and define a mthod, `filter(notice)` that
-    takes a `%Honeybagder.Notice{}` struct and returns the possibly filtered
+    Then implement the module and define a function, `filter(notice)` that
+    takes a `%Honeybadger.Notice{}` struct and returns the possibly filtered
     struct.  There is a convenience module, `Honeybadger.Filter`, that
-    defines some convenience methods to access parts of the notice.  An
+    defines some convenience functions to access parts of the notice.  An
     example filter:
 
         defmodule MyApp.MyFilter do
