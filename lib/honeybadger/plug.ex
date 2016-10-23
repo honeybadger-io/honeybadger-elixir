@@ -4,7 +4,6 @@ defmodule Honeybadger.Plug do
   defmacro __using__(_env) do
     quote do
       import Honeybadger.Plug
-      use Plug.ErrorHandler
       require Honeybadger
 
       def call(conn, opts) do
