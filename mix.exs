@@ -4,7 +4,7 @@ defmodule Honeybadger.Mixfile do
   def project do
     [app: :honeybadger,
      version: "0.6.1",
-     elixir: "~> 1.0",
+     elixir: "~> 1.2",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
      deps: deps(),
@@ -25,7 +25,7 @@ defmodule Honeybadger.Mixfile do
 
   defp deps do
     [{:httpoison, "~> 0.9"},
-     {:poison, ">= 1.4.0 and < 3.0.0"},
+     {:poison, "~> 3.0"},
      {:plug, ">= 0.13.0 and < 2.0.0"},
 
      # Dev dependencies
