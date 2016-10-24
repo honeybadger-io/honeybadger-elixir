@@ -1,5 +1,17 @@
 # Honeybadger-Elixir Changelog
 
+## v0.6.2
+
+This is a minor release and includes:
+
+* ability to customize error names/messages,
+
+* stops plug error notifications from being sent twice
+
+* minor typo fixes
+
+* dependency updates
+
 ## v0.6.1
 
 Reformatting the plug environment data sent to Honeybadger.
