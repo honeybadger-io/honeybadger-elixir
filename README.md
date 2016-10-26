@@ -111,7 +111,19 @@ rescue
 end
 ```
 
+### Filtering Sensitive Data
 
+Before data is sent to Honeybadger, it can be run through a filter to remove sensitive fields or do other processing on the data.  For basic filtering you can configure `Honeybadger.DefaultFilter` and set sensitive keys in `filter_keys`:
+
+```elixir
+config :honeybadger,
+  filter: Honeybadger.DefaultFilter,
+  filter_keys: [:password, :credit_card]
+```
+
+This will remove any entries in the context, session, cgi_data and params that match one of the filter keys.  The check is case insensitive and matches atoms or strings.
+
+If `Honeybadger.DefaultFilter` does not suit your needs, you can implement your own filter. See the `Honeybadger.Filter` module doc for details on implementing your own filter.
 
 ## Sample Application
 
@@ -148,6 +160,8 @@ Here are all of the options you can pass in the keyword list:
 | hostname     | Hostname of the system your application is running on                     | :inet.gethostname |
 | origin       | URL for the Honeybadger API                                               | "https://api.honeybadger.io" |
 | project_root | Directory root for where your application is running                      | System.cwd |
+| filter       | Name of module to filter data before it is sent to Honeybadger.io         | nil |
+| filter_keys  | A list of keywords (atoms) to filter.  Only valid if `filter` is `Honeybadger.DefaultFilter` | [:password, :credit_card] |
 
 ## Public Interface
 

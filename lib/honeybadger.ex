@@ -35,7 +35,8 @@ defmodule Honeybadger do
           origin: "https://api.honeybadger.io",
           project_root: "/home/skynet",
           use_logger: true,
-          filter: MyApp.MyFilter
+          filter: Honeybadger.DefaultFilter,
+          filter_keys: [:password, :credit_card]
 
     ### Notifying
     Honeybadger.notify is a macro so that it can be wiped away in environments
@@ -98,17 +99,23 @@ defmodule Honeybadger do
 
     Before data is sent to Honeybadger, it can be run through an
     application defined filter, which can remove sensitive fields or do
-    other processing on the data.  To use a filter, set the `filter` option
-    to the name of a module that implements a filter function, e.g., `
-
+    other processing on the data.  For basic filtering you can configure
+    `Honeybadger.DefaultFilter` and set sensitive keys in `filter_keys`:
+     
         config :honeybadger,
-          filter: MyApp.MyFilter
+          filter: Honeybadger.DefaultFilter,
+          filter_keys: [:password, :credit_card]
 
-    Then implement the module and define a function, `filter(notice)` that
-    takes a `%Honeybadger.Notice{}` struct and returns the possibly filtered
-    struct.  There is a convenience module, `Honeybadger.Filter`, that
-    defines some convenience functions to access parts of the notice.  An
-    example filter:
+    This will remove any entries in the context, session, cgi_data and
+    params that match one of the filter keys.  The check is case
+    insensitive and matches atoms or strings.
+
+    If the `DefaultFilter` does not suit your needs, you can implement your
+    own filter.  Implement the module and define a function,
+    `filter(notice)` that takes a `%Honeybadger.Notice{}` struct and
+    returns the possibly filtered struct.  There is a module,
+    `Honeybadger.Filter`, that defines some convenience functions to access
+    parts of the notice.  An example filter:
 
         defmodule MyApp.MyFilter do
           use Honeybadger.Filter
@@ -120,6 +127,9 @@ defmodule Honeybadger do
           def filter_error_message(message),
             do: Regex.replace(~r/Secret: \w+/, message, "Secret: ***")
         end
+
+    See the `Honeybadger.Filter` module doc for details on implementing
+    your own filter.
   """
 
   @context :honeybadger_context
@@ -206,7 +216,8 @@ defmodule Honeybadger do
       origin: "https://api.honeybadger.io",
       project_root: System.cwd,
       use_logger: true,
-      filter: nil]
+      filter: nil,
+      filter_keys: [:password, :credit_card]]
   end
 
   defp require_environment_name! do

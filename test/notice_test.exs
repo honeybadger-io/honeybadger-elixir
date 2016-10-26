@@ -66,7 +66,7 @@ defmodule Honeybadger.NoticeTest do
     assert class == "ArgumentError"
   end
 
-  test "filter works on context, message and params", %{notice: n} do
+  test "Honyebadger.Filter works on context, message and params" do
     defmodule TestFilter do
       use Honeybadger.Filter
       def filter_context(context), do: Map.drop(context, [:password])
@@ -76,20 +76,72 @@ defmodule Honeybadger.NoticeTest do
     end
 
     orig_filter = Application.get_env :honeybadger, :filter
+
     Application.put_env :honeybadger, :filter, TestFilter
 
-    exception = %RuntimeError{message: "Secret data: XYZZY"}
-    metadata = %{plug_env: %{params: %{"token" => "123456"}},
-                 tags: [],
-                 context: %{password: "123", foo: "foo"}}
-    notice = Notice.new(exception, metadata, [])
+    # Must create notice after filter is set
+    notice = filterable_notice
 
     assert get_in(notice.request, [:context, :foo])
     refute get_in(notice.request, [:context, :password])
     refute notice.error.message =~ "XYZZY"
     refute get_in(notice.request, [:params, "token"])
-    on_exit(fn ->
-      Application.put_env :honeybadger, :filter, orig_filter
-    end)
+
+    on_exit fn -> Application.put_env(:honeybadger, :filter, orig_filter) end
+  end
+
+  test "Honeybadger.DefaultFilter filters according to config" do
+    orig_filter = Application.get_env :honeybadger, :filter
+    orig_keys   = Application.get_env :honeybadger, :filter_keys
+    Application.put_env :honeybadger, :filter, Honeybadger.DefaultFilter
+    Application.put_env :honeybadger, :filter_keys, [:password, :credit_card, :authorization]
+
+    notice = filterable_notice
+
+    # It leaves unfiltered elements alone
+    assert get_in(notice.request, [:context, :foo]) == "foo"
+    assert get_in(notice.request, [:cgi_data, "HTTP_HOST"]) == "honeybadger.io"
+    assert get_in(notice.request, [:params, "unfiltered" ]) == "unfiltered"
+
+    # It filters sensitive data
+    refute get_in(notice.request, [:context, :password])
+    refute get_in(notice.request, [:cgi_data, "PASSWORD"])
+    refute get_in(notice.request, [:cgi_data, "Authorization"])
+    refute get_in(notice.request, [:cgi_data, "credit_card"])
+    refute get_in(notice.request, [:params, "password"])
+    refute get_in(notice.request, [:params, "PaSSword"])
+    refute get_in(notice.request, [:session, :password])
+
+    on_exit fn ->
+      Application.put_env(:honeybadger, :filter, orig_filter)
+      Application.put_env(:honeybadger, :filter_keys, orig_keys)
+    end
+  end
+
+  defp filterable_notice do
+      exception = %RuntimeError{message: "Secret data: XYZZY"}
+      backtrace = []
+      metadata = %{
+        context: %{password: "123", foo: "foo"},
+
+        plug_env: %{
+          url: "/some/secret/place",
+          component: SomeApp.PageController,
+          action: :show,
+          params: %{"password" => "a password",
+                    "credit_card" => "1234",
+                    "PaSSword" => "WhAtevER",
+                    "unfiltered" => "unfiltered"},
+          cgi_data: %{
+            "HTTP_HOST" => "honeybadger.io",
+            "Authorization" => "Basic whatever",
+            "PASSWORD" => "Why is there a password Header?"},
+          session: %{:credit_card => "1234",
+                     "CREDIT_card" => "1234",
+                     :password => "secret",
+                     "not filtered" => :not_filtered},
+        }
+      }
+      Notice.new(exception, metadata, backtrace)
   end
 end
