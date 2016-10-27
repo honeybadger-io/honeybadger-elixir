@@ -101,14 +101,14 @@ defmodule Honeybadger do
     application defined filter, which can remove sensitive fields or do
     other processing on the data.  For basic filtering you can configure
     `Honeybadger.DefaultFilter` and set sensitive keys in `filter_keys`:
-     
+
         config :honeybadger,
           filter: Honeybadger.DefaultFilter,
           filter_keys: [:password, :credit_card]
 
     This will remove any entries in the context, session, cgi_data and
-    params that match one of the filter keys.  The check is case
-    insensitive and matches atoms or strings.
+    params that match one of the filter keys. The check is case insensitive
+    and matches atoms or strings.
 
     If the `DefaultFilter` does not suit your needs, you can implement your
     own filter.  Implement the module and define a function,
@@ -217,7 +217,10 @@ defmodule Honeybadger do
       project_root: System.cwd,
       use_logger: true,
       filter: nil,
-      filter_keys: [:password, :credit_card]]
+      filter_keys: [:password, :credit_card],
+      filter_disable_url: false,
+      filter_disable_params: false,
+      filter_disable_session: false]
   end
 
   defp require_environment_name! do

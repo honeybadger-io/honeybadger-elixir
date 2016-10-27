@@ -162,6 +162,9 @@ Here are all of the options you can pass in the keyword list:
 | project_root | Directory root for where your application is running                      | System.cwd |
 | filter       | Name of module to filter data before it is sent to Honeybadger.io         | nil |
 | filter_keys  | A list of keywords (atoms) to filter.  Only valid if `filter` is `Honeybadger.DefaultFilter` | [:password, :credit_card] |
+| filter_disable_url | If true, will remove the request url | false |
+| filter_disable_session | If true, will remove the request session | false |
+| filter_disable_params | If true, will remove the request params | false |
 
 ## Public Interface
 

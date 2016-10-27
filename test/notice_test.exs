@@ -1,7 +1,7 @@
 defmodule Honeybadger.NoticeTest do
   alias Honeybadger.Backtrace
   alias Honeybadger.Notice
-  use ExUnit.Case, async: true
+  use ExUnit.Case, async: false
 
   setup do
     exception = %RuntimeError{message: "Oops"}
@@ -115,6 +115,54 @@ defmodule Honeybadger.NoticeTest do
     on_exit fn ->
       Application.put_env(:honeybadger, :filter, orig_filter)
       Application.put_env(:honeybadger, :filter_keys, orig_keys)
+    end
+  end
+
+  test "Honeybadger.DefaultFilter filters entire session if filter_disable_session is set" do
+    orig_filter = Application.get_env :honeybadger, :filter
+    orig_disable = Application.get_env :honeybadger, :filter_disable_session
+    Application.put_env :honeybadger, :filter, Honeybadger.DefaultFilter
+    Application.put_env :honeybadger, :filter_disable_session, true
+
+    notice = filterable_notice
+
+    refute get_in(notice.request, [:session])
+
+    on_exit fn ->
+      Application.put_env(:honeybadger, :filter, orig_filter)
+      Application.put_env(:honeybadger, :filter_disable_session, orig_disable)
+    end
+  end
+
+  test "Honeybadger.DefaultFilter filters url if filter_disable_url is set" do
+    orig_filter = Application.get_env :honeybadger, :filter
+    orig_disable = Application.get_env :honeybadger, :filter_disable_url
+    Application.put_env :honeybadger, :filter, Honeybadger.DefaultFilter
+    Application.put_env :honeybadger, :filter_disable_url, true
+
+    notice = filterable_notice
+
+    refute get_in(notice.request, [:url])
+
+    on_exit fn ->
+      Application.put_env(:honeybadger, :filter, orig_filter)
+      Application.put_env(:honeybadger, :filter_disable_url, orig_disable)
+    end
+  end
+
+  test "Honeybadger.DefaultFilter filters params if filter_disable_params is set" do
+    orig_filter = Application.get_env :honeybadger, :filter
+    orig_disable = Application.get_env :honeybadger, :filter_disable_params
+    Application.put_env :honeybadger, :filter, Honeybadger.DefaultFilter
+    Application.put_env :honeybadger, :filter_disable_params, true
+
+    notice = filterable_notice
+
+    refute get_in(notice.request, [:params])
+
+    on_exit fn ->
+      Application.put_env(:honeybadger, :filter, orig_filter)
+      Application.put_env(:honeybadger, :filter_disable_params, orig_disable)
     end
   end
 

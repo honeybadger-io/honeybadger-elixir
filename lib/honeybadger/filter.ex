@@ -39,13 +39,15 @@ defmodule Honeybadger.Filter do
 
         `request` is a map that looks like:
 
-            request: %{action: :show,
+            %{action: :show,
               component: SomeApp.PageController,
               context: %{account_id: 1, user_id: 1},
               params: %{"query_param" => "value"},
               url: "/pages/1"}
       """
-      def filter_request(request) do
+      def filter_request(request), do: do_filter_request(request)
+
+      def do_filter_request(request) do
         filtered_context =
           case request |> Map.get(:context) do
             nil -> nil
@@ -163,16 +165,42 @@ defmodule Honeybadger.DefaultFilter do
           filter: Honeybadger.DefaultFilter,
           filter_keys: [:password, :access_token, :sekrit_stuff],
           filter_disable_session: true,
-          filter_disable_url: true
+          filter_disable_url: true,
+          filter_disable_params: true
   """
   use Honeybadger.Filter
+
+  def filter_request(request) do
+    do_filter_request(request)
+    |> disable_url
+    |> disable_session
+    |> disable_params
+  end
 
   def filter_context(context), do: filter_map(context)
   def filter_params(params), do: filter_map(params)
   def filter_cgi_data(cgi_data), do: filter_map(cgi_data)
   def filter_session(session), do: filter_map(session)
 
-  def filter_map(map) do
+  defp disable_url(request) do
+    if Application.get_env(:honeybadger, :filter_disable_url),
+      do: request |> Map.drop([:url]),
+      else: request
+  end
+
+  defp disable_session(request) do
+    if Application.get_env(:honeybadger, :filter_disable_session),
+      do: request |> Map.drop([:session]),
+      else: request
+  end
+
+  defp disable_params(request) do
+    if Application.get_env(:honeybadger, :filter_disable_params),
+      do: request |> Map.drop([:params]),
+      else: request
+  end
+
+  defp filter_map(map) do
     case Application.get_env(:honeybadger, :filter_keys) do
       keys when is_list(keys) ->
         filter_keys = Enum.map(keys, &canonicalize(&1))
@@ -183,5 +211,5 @@ defmodule Honeybadger.DefaultFilter do
     end
   end
 
-  def canonicalize(key), do: key |> to_string |> String.downcase
+  defp canonicalize(key), do: key |> to_string |> String.downcase
 end
