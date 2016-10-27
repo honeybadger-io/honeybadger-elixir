@@ -35,6 +35,7 @@ defmodule Honeybadger do
           origin: "https://api.honeybadger.io",
           project_root: "/home/skynet",
           use_logger: true,
+          notice_filter: Honeybadger.DefaultNoticeFilter,
           filter: Honeybadger.DefaultFilter,
           filter_keys: [:password, :credit_card]
 
@@ -96,11 +97,9 @@ defmodule Honeybadger do
     Honeybadger config.
 
     ### Using a notification filter
-
-    Before data is sent to Honeybadger, it can be run through an
-    application defined filter, which can remove sensitive fields or do
-    other processing on the data.  For basic filtering you can configure
-    `Honeybadger.DefaultFilter` and set sensitive keys in `filter_keys`:
+    Before data is sent to Honeybadger, it is run through a filter which
+    can remove sensitive fields or do other processing on the data.  For
+    basic filtering the default configuration is equivalent to:
 
         config :honeybadger,
           filter: Honeybadger.DefaultFilter,
@@ -111,14 +110,10 @@ defmodule Honeybadger do
     and matches atoms or strings.
 
     If the `DefaultFilter` does not suit your needs, you can implement your
-    own filter.  Implement the module and define a function,
-    `filter(notice)` that takes a `%Honeybadger.Notice{}` struct and
-    returns the possibly filtered struct.  There is a module,
-    `Honeybadger.Filter`, that defines some convenience functions to access
-    parts of the notice.  An example filter:
+    own filter. A simple filter looks like:
 
         defmodule MyApp.MyFilter do
-          use Honeybadger.Filter
+          use Honeybadger.FilterMixin
 
           # drop password fields out of the context Map
           def filter_context(context), do: Map.drop(context, [:password])
@@ -128,7 +123,7 @@ defmodule Honeybadger do
             do: Regex.replace(~r/Secret: \w+/, message, "Secret: ***")
         end
 
-    See the `Honeybadger.Filter` module doc for details on implementing
+    See the `Honeybadger.FilterMixin` module doc for details on implementing
     your own filter.
   """
 
@@ -216,7 +211,8 @@ defmodule Honeybadger do
       origin: "https://api.honeybadger.io",
       project_root: System.cwd,
       use_logger: true,
-      filter: nil,
+      notice_filter: Honeybadger.DefaultNoticeFilter,
+      filter: Honeybadger.DefaultFilter,
       filter_keys: [:password, :credit_card],
       filter_disable_url: false,
       filter_disable_params: false,

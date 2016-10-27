@@ -37,7 +37,7 @@ defmodule Honeybadger.Notice do
                 request: request,
                 notifier: notifier(),
                 server: server()}
-    |> filter(Application.get_env(:honeybadger, :filter))
+     |> filter(Application.get_env(:honeybadger, :notice_filter))
   end
 
   url = get_in(Honeybadger.Mixfile.project, [:package, :links, "GitHub"])

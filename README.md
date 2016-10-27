@@ -111,20 +111,6 @@ rescue
 end
 ```
 
-### Filtering Sensitive Data
-
-Before data is sent to Honeybadger, it can be run through a filter to remove sensitive fields or do other processing on the data.  For basic filtering you can configure `Honeybadger.DefaultFilter` and set sensitive keys in `filter_keys`:
-
-```elixir
-config :honeybadger,
-  filter: Honeybadger.DefaultFilter,
-  filter_keys: [:password, :credit_card]
-```
-
-This will remove any entries in the context, session, cgi_data and params that match one of the filter keys.  The check is case insensitive and matches atoms or strings.
-
-If `Honeybadger.DefaultFilter` does not suit your needs, you can implement your own filter. See the `Honeybadger.Filter` module doc for details on implementing your own filter.
-
 ## Sample Application
 
 If you'd like to see the module in action before you integrate it with your apps, check out our [sample Phoenix application](https://github.com/honeybadger-io/crywolf-elixir).
@@ -137,6 +123,21 @@ Don't forget to destroy the Heroku app after you're done so that you aren't
 charged for usage.
 
 The code for the sample app is [available on Github](https://github.com/honeybadger-io/crywolf-elixir), in case you'd like to read through it, or run it locally.
+
+## Filtering Sensitive Data
+
+Before data is sent to Honeybadger, it is passed through a filter to remove sensitive fields and do other processing on the data.  The default configuration is equivalent to:
+
+```elixir
+config :honeybadger,
+  filter: Honeybadger.DefaultFilter,
+  filter_keys: [:password, :credit_card]
+```
+
+This will remove any entries in the context, session, cgi_data and params that match one of the filter keys.  The filter is case insensitive and matches atoms or strings.
+
+If `Honeybadger.DefaultFilter` does not suit your needs, you can implement your own filter. See the `Honeybadger.FilterMixin` module doc for details on implementing your own filter.
+
 
 ## Advanced Configuration
 
@@ -160,11 +161,12 @@ Here are all of the options you can pass in the keyword list:
 | hostname     | Hostname of the system your application is running on                     | :inet.gethostname |
 | origin       | URL for the Honeybadger API                                               | "https://api.honeybadger.io" |
 | project_root | Directory root for where your application is running                      | System.cwd |
-| filter       | Name of module to filter data before it is sent to Honeybadger.io         | nil |
+| filter       | Module implementing `Honeybadger.Filter` to filter data before sending to Honeybadger.io         | `Honeybadger.DefaultFilter`|
 | filter_keys  | A list of keywords (atoms) to filter.  Only valid if `filter` is `Honeybadger.DefaultFilter` | [:password, :credit_card] |
 | filter_disable_url | If true, will remove the request url | false |
 | filter_disable_session | If true, will remove the request session | false |
 | filter_disable_params | If true, will remove the request params | false |
+| notice_filter       | Module implementing `Honeybadger.NoticeFilter`. If `nil`, no filtering is done. | `Honeybadger.DefaultNoticeFilter`|
 
 ## Public Interface
 
