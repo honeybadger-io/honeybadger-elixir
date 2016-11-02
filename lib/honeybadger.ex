@@ -34,7 +34,10 @@ defmodule Honeybadger do
           hostname: "myserver.domain.com",
           origin: "https://api.honeybadger.io",
           project_root: "/home/skynet",
-          use_logger: true
+          use_logger: true,
+          notice_filter: Honeybadger.DefaultNoticeFilter,
+          filter: Honeybadger.DefaultFilter,
+          filter_keys: [:password, :credit_card]
 
     ### Notifying
     Honeybadger.notify is a macro so that it can be wiped away in environments
@@ -92,6 +95,36 @@ defmodule Honeybadger do
     any process spawned using `proc_lib`. You can disable the
     logger by setting `use_logger` to false in your
     Honeybadger config.
+
+    ### Using a notification filter
+    Before data is sent to Honeybadger, it is run through a filter which
+    can remove sensitive fields or do other processing on the data.  For
+    basic filtering the default configuration is equivalent to:
+
+        config :honeybadger,
+          filter: Honeybadger.DefaultFilter,
+          filter_keys: [:password, :credit_card]
+
+    This will remove any entries in the context, session, cgi_data and
+    params that match one of the filter keys. The check is case insensitive
+    and matches atoms or strings.
+
+    If the `DefaultFilter` does not suit your needs, you can implement your
+    own filter. A simple filter looks like:
+
+        defmodule MyApp.MyFilter do
+          use Honeybadger.FilterMixin
+
+          # drop password fields out of the context Map
+          def filter_context(context), do: Map.drop(context, [:password])
+
+          # remove secrets from an error message
+          def filter_error_message(message),
+            do: Regex.replace(~r/Secret: \w+/, message, "Secret: ***")
+        end
+
+    See the `Honeybadger.FilterMixin` module doc for details on implementing
+    your own filter.
   """
 
   @context :honeybadger_context
@@ -177,7 +210,13 @@ defmodule Honeybadger do
       hostname: :inet.gethostname |> elem(1) |> List.to_string,
       origin: "https://api.honeybadger.io",
       project_root: System.cwd,
-      use_logger: true]
+      use_logger: true,
+      notice_filter: Honeybadger.DefaultNoticeFilter,
+      filter: Honeybadger.DefaultFilter,
+      filter_keys: [:password, :credit_card],
+      filter_disable_url: false,
+      filter_disable_params: false,
+      filter_disable_session: false]
   end
 
   defp require_environment_name! do
