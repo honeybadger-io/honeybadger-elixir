@@ -33,30 +33,21 @@ defmodule Honeybadger.Client do
       metrics: metric
     })
 
-    case client.proxy do
-      nil ->
-        http_mod.post(
-          client.origin <> @metrics_endpoint, body, client.headers
-        )
-      _ ->
-        http_mod.post(
-          client.origin <> @metrics_endpoint, body, client.headers, [proxy: client.proxy, proxy_auth: client.proxy_auth]
-        )
-    end
+    post(client, @metrics_endpoint, body, http_mod)
   end
 
   def send_notice(%__MODULE__{} = client, metric, http_mod \\ HTTPoison) do
     body = JSON.encode!(metric)
 
+    post(client, @notices_endpoint, body, http_mod)
+  end
+
+  defp post(client, url, body, http_mod) do
+    proxy = [proxy: client.proxy, proxy_auth: client.proxy_auth]
+
     case client.proxy do
-      nil ->
-        http_mod.post(
-          client.origin <> @notices_endpoint, body, client.headers
-        )
-      _ ->
-        http_mod.post(
-          client.origin <> @notices_endpoint, body, client.headers, [proxy: client.proxy, proxy_auth: client.proxy_auth]
-        )
+      nil -> http_mod.post(client.origin <> url, body, client.headers)
+      _ -> http_mod.post(client.origin <> url, body, client.headers, proxy)
     end
   end
 
