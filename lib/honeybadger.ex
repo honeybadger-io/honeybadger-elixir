@@ -3,6 +3,7 @@ defmodule Honeybadger do
   alias Honeybadger.Backtrace
   alias Honeybadger.Client
   alias Honeybadger.Notice
+  alias Honeybadger.Metric
 
   defmodule MissingEnvironmentNameError do
     defexception message: """
@@ -161,21 +162,24 @@ defmodule Honeybadger do
   end
 
   defp macro_notify(exception, metadata, stacktrace) do
-    exclude_envs = Application.get_env(:honeybadger, :exclude_envs, [:dev, :test])
-
-    case Application.get_env(:honeybadger, :environment_name) in exclude_envs do
-      false ->
-        quote do
-          Task.start fn ->
-            Honeybadger.do_notify(unquote(exception), unquote(metadata), unquote(stacktrace))
-          end
+    if active_environment? do
+      quote do
+        Task.start fn ->
+          Honeybadger.do_notify(unquote(exception), unquote(metadata), unquote(stacktrace))
         end
-      _ ->
-        quote do
-          [_, _, _] = [unquote(exception), unquote(metadata), unquote(stacktrace)]
-          :ok
-        end
+      end
+    else
+      quote do
+        [_, _, _] = [unquote(exception), unquote(metadata), unquote(stacktrace)]
+        :ok
+      end
     end
+  end
+
+  def active_environment? do
+    env = Application.get_env(:honeybadger, :environment_name)
+    exclude_envs = Application.get_env(:honeybadger, :exclude_envs, [:dev, :test])
+    not env in exclude_envs
   end
 
   def do_notify(exception, metadata, []) do
@@ -193,6 +197,15 @@ defmodule Honeybadger do
   def do_notify(exception, metadata, stacktrace) do
     metadata = %{context: metadata}
     do_notify(exception, metadata, stacktrace)
+  end
+
+  def send_metric(%Metric{} = metric) do
+    if active_environment? do
+      client = Client.new
+      Client.send_metric(client, metric, HTTPoison)
+    else
+      :ok
+    end
   end
 
   def context do
