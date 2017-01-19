@@ -1,7 +1,7 @@
 defmodule Honeybadger.Metrics.Server do
   use GenServer
+  require Honeybadger
   alias Honeybadger.Metric
-  alias Honeybadger.Client
 
   @moduledoc """
     This GenServer receives metrics (the response time) from
@@ -44,9 +44,8 @@ defmodule Honeybadger.Metrics.Server do
 
   def handle_info(:flush, state) do
     schedule_flush_message(state[:interval])
-    client = Client.new
     metric = Metric.new(state[:timings])
-    Client.send_metric(client, metric, HTTPoison)
+    Honeybadger.send_metric(metric)
     {:noreply, Map.put(state, :timings, [])}
   end
 
