@@ -162,7 +162,7 @@ defmodule Honeybadger do
   end
 
   defp macro_notify(exception, metadata, stacktrace) do
-    if active_environment? do
+    if active_environment?() do
       quote do
         Task.start fn ->
           Honeybadger.do_notify(unquote(exception), unquote(metadata), unquote(stacktrace))
@@ -200,7 +200,7 @@ defmodule Honeybadger do
   end
 
   def send_metric(%Metric{} = metric) do
-    if active_environment? do
+    if active_environment?() do
       client = Client.new
       Client.send_metric(client, metric, HTTPoison)
     else
