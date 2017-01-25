@@ -55,7 +55,7 @@ defmodule Honeybadger.NoticeTest do
       component: SomeApp.PageController,
       params: %{page: 1},
       url: "/pages/1"
-    } == Dict.drop(request, [:context])
+    } == Map.drop(request, [:context])
 
     assert %{user_id: 1, account_id: 1} == request[:context]
     refute [:test] == request[:tags]

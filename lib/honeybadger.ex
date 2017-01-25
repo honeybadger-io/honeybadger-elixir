@@ -212,8 +212,8 @@ defmodule Honeybadger do
     (Process.get(@context) || %{}) |> Enum.into(Map.new)
   end
 
-  def context(dict) do
-    Process.put(@context, Dict.merge(context(), dict))
+  def context(keyword_or_map) do
+    Process.put(@context, Map.merge(context(), Enum.into(keyword_or_map, %{})))
     context()
   end
 
