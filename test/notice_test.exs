@@ -89,7 +89,7 @@ defmodule Honeybadger.NoticeTest do
     Application.put_env :honeybadger, :filter, TestFilter
     on_exit fn -> Application.put_env(:honeybadger, :filter, orig_filter) end
 
-    notice = filterable_notice
+    notice = filterable_notice()
 
     assert get_in(notice.request, [:context, :foo])
     refute get_in(notice.request, [:context, :password])
@@ -105,7 +105,7 @@ defmodule Honeybadger.NoticeTest do
     Application.put_env :honeybadger, :filter_keys, [:password, :credit_card, :authorization]
     on_exit fn -> Application.put_env(:honeybadger, :filter_keys, orig_keys) end
 
-    notice = filterable_notice
+    notice = filterable_notice()
 
     # It leaves unfiltered elements alone
     assert get_in(notice.request, [:context, :foo]) == "foo"
@@ -131,7 +131,7 @@ defmodule Honeybadger.NoticeTest do
       Application.put_env(:honeybadger, :filter_disable_session, orig_disable)
     end
 
-    notice = filterable_notice
+    notice = filterable_notice()
     assert get_in(notice.request, [:params])
     assert get_in(notice.request, [:url])
     refute get_in(notice.request, [:session])
@@ -156,7 +156,7 @@ defmodule Honeybadger.NoticeTest do
       Application.put_env(:honeybadger, :filter_disable_url, orig_disable)
     end
 
-    notice = filterable_notice
+    notice = filterable_notice()
     assert get_in(notice.request, [:params])
     refute get_in(notice.request, [:url])
     assert get_in(notice.request, [:session])
@@ -182,7 +182,7 @@ defmodule Honeybadger.NoticeTest do
       Application.put_env(:honeybadger, :filter_disable_params, orig_disable)
     end
 
-    notice = filterable_notice
+    notice = filterable_notice()
 
     refute get_in(notice.request, [:params])
     assert get_in(notice.request, [:url])
@@ -207,7 +207,7 @@ defmodule Honeybadger.NoticeTest do
       Application.put_env(:honeybadger, :notice_filter, orig_notice_filter)
     end
 
-    notice = filterable_notice
+    notice = filterable_notice()
 
     assert get_in(notice.request, [:params])
     assert get_in(notice.request, [:url])
