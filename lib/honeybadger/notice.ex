@@ -10,7 +10,7 @@ defmodule Honeybadger.Notice do
     error = %{
       class: class,
       message: message,
-      tags: Dict.get(metadata, :tags, []),
+      tags: Map.get(metadata, :tags, []),
       backtrace: backtrace
     }
     create(error, metadata)
@@ -22,16 +22,16 @@ defmodule Honeybadger.Notice do
     error = %{
       class: Utils.strip_elixir_prefix(exception_mod),
       message: exception_mod.message(exception),
-      tags: Dict.get(metadata, :tags, []),
+      tags: Map.get(metadata, :tags, []),
       backtrace: backtrace
     }
     create(error, metadata)
   end
 
   defp create(error, metadata) do
-    context = Dict.get(metadata, :context, %{})
-    request = Dict.get(metadata, :plug_env, %{})
-              |> Dict.put(:context, context)
+    context = Map.get(metadata, :context, %{})
+    request = Map.get(metadata, :plug_env, %{})
+              |> Map.put(:context, context)
 
     %__MODULE__{error: error,
                 request: request,
