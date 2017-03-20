@@ -232,6 +232,9 @@ defmodule Honeybadger do
       filter_disable_session: false]
   end
 
+  defp resolve_api_key({:system, env_var}), do: System.get_env(env_var)
+  defp resolve_api_key(api_key), do: api_key
+
   defp require_environment_name! do
     if is_nil(Application.get_env(:honeybadger, :environment_name)) do
       case System.get_env("MIX_ENV") do
@@ -245,7 +248,12 @@ defmodule Honeybadger do
 
   defp update_application_config!(config) do
     Enum.each(config, fn({key, value}) ->
-      Application.put_env(:honeybadger, key, value)
+      case key do
+        :api_key ->
+          Application.put_env(:honeybadger, key, resolve_api_key(value))
+        _ ->
+          Application.put_env(:honeybadger, key, value)
+      end
     end)
   end
 end
