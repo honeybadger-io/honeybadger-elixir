@@ -30,11 +30,11 @@ defmodule Honeybadger.Client do
     case client.proxy do
       nil ->
         http_mod.post(
-          client.origin <> @notices_endpoint, notice, client.headers
+          client.origin <> @notices_endpoint, body, client.headers
         )
       _ ->
         http_mod.post(
-          client.origin <> @notices_endpoint, notice, client.headers,
+          client.origin <> @notices_endpoint, body, client.headers,
           [proxy: client.proxy, proxy_auth: client.proxy_auth]
         )
     end
