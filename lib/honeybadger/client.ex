@@ -3,9 +3,7 @@ defmodule Honeybadger.Client do
 
   defstruct [:environment_name, :headers, :hostname, :origin, :proxy, :proxy_auth]
 
-  @metrics_endpoint "/v1/metrics"
   @notices_endpoint "/v1/notices"
-
   @headers [
     {"Accept", "application/json"},
     {"Content-Type", "application/json"}
@@ -26,29 +24,19 @@ defmodule Honeybadger.Client do
                 proxy_auth: proxy_auth}
   end
 
-  def send_metric(%__MODULE__{} = client, metric, http_mod \\ HTTPoison) do
-    body = JSON.encode!(%{
-      environment: client.environment_name,
-      hostname: client.hostname,
-      metrics: metric
-    })
+  def send_notice(%__MODULE__{} = client, notice, http_mod \\ HTTPoison) do
+    body = JSON.encode!(notice)
 
-    post(client, @metrics_endpoint, body, http_mod)
-  end
-
-  def send_notice(%__MODULE__{} = client, metric, http_mod \\ HTTPoison) do
-    body = JSON.encode!(metric)
-
-    post(client, @notices_endpoint, body, http_mod)
-  end
-
-  defp post(client, url, body, http_mod) do
     case client.proxy do
       nil ->
-        http_mod.post(client.origin <> url, body, client.headers)
+        http_mod.post(
+          client.origin <> @notices_endpoint, notice, client.headers
+        )
       _ ->
-        proxy = [proxy: client.proxy, proxy_auth: client.proxy_auth]
-        http_mod.post(client.origin <> url, body, client.headers, proxy)
+        http_mod.post(
+          client.origin <> @notices_endpoint, notice, client.headers,
+          [proxy: client.proxy, proxy_auth: client.proxy_auth]
+        )
     end
   end
 

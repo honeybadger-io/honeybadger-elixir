@@ -39,27 +39,6 @@ defmodule HoneybadgerTest do
     Application.put_env(:honeybadger, :exclude_envs, [:dev, :test])
   end
 
-  test "sending a metric" do
-    :meck.expect(HTTP, :post, fn(_url, _data, _headers) -> %HTTP.Response{} end)
-    Application.put_env(:honeybadger, :exclude_envs, [])
-
-    url = Application.get_env(:honeybadger, :origin) <> "/v1/metrics"
-
-    defmodule Sample2 do
-      def send_metric do
-        metric = Honeybadger.Metric.new([15, 20, 23, 18, 44, 88, 6])
-        Honeybadger.send_metric(metric)
-      end
-    end
-
-    Sample2.send_metric
-    :timer.sleep 250
-
-    assert :meck.called(HTTP, :post, [url, :_, @test_headers])
-  after
-    Application.put_env(:honeybadger, :exclude_envs, [:dev, :test])
-  end
-
   test "getting and setting the context" do
     assert %{} == Honeybadger.context()
 
