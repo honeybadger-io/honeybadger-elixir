@@ -8,14 +8,7 @@ defmodule Honeybadger.Plug do
 
       def call(conn, opts) do
         try do
-          before_response = :erlang.monotonic_time
-
-          conn = super(conn, opts)
-
-          after_response = :erlang.monotonic_time
-          response_time = :erlang.convert_time_unit(after_response - before_response, :native, :micro_seconds)
-          Honeybadger.Metrics.Server.timing(response_time)
-          conn
+          super(conn, opts)
         catch
           kind, reason ->
             Plug.ErrorHandler.__catch__(conn, kind, reason, &handle_errors/2)
@@ -35,7 +28,7 @@ defmodule Honeybadger.Plug do
       end
 
       defp handle_errors(conn, %{kind: _kind, reason: exception, stack: stack}) do
-        metadata = %{plug_env: build_plug_env(conn, __MODULE__), 
+        metadata = %{plug_env: build_plug_env(conn, __MODULE__),
                      context: Honeybadger.context()}
         Honeybadger.notify(exception, metadata, stack)
       end

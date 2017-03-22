@@ -1,9 +1,9 @@
 defmodule Honeybadger do
   use Application
+
   alias Honeybadger.Backtrace
   alias Honeybadger.Client
   alias Honeybadger.Notice
-  alias Honeybadger.Metric
 
   defmodule MissingEnvironmentNameError do
     defexception message: """
@@ -146,7 +146,7 @@ defmodule Honeybadger do
       :error_logger.add_report_handler(Honeybadger.Logger)
     end
 
-    Honeybadger.Metrics.Supervisor.start_link
+    {Application.ensure_started(:httpoison), self()}
   end
 
   defmacro notify(exception) do
@@ -197,15 +197,6 @@ defmodule Honeybadger do
   def do_notify(exception, metadata, stacktrace) do
     metadata = %{context: metadata}
     do_notify(exception, metadata, stacktrace)
-  end
-
-  def send_metric(%Metric{} = metric) do
-    if active_environment?() do
-      client = Client.new
-      Client.send_metric(client, metric, HTTPoison)
-    else
-      :ok
-    end
   end
 
   def context do
