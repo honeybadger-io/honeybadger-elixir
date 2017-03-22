@@ -3,6 +3,12 @@ defmodule HoneybadgerTest do
   alias HTTPoison, as: HTTP
   require Honeybadger
 
+  @test_headers [
+    {"X-API-Key", "at3stk3y"},
+    {"Accept", "application/json"},
+    {"Content-Type", "application/json"}
+  ]
+
   setup do
     before = Application.get_env :honeybadger, :api_key
 
@@ -18,9 +24,6 @@ defmodule HoneybadgerTest do
     Application.put_env(:honeybadger, :exclude_envs, [])
 
     url = Application.get_env(:honeybadger, :origin) <> "/v1/notices"
-    headers = [{"Accept", "application/json"},
-               {"Content-Type", "application/json"},
-               {"X-API-Key", "at3stk3y"}]
 
     defmodule Sample do
       def notify do
@@ -31,7 +34,7 @@ defmodule HoneybadgerTest do
     Sample.notify
     :timer.sleep 250
 
-    assert :meck.called(HTTP, :post, [url, :_, headers])
+    assert :meck.called(HTTP, :post, [url, :_, @test_headers])
   after
     Application.put_env(:honeybadger, :exclude_envs, [:dev, :test])
   end
@@ -41,9 +44,6 @@ defmodule HoneybadgerTest do
     Application.put_env(:honeybadger, :exclude_envs, [])
 
     url = Application.get_env(:honeybadger, :origin) <> "/v1/metrics"
-    headers = [{"Accept", "application/json"},
-               {"Content-Type", "application/json"},
-               {"X-API-Key", "at3stk3y"}]
 
     defmodule Sample2 do
       def send_metric do
@@ -55,7 +55,7 @@ defmodule HoneybadgerTest do
     Sample2.send_metric
     :timer.sleep 250
 
-    assert :meck.called(HTTP, :post, [url, :_, headers])
+    assert :meck.called(HTTP, :post, [url, :_, @test_headers])
   after
     Application.put_env(:honeybadger, :exclude_envs, [:dev, :test])
   end

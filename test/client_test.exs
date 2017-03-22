@@ -23,9 +23,9 @@ defmodule Honeybadger.ClientTest do
         "hostname" => Application.get_env(:honeybadger, :hostname)
       },
       "headers" => [
+        {"X-API-Key", "abc123"},
         {"Accept", "application/json"},
-        {"Content-Type", "application/json"},
-        {"X-API-Key", "abc123"}
+        {"Content-Type", "application/json"}
       ],
       "url" => "https://localhost:4000/v1/metrics",
     } == request

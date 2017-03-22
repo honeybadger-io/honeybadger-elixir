@@ -43,15 +43,16 @@ defmodule Honeybadger.Client do
   end
 
   defp post(client, url, body, http_mod) do
-    proxy = [proxy: client.proxy, proxy_auth: client.proxy_auth]
-
     case client.proxy do
-      nil -> http_mod.post(client.origin <> url, body, client.headers)
-      _ -> http_mod.post(client.origin <> url, body, client.headers, proxy)
+      nil ->
+        http_mod.post(client.origin <> url, body, client.headers)
+      _ ->
+        proxy = [proxy: client.proxy, proxy_auth: client.proxy_auth]
+        http_mod.post(client.origin <> url, body, client.headers, proxy)
     end
   end
 
   defp headers(api_key) do
-    @headers ++ [{"X-API-Key", api_key}]
+    [{"X-API-Key", api_key}] ++ @headers
   end
 end
