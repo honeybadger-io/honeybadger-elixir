@@ -44,11 +44,6 @@ defmodule HoneybadgerTest do
   test "sending a notice on an inactive environment doesn't make an HTTP request" do
     assert [:dev, :test] == Application.get_env(:honeybadger, :exclude_envs)
 
-    url = Application.get_env(:honeybadger, :origin) <> "/v1/notices"
-    headers = [{"Accept", "application/json"},
-               {"Content-Type", "application/json"},
-               {"X-API-Key", "at3stk3y"}]
-
     defmodule InactiveSample do
       def notify do
         Honeybadger.notify(%RuntimeError{}, %{})
