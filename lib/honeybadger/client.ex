@@ -16,11 +16,14 @@ defmodule Honeybadger.Client do
                 hostname: hostname}
   end
 
-  def send_notice(%__MODULE__{} = client, notice, http_mod \\ HTTPoison) do
-    body = JSON.encode!(notice)
-
+  def send_notice(%__MODULE__{} = client, notice, http_mod \\ HTTPoison, active_environment) do
+    encoded_notice = JSON.encode!(notice)
+    do_send_notice(client, encoded_notice, http_mod, active_environment)
+  end
+  defp do_send_notice(_client, _encoded_notice, _http_mod, false), do: {:ok, :unsent}
+  defp do_send_notice(client, encoded_notice, http_mod, true) do
     http_mod.post(
-      client.origin <> @notices_endpoint, notice, client.headers
+      client.origin <> @notices_endpoint, encoded_notice, client.headers
     )
   end
 
