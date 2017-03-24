@@ -178,18 +178,12 @@ defmodule Honeybadger do
     client = Client.new
     backtrace = Backtrace.from_stacktrace(stacktrace)
     notice = Notice.new(exception, metadata, backtrace)
-    Client.send_notice(client, notice, active_environment?())
+    Client.send_notice(client, notice)
   end
 
   def do_notify(exception, metadata, stacktrace) do
     metadata = %{context: metadata}
     do_notify(exception, metadata, stacktrace)
-  end
-
-  def active_environment? do
-    env = Application.get_env(:honeybadger, :environment_name)
-    exclude_envs = Application.get_env(:honeybadger, :exclude_envs, [:dev, :test])
-    not env in exclude_envs
   end
 
   def context do
