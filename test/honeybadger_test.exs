@@ -3,6 +3,12 @@ defmodule HoneybadgerTest do
   alias HTTPoison, as: HTTP
   require Honeybadger
 
+  @test_headers [
+    {"X-API-Key", "at3stk3y"},
+    {"Accept", "application/json"},
+    {"Content-Type", "application/json"}
+  ]
+
   setup do
     before = Application.get_env :honeybadger, :api_key
 
@@ -23,9 +29,6 @@ defmodule HoneybadgerTest do
     Application.put_env(:honeybadger, :exclude_envs, [])
 
     url = Application.get_env(:honeybadger, :origin) <> "/v1/notices"
-    headers = [{"Accept", "application/json"},
-               {"Content-Type", "application/json"},
-               {"X-API-Key", "at3stk3y"}]
 
     defmodule ActiveSample do
       def notify do
