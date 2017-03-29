@@ -172,8 +172,8 @@ defmodule Honeybadger do
   end
 
   def do_notify(exception, metadata, []) do
-      {:current_stacktrace, stacktrace} = Process.info(self(), :current_stacktrace)
-      do_notify(exception, metadata, stacktrace)
+    {:current_stacktrace, stacktrace} = Process.info(self(), :current_stacktrace)
+    do_notify(exception, metadata, stacktrace)
   end
 
   def do_notify(exception, %{context: _} = metadata, stacktrace) do
