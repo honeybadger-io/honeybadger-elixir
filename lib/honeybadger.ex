@@ -164,24 +164,11 @@ defmodule Honeybadger do
   end
 
   defp macro_notify(exception, metadata, stacktrace) do
-    if active_environment?() do
-      quote do
-        Task.start fn ->
-          Honeybadger.do_notify(unquote(exception), unquote(metadata), unquote(stacktrace))
-        end
-      end
-    else
-      quote do
-        [_, _, _] = [unquote(exception), unquote(metadata), unquote(stacktrace)]
-        :ok
+    quote do
+      Task.start fn ->
+        Honeybadger.do_notify(unquote(exception), unquote(metadata), unquote(stacktrace))
       end
     end
-  end
-
-  def active_environment? do
-    env = Application.get_env(:honeybadger, :environment_name)
-    exclude_envs = Application.get_env(:honeybadger, :exclude_envs, [:dev, :test])
-    not env in exclude_envs
   end
 
   def do_notify(exception, metadata, []) do

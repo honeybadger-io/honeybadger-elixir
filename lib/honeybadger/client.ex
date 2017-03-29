@@ -25,8 +25,12 @@ defmodule Honeybadger.Client do
   end
 
   def send_notice(%__MODULE__{} = client, notice, http_mod \\ HTTPoison) do
-    body = JSON.encode!(notice)
-
+    encoded_notice = JSON.encode!(notice)
+    do_send_notice(client, encoded_notice, http_mod, active_environment?())
+  end
+  
+  defp do_send_notice(_client, _encoded_notice, _http_mod, false), do: {:ok, :unsent}
+  defp do_send_notice(client, encoded_notice, http_mod, true) do
     case client.proxy do
       nil ->
         http_mod.post(
@@ -43,4 +47,12 @@ defmodule Honeybadger.Client do
   defp headers(api_key) do
     [{"X-API-Key", api_key}] ++ @headers
   end
+
+
+  def active_environment? do
+    env = Application.get_env(:honeybadger, :environment_name)
+    exclude_envs = Application.get_env(:honeybadger, :exclude_envs, [:dev, :test])
+    not env in exclude_envs
+  end
+
 end
