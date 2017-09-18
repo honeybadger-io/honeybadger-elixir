@@ -58,6 +58,46 @@ defmodule HoneybadgerTest do
     refute :meck.called(HTTP, :post, [:_, :_, :_])
   end
 
+  test "fetching application values" do
+    on_exit(fn ->
+      Application.delete_env(:honeybadger, :unused)
+    end)
+
+    Application.put_env(:honeybadger, :unused, "VALUE")
+
+    assert Honeybadger.get_env(:unused) == "VALUE"
+  end
+
+  test "fetching system values" do
+    on_exit(fn ->
+      Application.delete_env(:honeybadger, :unused)
+      System.delete_env("UNUSED")
+    end)
+
+    Application.put_env(:honeybadger, :unused, {:system, "UNUSED"})
+    System.put_env("UNUSED", "VALUE")
+
+    assert Honeybadger.get_env(:unused) == "VALUE"
+  end
+
+  test "an error is raised with unknown config keys" do
+    assert_raise ArgumentError, ~r/parameter :unused is not set/, fn ->
+      Honeybadger.get_env(:unused)
+    end
+  end
+
+  test "an error is raised with an unset system env" do
+    on_exit(fn ->
+      Application.delete_env(:honeybadger, :unused)
+    end)
+
+    Application.put_env(:honeybadger, :unused, {:system, "UNUSED"})
+
+    assert_raise ArgumentError, ~r/variable "UNUSED" is not set/, fn ->
+      Honeybadger.get_env(:unused)
+    end
+  end
+
   test "getting and setting the context" do
     assert %{} == Honeybadger.context()
 
@@ -67,5 +107,4 @@ defmodule HoneybadgerTest do
     Honeybadger.context(%{user_id: 2})
     assert %{user_id: 2} == Honeybadger.context()
   end
-
 end

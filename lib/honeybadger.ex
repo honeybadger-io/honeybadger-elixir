@@ -197,6 +197,21 @@ defmodule Honeybadger do
     context()
   end
 
+  @doc """
+  Fetch configuration specific to the :honeybadger application.
+  """
+  @spec get_env(atom) :: any | no_return
+  def get_env(key) when is_atom(key) do
+    case Application.fetch_env(:honeybadger, key) do
+      {:ok, {:system, var}} when is_binary(var) ->
+        System.get_env(var) || raise ArgumentError, "system variable #{inspect(var)} is not set"
+      {:ok, value} ->
+        value
+      :error ->
+        raise ArgumentError, "the configuration parameter #{inspect(key)} is not set"
+    end
+  end
+
   defp default_config do
      [api_key: System.get_env("HONEYBADGER_API_KEY"),
       exclude_envs: [:dev, :test],
