@@ -37,7 +37,7 @@ defmodule Honeybadger.Notice do
                 request: request,
                 notifier: notifier(),
                 server: server()}
-     |> filter(Application.get_env(:honeybadger, :notice_filter))
+     |> filter(Honeybadger.get_env(:notice_filter))
   end
 
   url = get_in(Honeybadger.Mixfile.project, [:package, :links, "GitHub"])
@@ -53,20 +53,8 @@ defmodule Honeybadger.Notice do
   end
 
   defp server do
-    %{environment_name: environment_name(),
-      hostname: hostname(),
-      project_root: project_root()}
-  end
-
-  defp hostname do
-    Application.get_env(:honeybadger, :hostname)
-  end
-
-  defp project_root do
-    Application.get_env(:honeybadger, :project_root)
-  end
-
-  defp environment_name do
-    Application.get_env(:honeybadger, :environment_name)
+    %{environment_name: Honeybadger.get_env(:environment_name),
+      hostname: Honeybadger.get_env(:hostname),
+      project_root: Honeybadger.get_env(:project_root)}
   end
 end
