@@ -31,7 +31,7 @@ defmodule Honeybadger.Logger do
       end
     rescue
       ex ->
-        error_type = Utils.strip_elixir_prefix(ex.__struct__)
+        error_type = Utils.module_to_string(ex.__struct__)
         reason = Exception.message(ex)
         message = "Unable to notify Honeybadger! #{error_type}: #{reason}"
         Logger.warn(message)
