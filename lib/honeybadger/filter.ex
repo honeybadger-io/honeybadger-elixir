@@ -92,7 +92,7 @@ defmodule Honeybadger.FilterMixin do
       def filter_error_message(message), do: message
 
       defp filter_map(map) do
-        case Application.get_env(:honeybadger, :filter_keys) do
+        case Honeybadger.get_env(:filter_keys) do
           keys when is_list(keys) ->
             filter_keys = Enum.map(keys, &canonicalize(&1))
             drop_keys = Enum.filter(Map.keys(map),
@@ -114,7 +114,7 @@ defmodule Honeybadger.DefaultNoticeFilter do
   @behaviour Honeybadger.NoticeFilter
 
   def filter(%Honeybadger.Notice{} = notice) do
-    if filter = Application.get_env(:honeybadger, :filter) do
+    if filter = Honeybadger.get_env(:filter) do
       notice
       |> Map.put(:request, filter_request(notice.request, filter))
       |> Map.put(:error, filter_error(notice.error, filter))
@@ -147,9 +147,11 @@ defmodule Honeybadger.DefaultNoticeFilter do
   end
 
   defp disable(request, config_key, map_key) do
-    if Application.get_env(:honeybadger, config_key),
-      do: request |> Map.drop([map_key]),
-      else: request
+    if Honeybadger.get_env(config_key) do
+      request |> Map.drop([map_key])
+    else
+      request
+    end
   end
 end
 
