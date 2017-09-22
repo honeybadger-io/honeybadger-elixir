@@ -1,53 +1,90 @@
 defmodule Honeybadger.Client do
-  alias Poison, as: JSON
+  @moduledoc false
 
-  defstruct [:active?, :environment_name, :headers, :hostname, :origin, :proxy,
-             :proxy_auth]
+  use GenServer
 
-  @notices_endpoint "/v1/notices"
   @headers [
     {"Accept", "application/json"},
-    {"Content-Type", "application/json"}
+    {"Content-Type", "application/json"},
+    {"User-Agent", "Honeybadger Elixir"}
   ]
+  @max_connections 20
+  @notices_endpoint "/v1/notices"
 
-  def new do
-    api_key = Honeybadger.get_env(:api_key)
-    env_name = Honeybadger.get_env(:environment_name)
-    exclude_envs = Honeybadger.get_env(:exclude_envs)
-    hostname = Honeybadger.get_env(:hostname)
-    origin = Honeybadger.get_env(:origin)
-    proxy = Honeybadger.get_env(:proxy)
-    proxy_auth = Honeybadger.get_env(:proxy_auth)
+  # State
 
-    %__MODULE__{active?: !Enum.member?(exclude_envs, env_name),
-                origin: origin,
-                headers: headers(api_key),
-                environment_name: env_name,
-                hostname: hostname,
-                proxy: proxy,
-                proxy_auth: proxy_auth}
+  defstruct [:enabled, :headers, :proxy, :proxy_auth, :url]
+
+  # API
+
+  def start_link(config_opts) do
+    state = new(config_opts)
+
+    GenServer.start_link(__MODULE__, state, [name: __MODULE__])
   end
 
-  def send_notice(%__MODULE__{} = client, notice, http_mod \\ HTTPoison) do
-    do_send_notice(client, JSON.encode!(notice), http_mod)
+  @doc false
+  def new(opts) do
+    %__MODULE__{enabled: enabled?(opts),
+                headers: build_headers(opts),
+                proxy: get_env(opts, :proxy),
+                proxy_auth: get_env(opts, :proxy_auth),
+                url: get_env(opts, :origin) <> @notices_endpoint}
   end
 
-  defp do_send_notice(%{active?: false}, _notice, _http_mod) do
-    {:ok, :unsent}
-  end
-  defp do_send_notice(%{proxy: nil} = client, notice, http_mod) do
-    http_mod.post(client.origin <> @notices_endpoint,
-                  notice,
-                  client.headers)
-  end
-  defp do_send_notice(client, notice, http_mod) do
-    http_mod.post(client.origin <> @notices_endpoint,
-                  notice,
-                  client.headers,
-                  [proxy: client.proxy, proxy_auth: client.proxy_auth])
+  @doc false
+  def send_notice(notice) when is_map(notice) do
+    if pid = Process.whereis(__MODULE__) do
+      GenServer.cast(pid, {:notice, notice})
+    else
+      IO.puts "SERVER NOT RUNNING"
+    end
   end
 
-  defp headers(api_key) do
-    [{"X-API-Key", api_key}] ++ @headers
+  # Callbacks
+
+  def init(state) do
+    :ok = :hackney_pool.start_pool(__MODULE__, [max_connections: @max_connections])
+
+    {:ok, state}
+  end
+
+  def terminate(_reason, _state) do
+    :ok = :hackney_pool.stop_pool(__MODULE__)
+  end
+
+  def handle_cast({:notice, _notice}, %{enabled: false} = state) do
+    {:noreply, state}
+  end
+
+  def handle_cast({:notice, notice}, %{enabled: true} = state) do
+    payload = Poison.encode!(notice)
+
+    opts =
+      state
+      |> Map.take([:proxy, :proxy_auth])
+      |> Enum.into(Keyword.new)
+      |> Keyword.put(:pool, __MODULE__)
+
+    :hackney.post(state.url, state.headers, payload, opts)
+
+    {:noreply, state}
+  end
+
+  # Helpers
+
+  def enabled?(opts) do
+    env_name = get_env(opts, :environment_name)
+    excluded = get_env(opts, :exclude_envs)
+
+    not env_name in excluded
+  end
+
+  defp build_headers(opts) do
+    [{"X-API-Key", get_env(opts, :api_key)}] ++ @headers
+  end
+
+  defp get_env(opts, key) do
+    Keyword.get(opts, key, Honeybadger.get_env(:api_key))
   end
 end

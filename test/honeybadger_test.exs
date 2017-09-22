@@ -1,6 +1,5 @@
 defmodule HoneybadgerTest do
   use ExUnit.Case
-  alias HTTPoison, as: HTTP
   require Honeybadger
 
   setup do
@@ -10,12 +9,6 @@ defmodule HoneybadgerTest do
 
     on_exit(fn ->
       Application.put_env :honeybadger, :api_key, before
-    end)
-
-    :meck.expect(HTTP, :post, fn(_url, _data, _headers) -> %HTTP.Response{} end)
-
-    on_exit(fn ->
-      :meck.unload(HTTP)
     end)
   end
 
@@ -52,10 +45,7 @@ defmodule HoneybadgerTest do
       end
     end
 
-    {:ok, _} = InactiveSample.notify
-    :timer.sleep 250
-
-    refute :meck.called(HTTP, :post, [:_, :_, :_])
+    {:ok, :unsent} = InactiveSample.notify
   end
 
   test "fetching application values" do

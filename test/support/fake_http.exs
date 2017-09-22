@@ -1,11 +1,8 @@
 defmodule FakeHttp do
-  alias Poison, as: JSON
+  @moduledoc false
 
-  def post(url, body, headers) do
-    body = JSON.decode!(body)
-
-    %{"url" => url,
-      "body" => body,
-      "headers" => headers}
+  @doc false
+  def post(_url, headers, body, _options) do
+    {:ok, 201, headers, body}
   end
 end

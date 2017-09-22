@@ -1,9 +1,7 @@
 defmodule Honeybadger do
   use Application
 
-  alias Honeybadger.Backtrace
-  alias Honeybadger.Client
-  alias Honeybadger.Notice
+  alias Honeybadger.{Backtrace, Client, Notice}
 
   defmodule MissingEnvironmentNameError do
     defexception message: """
@@ -132,60 +130,33 @@ defmodule Honeybadger do
 
   @context :honeybadger_context
 
-  @doc """
-    This is here as a callback to Application to configure and start the
-    Honeybadger client's dependencies. You'll likely never need to call this
-    function yourself.
-  """
+  @doc false
   def start(_type, _opts) do
-    require_environment_name!()
+    import Supervisor.Spec
 
-    app_config = Application.get_all_env(:honeybadger)
-    config = Keyword.merge(default_config(), app_config)
-    update_application_config!(config)
+    config =
+      :honeybadger
+      |> Application.get_all_env()
+      |> update_with_merged_config()
+      |> verify_environment_name!()
 
     if config[:use_logger] do
       :error_logger.add_report_handler(Honeybadger.Logger)
     end
 
-    {Application.ensure_started(:httpoison), self()}
+    children = [
+      worker(Client, [config])
+    ]
+
+    Supervisor.start_link(children, strategy: :one_for_one)
   end
 
-  defmacro notify(exception) do
-    macro_notify(exception, {:%{}, [], []}, [])
-  end
+  def notify(exception, metadata \\ %{}, stacktrace \\ []) do
+    notice = Notice.new(exception,
+                        contextual_metadata(metadata),
+                        backtrace(stacktrace))
 
-  defmacro notify(exception, metadata) do
-    macro_notify(exception, metadata, [])
-  end
-
-  defmacro notify(exception, metadata, stacktrace) do
-    macro_notify(exception, metadata, stacktrace)
-  end
-
-  defp macro_notify(exception, metadata, stacktrace) do
-    quote do
-      Task.start fn ->
-        Honeybadger.do_notify(unquote(exception), unquote(metadata), unquote(stacktrace))
-      end
-    end
-  end
-
-  def do_notify(exception, metadata, []) do
-    {:current_stacktrace, stacktrace} = Process.info(self(), :current_stacktrace)
-    do_notify(exception, metadata, stacktrace)
-  end
-
-  def do_notify(exception, %{context: _} = metadata, stacktrace) do
-    client = Client.new
-    backtrace = Backtrace.from_stacktrace(stacktrace)
-    notice = Notice.new(exception, metadata, backtrace)
-    Client.send_notice(client, notice)
-  end
-
-  def do_notify(exception, metadata, stacktrace) do
-    metadata = %{context: metadata}
-    do_notify(exception, metadata, stacktrace)
+    Client.send_notice(notice)
   end
 
   def context do
@@ -217,6 +188,8 @@ defmodule Honeybadger do
     end
   end
 
+  # Helpers
+
   defp default_config do
      [api_key: {:system, "HONEYBADGER_API_KEY"},
       app: nil,
@@ -236,23 +209,36 @@ defmodule Honeybadger do
       filter_disable_session: false]
   end
 
-  defp require_environment_name! do
-    case Honeybadger.get_env(:environment_name) do
+  defp update_with_merged_config(config) do
+    merged = Keyword.merge(default_config(), config)
+
+    Enum.each(merged, fn {key, value} ->
+      Application.put_env(:honeybadger, key, value)
+    end)
+
+    merged
+  end
+
+  defp verify_environment_name!(config) do
+    case Keyword.get(config, :environment_name) do
       nil -> raise MissingEnvironmentNameError
-      env -> put_environment_name(env)
+      _ -> config
     end
   end
 
-  defp update_application_config!(config) do
-    Enum.each(config, fn {key, value} ->
-      Application.put_env(:honeybadger, key, value)
-    end)
+  defp backtrace([]) do
+    {:current_stacktrace, stacktrace} = Process.info(self(), :current_stacktrace)
+
+    backtrace(stacktrace)
+  end
+  defp backtrace(stacktrace) do
+    Backtrace.from_stacktrace(stacktrace)
   end
 
-  defp put_environment_name(env) when is_binary(env) do
-    put_environment_name(String.to_atom(env))
+  defp contextual_metadata(%{context: _} = metadata) do
+    metadata
   end
-  defp put_environment_name(env) when is_atom(env) do
-    Application.put_env(:honeybadger, :environment_name, env)
+  defp contextual_metadata(metadata) do
+    %{context: metadata}
   end
 end
