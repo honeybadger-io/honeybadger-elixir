@@ -18,13 +18,13 @@ defmodule Honeybadger.Mixfile do
   end
 
   def application do
-    [applications: [:httpoison, :logger, :poison],
+    [applications: [:hackney, :logger, :poison],
      env: [],
      mod: {Honeybadger, []}]
   end
 
   defp deps do
-    [{:httpoison, "~> 0.9 or ~> 0.11"},
+    [{:hackney, "~> 1.1"},
      {:poison, "~> 2.0 or ~> 3.0"},
      {:plug, ">= 0.13.0 and < 2.0.0"},
 
@@ -32,7 +32,8 @@ defmodule Honeybadger.Mixfile do
      {:ex_doc, "~> 0.7", only: :dev},
 
      # Test dependencies
-     {:meck, "~> 0.8.3", only: :test}]
+     {:meck, "~> 0.8.3", only: :test},
+     {:cowboy, "~> 1.0.0", only: :test}]
   end
 
   defp package do

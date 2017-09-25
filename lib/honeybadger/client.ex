@@ -85,6 +85,6 @@ defmodule Honeybadger.Client do
   end
 
   defp get_env(opts, key) do
-    Keyword.get(opts, key, Honeybadger.get_env(:api_key))
+    Keyword.get(opts, key, Honeybadger.get_env(key))
   end
 end

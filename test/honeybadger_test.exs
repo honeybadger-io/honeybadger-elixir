@@ -1,51 +1,26 @@
 defmodule HoneybadgerTest do
-  use ExUnit.Case
-  require Honeybadger
+  use Honeybadger.Case
 
   setup do
-    before = Application.get_env :honeybadger, :api_key
+    {:ok, _} = Honeybadger.API.start(self())
 
-    Application.put_env :honeybadger, :api_key, "at3stk3y"
-
-    on_exit(fn ->
-      Application.put_env :honeybadger, :api_key, before
-    end)
+    on_exit(&Honeybadger.API.stop/0)
   end
 
   test "sending a notice on an active environment" do
-    Application.put_env(:honeybadger, :exclude_envs, [])
+    restart_with_config(exclude_envs: [])
 
-    url = Application.get_env(:honeybadger, :origin) <> "/v1/notices"
-    headers = [
-      {"X-API-Key", "at3stk3y"},
-      {"Accept", "application/json"},
-      {"Content-Type", "application/json"},
-    ]
+    :ok = Honeybadger.notify(%RuntimeError{}, %{})
 
-    defmodule ActiveSample do
-      def notify do
-        Honeybadger.notify(%RuntimeError{}, %{})
-      end
-    end
-
-    {:ok, _} = ActiveSample.notify
-    :timer.sleep 250
-
-    assert :meck.called(HTTP, :post, [url, :meck.is(fn(data) -> is_binary(data) end), headers])
-  after
-    Application.put_env(:honeybadger, :exclude_envs, [:dev, :test])
+    assert_receive {:api_request, _}
   end
 
   test "sending a notice on an inactive environment doesn't make an HTTP request" do
-    assert [:dev, :test] == Application.get_env(:honeybadger, :exclude_envs)
+    restart_with_config(exclude_envs: [:dev, :test])
 
-    defmodule InactiveSample do
-      def notify do
-        Honeybadger.notify(%RuntimeError{}, %{})
-      end
-    end
+    :ok = Honeybadger.notify(%RuntimeError{}, %{})
 
-    {:ok, :unsent} = InactiveSample.notify
+    refute_receive {:api_request, _}
   end
 
   test "fetching application values" do
