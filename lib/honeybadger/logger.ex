@@ -30,11 +30,13 @@ defmodule Honeybadger.Logger do
           Honeybadger.notify(exception, context, stacktrace)
       end
     rescue
-      ex ->
-        error_type = Utils.module_to_string(ex.__struct__)
-        reason = Exception.message(ex)
-        message = "Unable to notify Honeybadger! #{error_type}: #{reason}"
-        Logger.error(message)
+      exception ->
+        Logger.warn(fn ->
+          error_type = Utils.module_to_string(exception.__struct__)
+          reason = Exception.message(exception)
+
+          "Unable to notify Honeybadger! #{error_type}: #{reason}"
+        end)
     end
 
     {:ok, state}

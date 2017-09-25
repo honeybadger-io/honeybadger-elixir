@@ -50,7 +50,7 @@ defmodule Honeybadger.LoggerTest do
       :error_logger.error_report(error_report)
     end)
 
-    assert log =~ "Unable to notify Honeybadger!"
+    assert log =~ "Unable to notify Honeybadger! BadMapError: "
 
     refute_receive {:api_request, _}
   end
