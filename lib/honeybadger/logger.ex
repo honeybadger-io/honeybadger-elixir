@@ -34,7 +34,7 @@ defmodule Honeybadger.Logger do
         error_type = Utils.module_to_string(ex.__struct__)
         reason = Exception.message(ex)
         message = "Unable to notify Honeybadger! #{error_type}: #{reason}"
-        Logger.warn(message)
+        Logger.error(message)
     end
 
     {:ok, state}

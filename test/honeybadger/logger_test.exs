@@ -42,15 +42,18 @@ defmodule Honeybadger.LoggerTest do
     assert_receive {:api_request, _}
   end
 
-  # test "crashes do not cause recursive logging" do
-  #   error_report = [[error_info: {:error, %RuntimeError{message: "Oops"}, []},
-  #                   dictionary: [honeybadger_context: [user_id: 1]]], []]
+  test "crashes do not cause recursive logging" do
+    error_report = [[error_info: {:error, %RuntimeError{message: "Oops"}, []},
+                    dictionary: [honeybadger_context: [user_id: 1]]], []]
 
-  #   :error_logger.error_report(error_report)
-  #   Logger.flush()
+    log = capture_log(fn ->
+      :error_logger.error_report(error_report)
+    end)
 
-  #   assert_receive {:api_request, _}
-  # end
+    assert log =~ "Unable to notify Honeybadger!"
+
+    refute_receive {:api_request, _}
+  end
 
   test "log levels lower than :error_report are ignored" do
     message_types = [:info_msg, :info_report, :warning_msg, :error_msg]

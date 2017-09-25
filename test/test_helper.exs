@@ -24,6 +24,20 @@ defmodule Honeybadger.Case do
     :ok = Application.ensure_started(:honeybadger)
   end
 
+  def capture_log(fun) do
+    Logger.add_backend(:console, flush: true)
+
+    on_exit(fn ->
+      Logger.remove_backend(:console)
+    end)
+
+    ExUnit.CaptureIO.capture_io(:user, fn ->
+      fun.()
+      :timer.sleep(100)
+      Logger.flush()
+    end)
+  end
+
   defp put_all_env(opts) do
     Enum.each(opts, fn {key, val} ->
       Application.put_env(:honeybadger, key, val)
