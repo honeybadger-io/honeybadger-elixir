@@ -3,6 +3,8 @@ defmodule Honeybadger.Client do
 
   use GenServer
 
+  require Logger
+
   @headers [
     {"Accept", "application/json"},
     {"Content-Type", "application/json"},
@@ -37,7 +39,7 @@ defmodule Honeybadger.Client do
     if pid = Process.whereis(__MODULE__) do
       GenServer.cast(pid, {:notice, notice})
     else
-      IO.puts "SERVER NOT RUNNING"
+      Logger.warn("[Honeybadger] Unable to notify, the :honeybadger client isn't running")
     end
   end
 
@@ -66,7 +68,20 @@ defmodule Honeybadger.Client do
       |> Enum.into(Keyword.new)
       |> Keyword.put(:pool, __MODULE__)
 
-    :hackney.post(state.url, state.headers, payload, opts)
+    case :hackney.post(state.url, state.headers, payload, opts) do
+      {:ok, code, _headers, body} when code >= 200 and code <= 399 ->
+        Logger.debug("[Honeybadger] API success: #{inspect(body)}")
+      {:ok, code, _headers, body} when code >= 400 and code <= 504 ->
+        Logger.error("[Honeybadger] API failure: #{inspect(body)}")
+      {:error, reason} ->
+        Logger.error("[Honeybadger] connection error: #{inspect(reason)}")
+    end
+
+    {:noreply, state}
+  end
+
+  def handle_info(message, state) do
+    Logger.info("[Honeybadger] unexpected message: #{inspect(message)}")
 
     {:noreply, state}
   end
