@@ -1,6 +1,6 @@
 defmodule Honeybadger.Logger do
   alias Honeybadger.Utils
-  require Honeybadger
+
   require Logger
 
   use GenEvent
@@ -12,12 +12,12 @@ defmodule Honeybadger.Logger do
   end
 
   def handle_event({_level, gl, _event}, state)
-  when node(gl) != node() do
+      when node(gl) != node() do
     {:ok, state}
   end
 
-  def handle_event({:error_report, _gl, {_pid, _type, [message | _]}}, state) 
-  when is_list(message) do
+  def handle_event({:error_report, _gl, {_pid, _type, [message | _]}}, state)
+      when is_list(message) do
     try do
       error_info = message[:error_info]
       context = get_in(message, [:dictionary, :honeybadger_context])

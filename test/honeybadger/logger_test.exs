@@ -1,92 +1,84 @@
 defmodule Honeybadger.LoggerTest do
-  use ExUnit.Case
-  alias HTTPoison, as: HTTP
+  use Honeybadger.Case
+
   require Logger
 
-  setup_all do
-    :error_logger.add_report_handler(Honeybadger.Logger)
-    Application.put_env(:honeybadger, :exclude_envs, [])
-    # We re-require this file so the module will be re-compiled
-    # to reflect the new `exclude_envs` setting
-    Code.require_file("lib/honeybadger/logger.ex")
+  defmodule ErrorServer do
+    use GenServer
 
-    on_exit fn ->
-      :error_logger.delete_report_handler(Honeybadger.Logger)
-      Application.put_env(:honeybadger, :exclude_envs, [:dev, :test])
+    def start do
+      GenServer.start(__MODULE__, [])
+    end
+
+    def init(_), do: {:ok, []}
+
+    def handle_cast(:fail, _state) do
+      raise RuntimeError, "Crashing"
     end
   end
 
-  test "logging a crash" do
-    :meck.expect(HTTP, :post, fn(_ex, _c, _s) -> %HTTP.Response{} end)
+  setup_all do
+    :error_logger.add_report_handler(Honeybadger.Logger)
 
+    on_exit fn ->
+      :error_logger.delete_report_handler(Honeybadger.Logger)
+    end
+  end
+
+  setup do
+    {:ok, _} = Honeybadger.API.start(self())
+
+    restart_with_config(exclude_envs: [])
+
+    on_exit(&Honeybadger.API.stop/0)
+  end
+
+  test "logging a crash" do
     :proc_lib.spawn(fn ->
       Honeybadger.context(user_id: 1)
       raise RuntimeError, "Oops"
     end)
-    :timer.sleep 250
 
-    assert :meck.called(HTTP, :post, [:_, :_, :_])
-    :meck.unload(HTTP)
+    assert_receive {:api_request, _}
   end
 
-  test "crashes do not cause recursive logging" do
-    :meck.expect(HTTP, :post, fn(_ex, _c, _s) -> %HTTP.Error{reason: 500} end)
+  # test "crashes do not cause recursive logging" do
+  #   error_report = [[error_info: {:error, %RuntimeError{message: "Oops"}, []},
+  #                   dictionary: [honeybadger_context: [user_id: 1]]], []]
 
-    error_report = [[error_info: {:error, %RuntimeError{message: "Oops"}, []},
-                    dictionary: [honeybadger_context: [user_id: 1]]], []]
-    :error_logger.error_report(error_report)
-    :timer.sleep 250
+  #   :error_logger.error_report(error_report)
+  #   Logger.flush()
 
-    assert :meck.called(HTTP, :post, [:_, :_, :_])
-    :meck.unload(HTTP)
-  end
+  #   assert_receive {:api_request, _}
+  # end
 
   test "log levels lower than :error_report are ignored" do
     message_types = [:info_msg, :info_report, :warning_msg, :error_msg]
 
     Enum.each(message_types, fn(type) ->
-      :meck.expect(HTTP, :post, fn(_ex, _c, _s) -> %HTTP.Response{} end)
       apply(:error_logger, type, ["Ignore me"])
-      :timer.sleep 250
-      refute :meck.called(HTTP, :post, [:_, :_, :_])
+      Logger.flush()
+
+      refute_receive {:api_request, _}
     end)
-
-    :meck.unload(HTTP)
-  end
-
-  test "logging exceptions from special processes" do
-    :meck.expect(HTTP, :post, fn(_ex, _c, _s) -> %HTTP.Response{} end)
-
-    :proc_lib.spawn(fn ->
-      Float.parse("12.345e308")
-    end)
-    :timer.sleep 250
-
-    assert :meck.called(HTTP, :post, [:_, :_, :_])
-    :meck.unload(HTTP)
   end
 
   test "logging exceptions from Tasks" do
-    :meck.expect(HTTP, :post, fn(_ex, _c, _s) -> %HTTP.Response{} end)
-
     Task.start(fn ->
       Float.parse("12.345e308")
     end)
-    :timer.sleep 250
 
-    assert :meck.called(HTTP, :post, [:_, :_, :_])
-    :meck.unload(HTTP)
+    Logger.flush()
+
+    assert_receive {:api_request, _}
   end
 
   test "logging exceptions from GenServers" do
-    :meck.expect(HTTP, :post, fn(_ex, _c, _s) -> %HTTP.Response{} end)
-
     {:ok, pid} = ErrorServer.start
+
     GenServer.cast(pid, :fail)
-    :timer.sleep 250
+    Logger.flush()
 
-    assert :meck.called(HTTP, :post, [:_, :_, :_])
-    :meck.unload(HTTP)
+    assert_receive {:api_request, _}
   end
-
 end

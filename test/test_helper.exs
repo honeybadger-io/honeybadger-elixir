@@ -42,9 +42,9 @@ defmodule Honeybadger.API do
   end
 
   def stop do
-    :timer.sleep(50)
+    :timer.sleep(100)
     Cowboy.shutdown(__MODULE__.HTTP)
-    :timer.sleep(50)
+    :timer.sleep(100)
   end
 
   def init(opts) do
