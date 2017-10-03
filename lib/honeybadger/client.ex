@@ -10,12 +10,13 @@ defmodule Honeybadger.Client do
   ]
 
   def new do
-    origin = Application.get_env(:honeybadger, :origin)
-    api_key = Application.get_env(:honeybadger, :api_key)
-    env_name = Application.get_env(:honeybadger, :environment_name)
-    hostname = Application.get_env(:honeybadger, :hostname)
-    proxy = Application.get_env(:honeybadger, :proxy)
-    proxy_auth = Application.get_env(:honeybadger, :proxy_auth)
+    origin = Honeybadger.get_env(:origin)
+    api_key = Honeybadger.get_env(:api_key)
+    env_name = Honeybadger.get_env(:environment_name)
+    hostname = Honeybadger.get_env(:hostname)
+    proxy = Honeybadger.get_env(:proxy)
+    proxy_auth = Honeybadger.get_env(:proxy_auth)
+
     %__MODULE__{origin: origin,
                 headers: headers(api_key),
                 environment_name: env_name,
@@ -48,10 +49,10 @@ defmodule Honeybadger.Client do
     [{"X-API-Key", api_key}] ++ @headers
   end
 
-  def active_environment? do
-    env = Application.get_env(:honeybadger, :environment_name)
-    exclude_envs = Application.get_env(:honeybadger, :exclude_envs, [:dev, :test])
+  defp active_environment? do
+    env = Honeybadger.get_env(:environment_name)
+    exclude_envs = Honeybadger.get_env(:exclude_envs)
+
     not env in exclude_envs
   end
-
 end

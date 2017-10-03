@@ -68,7 +68,7 @@ defmodule Honeybadger.Plug do
       "REMOTE_ADDR" => get_remote_addr(conn.remote_ip),
       "REMOTE_PORT" => get_remote_port(conn.peer),
       "SERVER_ADDR" => "127.0.0.1",
-      "SERVER_NAME" => Application.get_env(:honeybadger, :hostname),
+      "SERVER_NAME" => Honeybadger.get_env(:hostname),
       "SERVER_PORT" => conn.port,
       "CONTENT_LENGTH" => Plug.Conn.get_req_header(conn, "content-length"),
       "ORIGINAL_FULLPATH" => conn.request_path

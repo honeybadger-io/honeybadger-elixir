@@ -197,8 +197,30 @@ defmodule Honeybadger do
     context()
   end
 
+  @doc """
+  Fetch configuration specific to the :honeybadger application.
+
+  # Example
+
+      Honeybadger.get_env(:exclude_envs)
+      #=> [:dev, :test]
+  """
+  @spec get_env(atom) :: any | no_return
+  def get_env(key) when is_atom(key) do
+    case Application.fetch_env(:honeybadger, key) do
+      {:ok, {:system, var}} when is_binary(var) ->
+        System.get_env(var) || raise ArgumentError, "system variable #{inspect(var)} is not set"
+      {:ok, value} ->
+        value
+      :error ->
+        raise ArgumentError, "the configuration parameter #{inspect(key)} is not set"
+    end
+  end
+
   defp default_config do
-     [api_key: System.get_env("HONEYBADGER_API_KEY"),
+     [api_key: {:system, "HONEYBADGER_API_KEY"},
+      app: nil,
+      environment_name: {:system, "MIX_ENV"},
       exclude_envs: [:dev, :test],
       hostname: :inet.gethostname |> elem(1) |> List.to_string,
       origin: "https://api.honeybadger.io",
@@ -215,19 +237,22 @@ defmodule Honeybadger do
   end
 
   defp require_environment_name! do
-    if is_nil(Application.get_env(:honeybadger, :environment_name)) do
-      case System.get_env("MIX_ENV") do
-        nil ->
-          raise MissingEnvironmentNameError
-        env ->
-          Application.put_env(:honeybadger, :environment_name, String.to_atom(env))
-      end
+    case Honeybadger.get_env(:environment_name) do
+      nil -> raise MissingEnvironmentNameError
+      env -> put_environment_name(env)
     end
   end
 
   defp update_application_config!(config) do
-    Enum.each(config, fn({key, value}) ->
+    Enum.each(config, fn {key, value} ->
       Application.put_env(:honeybadger, key, value)
     end)
+  end
+
+  defp put_environment_name(env) when is_binary(env) do
+    put_environment_name(String.to_atom(env))
+  end
+  defp put_environment_name(env) when is_atom(env) do
+    Application.put_env(:honeybadger, :environment_name, env)
   end
 end
