@@ -20,7 +20,7 @@ defmodule Honeybadger.Notice do
     exception = Exception.normalize(:error, exception)
     exception_mod = exception.__struct__
     error = %{
-      class: Utils.strip_elixir_prefix(exception_mod),
+      class: Utils.module_to_string(exception_mod),
       message: exception_mod.message(exception),
       tags: Map.get(metadata, :tags, []),
       backtrace: backtrace

@@ -51,7 +51,7 @@ defmodule Honeybadger.Plug do
            |> Plug.Conn.fetch_query_params
 
     %{url: conn.request_path,
-      component: Utils.strip_elixir_prefix(mod),
+      component: Utils.module_to_string(mod),
       action: "",
       params: conn.params,
       session: session,
