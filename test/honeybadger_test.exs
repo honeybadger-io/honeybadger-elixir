@@ -23,6 +23,23 @@ defmodule HoneybadgerTest do
     refute_receive {:api_request, _}
   end
 
+  test "fetching all application values" do
+    on_exit(fn ->
+      Application.delete_env(:honeybadger, :option_a)
+      Application.delete_env(:honeybadger, :option_b)
+      System.delete_env("OPTION_A")
+    end)
+
+    Application.put_env(:honeybadger, :option_a, {:system, "OPTION_A"})
+    Application.put_env(:honeybadger, :option_b, :value)
+    System.put_env("OPTION_A", "VALUE")
+
+    all_env = Honeybadger.get_all_env()
+
+    assert all_env[:option_a] == "VALUE"
+    assert all_env[:option_b] == :value
+  end
+
   test "fetching application values" do
     on_exit(fn ->
       Application.delete_env(:honeybadger, :unused)

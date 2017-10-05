@@ -135,8 +135,7 @@ defmodule Honeybadger do
     import Supervisor.Spec
 
     config =
-      :honeybadger
-      |> Application.get_all_env()
+      get_all_env()
       |> update_with_merged_config()
       |> verify_environment_name!()
 
@@ -171,7 +170,7 @@ defmodule Honeybadger do
   @doc """
   Fetch configuration specific to the :honeybadger application.
 
-  # Example
+  ## Example
 
       Honeybadger.get_env(:exclude_envs)
       #=> [:dev, :test]
@@ -185,6 +184,24 @@ defmodule Honeybadger do
         value
       :error ->
         raise ArgumentError, "the configuration parameter #{inspect(key)} is not set"
+    end
+  end
+
+  @doc """
+  Fetch all configuration specific to the :honeybadger application.
+
+  This resolves values the same way that `get_env/1` does, so it resolves
+  :system tuple variables correctly.
+
+  ## Example
+
+      Honeybadger.get_all_env()
+      #=> [api_key: "12345", environment_name: "dev", ...]
+  """
+  @spec get_all_env() :: [{atom, any}]
+  def get_all_env do
+    for {key, _value} <- Application.get_all_env(:honeybadger) do
+      {key, get_env(key)}
     end
   end
 
