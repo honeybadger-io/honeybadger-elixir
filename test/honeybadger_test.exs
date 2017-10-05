@@ -10,7 +10,11 @@ defmodule HoneybadgerTest do
   test "sending a notice on an active environment" do
     restart_with_config(exclude_envs: [])
 
-    :ok = Honeybadger.notify(%RuntimeError{}, %{})
+    logged = capture_log(fn ->
+      :ok = Honeybadger.notify(%RuntimeError{}, %{})
+    end)
+
+    assert logged =~ ~s|[Honeybadger] API success: "{}"|
 
     assert_receive {:api_request, _}
   end
@@ -18,7 +22,11 @@ defmodule HoneybadgerTest do
   test "sending a notice on an inactive environment doesn't make an HTTP request" do
     restart_with_config(exclude_envs: [:dev, :test])
 
-    :ok = Honeybadger.notify(%RuntimeError{}, %{})
+    logged = capture_log(fn ->
+      :ok = Honeybadger.notify(%RuntimeError{}, %{})
+    end)
+
+    refute logged =~ "[Honeybadger] API"
 
     refute_receive {:api_request, _}
   end

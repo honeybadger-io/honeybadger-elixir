@@ -69,10 +69,10 @@ defmodule Honeybadger.Client do
       |> Keyword.put(:pool, __MODULE__)
 
     case :hackney.post(state.url, state.headers, payload, opts) do
-      {:ok, code, _headers, body} when code >= 200 and code <= 399 ->
-        Logger.debug("[Honeybadger] API success: #{inspect(body)}")
-      {:ok, code, _headers, body} when code >= 400 and code <= 504 ->
-        Logger.error("[Honeybadger] API failure: #{inspect(body)}")
+      {:ok, code, _headers, ref} when code >= 200 and code <= 399 ->
+        Logger.debug("[Honeybadger] API success: #{inspect(body_from_ref(ref))}")
+      {:ok, code, _headers, ref} when code >= 400 and code <= 504 ->
+        Logger.error("[Honeybadger] API failure: #{inspect(body_from_ref(ref))}")
       {:error, reason} ->
         Logger.error("[Honeybadger] connection error: #{inspect(reason)}")
     end
@@ -93,6 +93,12 @@ defmodule Honeybadger.Client do
     excluded = get_env(opts, :exclude_envs)
 
     not env_name in excluded
+  end
+
+  defp body_from_ref(ref) do
+    ref
+    |> :hackney.body()
+    |> elem(1)
   end
 
   defp build_headers(opts) do
