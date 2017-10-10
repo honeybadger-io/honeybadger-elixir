@@ -136,8 +136,9 @@ defmodule Honeybadger do
 
     config =
       get_all_env()
-      |> update_with_merged_config()
+      |> put_dynamic_env()
       |> verify_environment_name!()
+      |> persist_all_env()
 
     if config[:use_logger] do
       :error_logger.add_report_handler(Honeybadger.Logger)
@@ -207,33 +208,16 @@ defmodule Honeybadger do
 
   # Helpers
 
-  defp default_config do
-     [api_key: {:system, "HONEYBADGER_API_KEY"},
-      app: nil,
-      environment_name: {:system, "MIX_ENV"},
-      exclude_envs: [:dev, :test],
-      hostname: :inet.gethostname |> elem(1) |> List.to_string,
-      origin: "https://api.honeybadger.io",
-      proxy: nil,
-      proxy_auth: {nil, nil},
-      project_root: System.cwd,
-      use_logger: true,
-      notice_filter: Honeybadger.DefaultNoticeFilter,
-      filter: Honeybadger.DefaultFilter,
-      filter_keys: [:password, :credit_card],
-      filter_disable_url: false,
-      filter_disable_params: false,
-      filter_disable_session: false]
-  end
+  defp put_dynamic_env(config) do
+    hostname = fn ->
+      :inet.gethostname()
+      |> elem(1)
+      |> List.to_string()
+    end
 
-  defp update_with_merged_config(config) do
-    merged = Keyword.merge(default_config(), config)
-
-    Enum.each(merged, fn {key, value} ->
-      Application.put_env(:honeybadger, key, value)
-    end)
-
-    merged
+    config
+    |> Keyword.put_new_lazy(:hostname, hostname)
+    |> Keyword.put_new_lazy(:project_root, &System.cwd/0)
   end
 
   defp verify_environment_name!(config) do
@@ -241,6 +225,14 @@ defmodule Honeybadger do
       nil -> raise MissingEnvironmentNameError
       _ -> config
     end
+  end
+
+  defp persist_all_env(config) do
+    Enum.each(config, fn {key, value} ->
+      Application.put_env(:honeybadger, key, value)
+    end)
+
+    config
   end
 
   defp backtrace([]) do

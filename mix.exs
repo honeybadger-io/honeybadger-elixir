@@ -19,7 +19,20 @@ defmodule Honeybadger.Mixfile do
 
   def application do
     [applications: [:hackney, :logger, :poison],
-     env: [],
+     env: [api_key: {:system, "HONEYBADGER_API_KEY"},
+           app: nil,
+           environment_name: {:system, "MIX_ENV"},
+           exclude_envs: [:dev, :test],
+           origin: "https://api.honeybadger.io",
+           proxy: nil,
+           proxy_auth: {nil, nil},
+           use_logger: true,
+           notice_filter: Honeybadger.DefaultNoticeFilter,
+           filter: Honeybadger.DefaultFilter,
+           filter_keys: [:password, :credit_card],
+           filter_disable_url: false,
+           filter_disable_params: false,
+           filter_disable_session: false],
      mod: {Honeybadger, []}]
   end
 
