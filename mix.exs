@@ -51,7 +51,7 @@ defmodule Honeybadger.Mixfile do
 
   defp package do
     [licenses: ["MIT"],
-     maintainers: ["Richard Bishop, Josh Wood, Johnny Winn"],
+     maintainers: ["Joshua Wood"],
      links: %{"GitHub" => "https://github.com/honeybadger-io/honeybadger-elixir"}]
   end
 end
