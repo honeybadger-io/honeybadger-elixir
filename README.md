@@ -229,8 +229,10 @@ will be accepted.
 1. Fork it.
 2. Create a topic branch `git checkout -b my_branch`
 3. Commit your changes `git commit -am "Boom"`
-3. Push to your branch `git push origin my_branch`
-4. Send a [pull request](https://github.com/honeybadger-io/honeybadger-elixir/pulls)
+4. Update the
+   [Changelog](https://github.com/honeybadger-io/honeybadger-elixir/blob/master/CHANGELOG.md)
+5. Push to your branch `git push origin my_branch`
+6. Send a [pull request](https://github.com/honeybadger-io/honeybadger-elixir/pulls)
 
 ### License
 
