@@ -1,5 +1,26 @@
 # Honeybadger-Elixir Changelog
 
+## v0.7.0-beta
+
+This release is a refactor of the package's internal client code and contains
+several bug fixes/additions:
+
+* Drops HTTPoison in favor of directly using Hackney, which gives us access to a
+  connection pool
+
+* Drops Meck and stubbing in favor of a local cowboy server
+  (honeybadger-io/honeybadger-elixir#7)
+
+* Changes notify from a macro to a function
+
+* Stops spawning new tasks for every error, instead relying on async handling in
+  the client (honeybadger-io/honeybadger-elixir#88)
+
+* Increases the logging around client activity
+  (honeybadger-io/honeybadger-elixir#20)
+
+* Starts a supervision tree with the client as a child
+
 ## v0.6.2
 
 This is a minor release and includes:
