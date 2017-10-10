@@ -1,6 +1,6 @@
 defmodule Honeybadger.Logger do
   alias Honeybadger.Utils
-  require Honeybadger
+
   require Logger
 
   use GenEvent
@@ -12,12 +12,12 @@ defmodule Honeybadger.Logger do
   end
 
   def handle_event({_level, gl, _event}, state)
-  when node(gl) != node() do
+      when node(gl) != node() do
     {:ok, state}
   end
 
-  def handle_event({:error_report, _gl, {_pid, _type, [message | _]}}, state) 
-  when is_list(message) do
+  def handle_event({:error_report, _gl, {_pid, _type, [message | _]}}, state)
+      when is_list(message) do
     try do
       error_info = message[:error_info]
       context = get_in(message, [:dictionary, :honeybadger_context])
@@ -30,11 +30,13 @@ defmodule Honeybadger.Logger do
           Honeybadger.notify(exception, context, stacktrace)
       end
     rescue
-      ex ->
-        error_type = Utils.module_to_string(ex.__struct__)
-        reason = Exception.message(ex)
-        message = "Unable to notify Honeybadger! #{error_type}: #{reason}"
-        Logger.warn(message)
+      exception ->
+        Logger.warn(fn ->
+          error_type = Utils.module_to_string(exception.__struct__)
+          reason = Exception.message(exception)
+
+          "Unable to notify Honeybadger! #{error_type}: #{reason}"
+        end)
     end
 
     {:ok, state}

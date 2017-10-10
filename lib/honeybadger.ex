@@ -1,9 +1,7 @@
 defmodule Honeybadger do
   use Application
 
-  alias Honeybadger.Backtrace
-  alias Honeybadger.Client
-  alias Honeybadger.Notice
+  alias Honeybadger.{Backtrace, Client, Notice}
 
   defmodule MissingEnvironmentNameError do
     defexception message: """
@@ -132,60 +130,33 @@ defmodule Honeybadger do
 
   @context :honeybadger_context
 
-  @doc """
-    This is here as a callback to Application to configure and start the
-    Honeybadger client's dependencies. You'll likely never need to call this
-    function yourself.
-  """
+  @doc false
   def start(_type, _opts) do
-    require_environment_name!()
+    import Supervisor.Spec
 
-    app_config = Application.get_all_env(:honeybadger)
-    config = Keyword.merge(default_config(), app_config)
-    update_application_config!(config)
+    config =
+      get_all_env()
+      |> put_dynamic_env()
+      |> verify_environment_name!()
+      |> persist_all_env()
 
     if config[:use_logger] do
       :error_logger.add_report_handler(Honeybadger.Logger)
     end
 
-    {Application.ensure_started(:httpoison), self()}
+    children = [
+      worker(Client, [config])
+    ]
+
+    Supervisor.start_link(children, strategy: :one_for_one)
   end
 
-  defmacro notify(exception) do
-    macro_notify(exception, {:%{}, [], []}, [])
-  end
+  def notify(exception, metadata \\ %{}, stacktrace \\ []) do
+    notice = Notice.new(exception,
+                        contextual_metadata(metadata),
+                        backtrace(stacktrace))
 
-  defmacro notify(exception, metadata) do
-    macro_notify(exception, metadata, [])
-  end
-
-  defmacro notify(exception, metadata, stacktrace) do
-    macro_notify(exception, metadata, stacktrace)
-  end
-
-  defp macro_notify(exception, metadata, stacktrace) do
-    quote do
-      Task.start fn ->
-        Honeybadger.do_notify(unquote(exception), unquote(metadata), unquote(stacktrace))
-      end
-    end
-  end
-
-  def do_notify(exception, metadata, []) do
-    {:current_stacktrace, stacktrace} = Process.info(self(), :current_stacktrace)
-    do_notify(exception, metadata, stacktrace)
-  end
-
-  def do_notify(exception, %{context: _} = metadata, stacktrace) do
-    client = Client.new
-    backtrace = Backtrace.from_stacktrace(stacktrace)
-    notice = Notice.new(exception, metadata, backtrace)
-    Client.send_notice(client, notice)
-  end
-
-  def do_notify(exception, metadata, stacktrace) do
-    metadata = %{context: metadata}
-    do_notify(exception, metadata, stacktrace)
+    Client.send_notice(notice)
   end
 
   def context do
@@ -197,37 +168,86 @@ defmodule Honeybadger do
     context()
   end
 
-  defp default_config do
-     [api_key: System.get_env("HONEYBADGER_API_KEY"),
-      exclude_envs: [:dev, :test],
-      hostname: :inet.gethostname |> elem(1) |> List.to_string,
-      origin: "https://api.honeybadger.io",
-      proxy: nil,
-      proxy_auth: {nil, nil},
-      project_root: System.cwd,
-      use_logger: true,
-      notice_filter: Honeybadger.DefaultNoticeFilter,
-      filter: Honeybadger.DefaultFilter,
-      filter_keys: [:password, :credit_card],
-      filter_disable_url: false,
-      filter_disable_params: false,
-      filter_disable_session: false]
-  end
+  @doc """
+  Fetch configuration specific to the :honeybadger application.
 
-  defp require_environment_name! do
-    if is_nil(Application.get_env(:honeybadger, :environment_name)) do
-      case System.get_env("MIX_ENV") do
-        nil ->
-          raise MissingEnvironmentNameError
-        env ->
-          Application.put_env(:honeybadger, :environment_name, String.to_atom(env))
-      end
+  ## Example
+
+      Honeybadger.get_env(:exclude_envs)
+      #=> [:dev, :test]
+  """
+  @spec get_env(atom) :: any | no_return
+  def get_env(key) when is_atom(key) do
+    case Application.fetch_env(:honeybadger, key) do
+      {:ok, {:system, var}} when is_binary(var) ->
+        System.get_env(var) || raise ArgumentError, "system variable #{inspect(var)} is not set"
+      {:ok, value} ->
+        value
+      :error ->
+        raise ArgumentError, "the configuration parameter #{inspect(key)} is not set"
     end
   end
 
-  defp update_application_config!(config) do
-    Enum.each(config, fn({key, value}) ->
+  @doc """
+  Fetch all configuration specific to the :honeybadger application.
+
+  This resolves values the same way that `get_env/1` does, so it resolves
+  :system tuple variables correctly.
+
+  ## Example
+
+      Honeybadger.get_all_env()
+      #=> [api_key: "12345", environment_name: "dev", ...]
+  """
+  @spec get_all_env() :: [{atom, any}]
+  def get_all_env do
+    for {key, _value} <- Application.get_all_env(:honeybadger) do
+      {key, get_env(key)}
+    end
+  end
+
+  # Helpers
+
+  defp put_dynamic_env(config) do
+    hostname = fn ->
+      :inet.gethostname()
+      |> elem(1)
+      |> List.to_string()
+    end
+
+    config
+    |> Keyword.put_new_lazy(:hostname, hostname)
+    |> Keyword.put_new_lazy(:project_root, &System.cwd/0)
+  end
+
+  defp verify_environment_name!(config) do
+    case Keyword.get(config, :environment_name) do
+      nil -> raise MissingEnvironmentNameError
+      _ -> config
+    end
+  end
+
+  defp persist_all_env(config) do
+    Enum.each(config, fn {key, value} ->
       Application.put_env(:honeybadger, key, value)
     end)
+
+    config
+  end
+
+  defp backtrace([]) do
+    {:current_stacktrace, stacktrace} = Process.info(self(), :current_stacktrace)
+
+    backtrace(stacktrace)
+  end
+  defp backtrace(stacktrace) do
+    Backtrace.from_stacktrace(stacktrace)
+  end
+
+  defp contextual_metadata(%{context: _} = metadata) do
+    metadata
+  end
+  defp contextual_metadata(metadata) do
+    %{context: metadata}
   end
 end

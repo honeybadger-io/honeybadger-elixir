@@ -21,7 +21,7 @@ defmodule Honeybadger.Backtrace do
   end
 
   defp otp_app do
-    Application.get_env(:honeybadger, :app)
+    Honeybadger.get_env(:app)
   end
 
   defp get_context(app, app) when app != nil, do: "app"

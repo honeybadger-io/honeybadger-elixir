@@ -18,13 +18,26 @@ defmodule Honeybadger.Mixfile do
   end
 
   def application do
-    [applications: [:httpoison, :logger, :poison],
-     env: [],
+    [applications: [:hackney, :logger, :poison],
+     env: [api_key: {:system, "HONEYBADGER_API_KEY"},
+           app: nil,
+           environment_name: {:system, "MIX_ENV"},
+           exclude_envs: [:dev, :test],
+           origin: "https://api.honeybadger.io",
+           proxy: nil,
+           proxy_auth: {nil, nil},
+           use_logger: true,
+           notice_filter: Honeybadger.DefaultNoticeFilter,
+           filter: Honeybadger.DefaultFilter,
+           filter_keys: [:password, :credit_card],
+           filter_disable_url: false,
+           filter_disable_params: false,
+           filter_disable_session: false],
      mod: {Honeybadger, []}]
   end
 
   defp deps do
-    [{:httpoison, "~> 0.9 or ~> 0.11"},
+    [{:hackney, "~> 1.1"},
      {:poison, "~> 2.0 or ~> 3.0"},
      {:plug, ">= 0.13.0 and < 2.0.0"},
 
@@ -32,7 +45,8 @@ defmodule Honeybadger.Mixfile do
      {:ex_doc, "~> 0.7", only: :dev},
 
      # Test dependencies
-     {:meck, "~> 0.8.3", only: :test}]
+     {:meck, "~> 0.8.3", only: :test},
+     {:cowboy, "~> 1.0.0", only: :test}]
   end
 
   defp package do

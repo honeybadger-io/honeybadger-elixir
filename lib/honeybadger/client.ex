@@ -1,57 +1,111 @@
 defmodule Honeybadger.Client do
-  alias Poison, as: JSON
+  @moduledoc false
 
-  defstruct [:environment_name, :headers, :hostname, :origin, :proxy, :proxy_auth]
+  use GenServer
 
-  @notices_endpoint "/v1/notices"
+  require Logger
+
   @headers [
     {"Accept", "application/json"},
-    {"Content-Type", "application/json"}
+    {"Content-Type", "application/json"},
+    {"User-Agent", "Honeybadger Elixir"}
   ]
+  @max_connections 20
+  @notices_endpoint "/v1/notices"
 
-  def new do
-    origin = Application.get_env(:honeybadger, :origin)
-    api_key = Application.get_env(:honeybadger, :api_key)
-    env_name = Application.get_env(:honeybadger, :environment_name)
-    hostname = Application.get_env(:honeybadger, :hostname)
-    proxy = Application.get_env(:honeybadger, :proxy)
-    proxy_auth = Application.get_env(:honeybadger, :proxy_auth)
-    %__MODULE__{origin: origin,
-                headers: headers(api_key),
-                environment_name: env_name,
-                hostname: hostname,
-                proxy: proxy,
-                proxy_auth: proxy_auth}
+  # State
+
+  defstruct [:enabled, :headers, :proxy, :proxy_auth, :url]
+
+  # API
+
+  def start_link(config_opts) do
+    state = new(config_opts)
+
+    GenServer.start_link(__MODULE__, state, [name: __MODULE__])
   end
 
-  def send_notice(%__MODULE__{} = client, notice, http_mod \\ HTTPoison) do
-    encoded_notice = JSON.encode!(notice)
-    do_send_notice(client, encoded_notice, http_mod, active_environment?())
+  @doc false
+  def new(opts) do
+    %__MODULE__{enabled: enabled?(opts),
+                headers: build_headers(opts),
+                proxy: get_env(opts, :proxy),
+                proxy_auth: get_env(opts, :proxy_auth),
+                url: get_env(opts, :origin) <> @notices_endpoint}
   end
 
-  defp do_send_notice(_client, _encoded_notice, _http_mod, false), do: {:ok, :unsent}
-  defp do_send_notice(client, encoded_notice, http_mod, true) do
-    case client.proxy do
-      nil ->
-        http_mod.post(
-          client.origin <> @notices_endpoint, encoded_notice, client.headers
-        )
-      _ ->
-        http_mod.post(
-          client.origin <> @notices_endpoint, encoded_notice, client.headers,
-          [proxy: client.proxy, proxy_auth: client.proxy_auth]
-        )
+  @doc false
+  def send_notice(notice) when is_map(notice) do
+    if pid = Process.whereis(__MODULE__) do
+      GenServer.cast(pid, {:notice, notice})
+    else
+      Logger.warn("[Honeybadger] Unable to notify, the :honeybadger client isn't running")
     end
   end
 
-  defp headers(api_key) do
-    [{"X-API-Key", api_key}] ++ @headers
+  # Callbacks
+
+  def init(state) do
+    :ok = :hackney_pool.start_pool(__MODULE__, [max_connections: @max_connections])
+
+    {:ok, state}
   end
 
-  def active_environment? do
-    env = Application.get_env(:honeybadger, :environment_name)
-    exclude_envs = Application.get_env(:honeybadger, :exclude_envs, [:dev, :test])
-    not env in exclude_envs
+  def terminate(_reason, _state) do
+    :ok = :hackney_pool.stop_pool(__MODULE__)
   end
 
+  def handle_cast({:notice, _notice}, %{enabled: false} = state) do
+    {:noreply, state}
+  end
+
+  def handle_cast({:notice, notice}, %{enabled: true} = state) do
+    payload = Poison.encode!(notice)
+
+    opts =
+      state
+      |> Map.take([:proxy, :proxy_auth])
+      |> Enum.into(Keyword.new)
+      |> Keyword.put(:pool, __MODULE__)
+
+    case :hackney.post(state.url, state.headers, payload, opts) do
+      {:ok, code, _headers, ref} when code >= 200 and code <= 399 ->
+        Logger.debug("[Honeybadger] API success: #{inspect(body_from_ref(ref))}")
+      {:ok, code, _headers, ref} when code >= 400 and code <= 504 ->
+        Logger.error("[Honeybadger] API failure: #{inspect(body_from_ref(ref))}")
+      {:error, reason} ->
+        Logger.error("[Honeybadger] connection error: #{inspect(reason)}")
+    end
+
+    {:noreply, state}
+  end
+
+  def handle_info(message, state) do
+    Logger.info("[Honeybadger] unexpected message: #{inspect(message)}")
+
+    {:noreply, state}
+  end
+
+  # Helpers
+
+  def enabled?(opts) do
+    env_name = get_env(opts, :environment_name)
+    excluded = get_env(opts, :exclude_envs)
+
+    not env_name in excluded
+  end
+
+  defp body_from_ref(ref) do
+    ref
+    |> :hackney.body()
+    |> elem(1)
+  end
+
+  defp build_headers(opts) do
+    [{"X-API-Key", get_env(opts, :api_key)}] ++ @headers
+  end
+
+  defp get_env(opts, key) do
+    Keyword.get(opts, key, Honeybadger.get_env(key))
+  end
 end
