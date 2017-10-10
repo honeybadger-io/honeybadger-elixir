@@ -215,7 +215,7 @@ end
 
 ## Changelog
 
-See https://github.com/honeybadger-io/honeybadger-elixir/releases
+See https://github.com/honeybadger-io/honeybadger-elixir/blob/master/CHANGELOG.md
 
 ## Contributing
 
