@@ -9,6 +9,8 @@ adheres to [Semantic Versioning](http://semver.org/).
   (honeybadger-io/honeybadger-elixir#20).
 
 ### Fixed
+- Get the environment directly from `Mix.env` and always compare the environment
+  names as atoms (honeybadger-io/honeybadger-elixir#94).
 - Drops HTTPoison in favor of directly using Hackney, which gives us access to a
   connection pool.
 - Drops Meck and stubbing in favor of a local cowboy server
