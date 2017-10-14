@@ -234,6 +234,14 @@ will be accepted.
 5. Push to your branch `git push origin my_branch`
 6. Send a [pull request](https://github.com/honeybadger-io/honeybadger-elixir/pulls)
 
+### Publishing a release on hex.pm
+
+1. Update the version property in `mix.exs`
+2. Create a git commit with all the changes so that your working directory is clean
+3. Run `mix release` from your terminal, which will do the following:
+    1. Upload the new version of honeybadger to hex.pm
+    2. Create a git tag with the version number and push it to GitHub
+
 ### License
 
 This library is MIT licensed. See the
