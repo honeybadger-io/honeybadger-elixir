@@ -99,14 +99,13 @@ you!
 
 #### Manual reporting
 
-You can manually report rescued exceptions with the  `Honeybadger.notify` macro.
+You can manually report rescued exceptions with the  `Honeybadger.notify` function.
 
 ```elixir
 try do
   File.read! "this_file_really_should_exist_dang_it.txt"
 rescue
   exception ->
-    require Honeybadger
     Honeybadger.notify(exception)
 end
 ```
@@ -172,7 +171,7 @@ Here are all of the options you can pass in the keyword list:
 
 ### `Honeybadger.notify`: Send an exception to Honeybadger.
 
-Use the `Honeybadger.notify/2` macro to send exception information to the
+Use the `Honeybadger.notify/2` function to send exception information to the
 collector API.  The first parameter is the exception and the second parameter
 is the context/metadata. There is also a `Honeybadger.notify/1` which doesn't require the second parameter.
 
@@ -183,7 +182,6 @@ try do
   File.read! "this_file_really_should_exist_dang_it.txt"
 rescue
   exception ->
-    require Honeybadger
     context = %{user_id: 5, account_name: "Foo"}
     Honeybadger.notify(exception, context)
 end
