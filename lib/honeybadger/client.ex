@@ -43,6 +43,28 @@ defmodule Honeybadger.Client do
     end
   end
 
+  @doc """
+  Check whether reporting is enabled for the current environment.
+
+  ## Example
+
+      iex> Honeybadger.Client.enabled?(environment_name: :dev, exclude_envs: [:test, :dev])
+      false
+
+      iex> Honeybadger.Client.enabled?(environment_name: "dev", exclude_envs: [:test, :dev])
+      false
+
+      iex> Honeybadger.Client.enabled?(environment_name: :dev, exclude_envs: [:test])
+      true
+  """
+  @spec enabled?(Keyword.t) :: boolean
+  def enabled?(opts) do
+    env_name = get_env(opts, :environment_name)
+    excluded = get_env(opts, :exclude_envs)
+
+    not maybe_to_atom(env_name) in excluded
+  end
+
   # Callbacks
 
   def init(state) do
@@ -88,13 +110,6 @@ defmodule Honeybadger.Client do
 
   # Helpers
 
-  def enabled?(opts) do
-    env_name = get_env(opts, :environment_name)
-    excluded = get_env(opts, :exclude_envs)
-
-    not env_name in excluded
-  end
-
   defp body_from_ref(ref) do
     ref
     |> :hackney.body()
@@ -107,5 +122,13 @@ defmodule Honeybadger.Client do
 
   defp get_env(opts, key) do
     Keyword.get(opts, key, Honeybadger.get_env(key))
+  end
+
+  defp maybe_to_atom(value) when is_binary(value) do
+    String.to_existing_atom(value)
+  end
+
+  defp maybe_to_atom(value) do
+    value
   end
 end
