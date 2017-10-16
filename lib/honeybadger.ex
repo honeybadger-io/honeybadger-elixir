@@ -151,7 +151,7 @@ defmodule Honeybadger do
     Supervisor.start_link(children, strategy: :one_for_one)
   end
 
-  def notify(exception, metadata \\ %{}, stacktrace \\ []) do
+  def notify(exception, metadata \\ %{}, stacktrace \\ nil) do
     notice = Notice.new(exception,
                         contextual_metadata(metadata),
                         backtrace(stacktrace))
@@ -235,6 +235,9 @@ defmodule Honeybadger do
     config
   end
 
+  defp backtrace(nil) do
+    backtrace(System.stacktrace())
+  end
   defp backtrace([]) do
     {:current_stacktrace, stacktrace} = Process.info(self(), :current_stacktrace)
 
