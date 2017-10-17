@@ -47,13 +47,14 @@ config :honeybadger,
   environment_name: :dev
 ```
 
-If `environment_name` is not set we will fall back to the `MIX_ENV` environment
-variable. If neither `MIX_ENV` or the `environment_name` config are set then
-you will get an exception informing you to set one of them. It is preferred
-that you set `environment_name` in your `config.exs` files for each
+If `environment_name` is not set we will fall back to the value of `Mix.env()`.
+`Mix.env()` uses the atomized value of the `MIX_ENV` environment variable and
+defaults to `:dev` when the environment variable is not set. This should be good
+for most setups. If you want to have an environment_name which is different than
+the `Mix.env()`, you should set `environment_name` in your `config.exs` files for each
 environment. This ensures that we can give you accurate environment information
 even during compile time. Explicitly setting the `environment_name` config
-takes higher precedence over the `MIX_ENV` environment variable.
+takes higher precedence over the `Mix.env()` value.
 
 ### 3. Enable error reporting
 
