@@ -8,6 +8,10 @@ adheres to [Semantic Versioning](http://semver.org/).
 - Increases the logging around client activity
   (honeybadger-io/honeybadger-elixir#20).
 
+### Changed
+- Use the latest exception's stacktrace whenever `notify` is called from a
+  `try` expression.
+
 ### Fixed
 - Get the environment directly from `Mix.env` and always compare the environment
   names as atoms (honeybadger-io/honeybadger-elixir#94).

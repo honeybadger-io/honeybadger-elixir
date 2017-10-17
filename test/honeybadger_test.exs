@@ -11,7 +11,7 @@ defmodule HoneybadgerTest do
     restart_with_config(exclude_envs: [])
 
     logged = capture_log(fn ->
-      :ok = Honeybadger.notify(%RuntimeError{}, %{})
+      :ok = Honeybadger.notify(%RuntimeError{})
     end)
 
     assert logged =~ ~s|[Honeybadger] API success: "{}"|
@@ -23,12 +23,33 @@ defmodule HoneybadgerTest do
     restart_with_config(exclude_envs: [:dev, :test])
 
     logged = capture_log(fn ->
-      :ok = Honeybadger.notify(%RuntimeError{}, %{})
+      :ok = Honeybadger.notify(%RuntimeError{})
     end)
 
     refute logged =~ "[Honeybadger] API"
 
     refute_receive {:api_request, _}
+  end
+
+  test "sending a notice with exception stacktrace" do
+    restart_with_config(exclude_envs: [])
+
+    try do
+      raise RuntimeError
+    rescue
+      exception ->
+        :ok = Honeybadger.notify(exception)
+    end
+
+    assert_receive {:api_request, %{"error" => %{"backtrace" => backtrace}}}
+
+    traced = for %{"file" => file, "method" => fun} <- backtrace, do: {file, fun}
+
+    refute {"lib/process.ex", "info"} in traced
+    refute {"lib/honeybadger.ex", "backtrace"} in traced
+    refute {"lib/honeybadger.ex", "notify"} in traced
+    assert {"test/honeybadger_test.exs",
+            "test sending a notice with exception stacktrace"} in traced
   end
 
   test "fetching all application values" do
