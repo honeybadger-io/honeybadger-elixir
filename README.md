@@ -192,7 +192,9 @@ end
 
 ### `Honeybadger.context/1`: Set metadata to be sent if an error occurs
 
-`Honeybadger.context/1` is provided for adding extra data to the notification that gets sent to Honeybadger. You can make use of this in places such as a Plug in your Phoenix Router or Controller to ensure useful debugging data is sent along.
+`Honeybadger.context/1` is provided for adding extra data to the notification
+that gets sent to Honeybadger. You can make use of this in places such as a Plug
+in your Phoenix Router or Controller to ensure useful debugging data is sent along.
 
 #### Examples:
 
@@ -209,6 +211,20 @@ def MyPhoenixApp.Controller
   end
 end
 ```
+
+`Honeybadger.context/1` stores the context data in the process dictionary, so
+it will be sent with errors/notifications on the same process. The following
+`Honeybadger.notify/1` call will not see the context data set in the previous line.
+
+```elixir
+Honeybadger.context(user_id: 5)
+Task.start(fn ->
+  # this notify does not see the context set earlier
+  # as this runs in a different elixir/erlang process.
+  Honeybadger.notify("Critical error")
+end)
+```
+
 ---
 
 ## Proxy configuration
