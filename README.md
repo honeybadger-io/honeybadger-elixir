@@ -24,8 +24,7 @@ end
 
 defp deps do
   [{:honeybadger, "~> 0.6"}]
-end
-```
+end ```
 
 ### 2. Set your API key and environment name
 
@@ -211,6 +210,15 @@ def MyPhoenixApp.Controller
 end
 ```
 ---
+
+## Testing your Honeybadger setup in dev
+
+1. Set the HONEYBADGER_API_KEY as documented above
+2. Remove `:dev` from the `excluded_envs` by adding this to your config/dev.exs
+```elixir
+config :honeybadger,
+  exclude_envs: [:test]
+```
 
 ## Changelog
 
