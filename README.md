@@ -47,13 +47,14 @@ config :honeybadger,
   environment_name: :dev
 ```
 
-If `environment_name` is not set we will fall back to the `MIX_ENV` environment
-variable. If neither `MIX_ENV` or the `environment_name` config are set then
-you will get an exception informing you to set one of them. It is preferred
-that you set `environment_name` in your `config.exs` files for each
+If `environment_name` is not set we will fall back to the value of `Mix.env()`.
+`Mix.env()` uses the atomized value of the `MIX_ENV` environment variable and
+defaults to `:dev` when the environment variable is not set. This should be good
+for most setups. If you want to have an environment_name which is different than
+the `Mix.env()`, you should set `environment_name` in your `config.exs` files for each
 environment. This ensures that we can give you accurate environment information
 even during compile time. Explicitly setting the `environment_name` config
-takes higher precedence over the `MIX_ENV` environment variable.
+takes higher precedence over the `Mix.env()` value.
 
 ### 3. Enable error reporting
 
@@ -70,14 +71,9 @@ or Phoenix.Router and any crashes will be automatically reported to
 Honeybadger. It's best to `use Honeybadger.Plug` **after the Router plugs** so that
 exceptions due to non-matching routes are not reported to Honeybadger.
 
+##### Phoenix app
+
 ```elixir
-defmodule MyPlugApp do
-  use Plug.Router
-  use Honeybadger.Plug
-
-  [... the rest of your plug ...]
-end
-
 defmodule MyPhoenixApp.Router do
   use Crywolf.Web, :router
   use Honeybadger.Plug
@@ -85,6 +81,17 @@ defmodule MyPhoenixApp.Router do
   pipeline :browser do
     [...]
   end
+end
+```
+
+##### Plug app
+
+```elixir
+defmodule MyPlugApp do
+  use Plug.Router
+  use Honeybadger.Plug
+
+  [... the rest of your plug ...]
 end
 ```
 
@@ -192,7 +199,9 @@ end
 
 ### `Honeybadger.context/1`: Set metadata to be sent if an error occurs
 
-`Honeybadger.context/1` is provided for adding extra data to the notification that gets sent to Honeybadger. You can make use of this in places such as a Plug in your Phoenix Router or Controller to ensure useful debugging data is sent along.
+`Honeybadger.context/1` is provided for adding extra data to the notification
+that gets sent to Honeybadger. You can make use of this in places such as a Plug
+in your Phoenix Router or Controller to ensure useful debugging data is sent along.
 
 #### Examples:
 
@@ -209,7 +218,40 @@ def MyPhoenixApp.Controller
   end
 end
 ```
+
+`Honeybadger.context/1` stores the context data in the process dictionary, so
+it will be sent with errors/notifications on the same process. The following
+`Honeybadger.notify/1` call will not see the context data set in the previous line.
+
+```elixir
+Honeybadger.context(user_id: 5)
+Task.start(fn ->
+  # this notify does not see the context set earlier
+  # as this runs in a different elixir/erlang process.
+  Honeybadger.notify(%RuntimeError{message: "critical error"})
+end)
+```
+
 ---
+
+## Proxy configuration
+
+If your server needs a proxy to access honeybadger, add the following to your config
+
+```elixir
+config :honeybadger,
+  proxy: "url",
+  proxy_auth: {"username", "password"}
+```
+
+## Testing your Honeybadger setup in dev
+
+1. Set the HONEYBADGER_API_KEY as documented above
+2. Remove `:dev` from the `excluded_envs` by adding this to your config/dev.exs
+```elixir
+config :honeybadger,
+  exclude_envs: [:test]
+```
 
 ## Changelog
 
