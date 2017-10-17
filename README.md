@@ -70,14 +70,9 @@ or Phoenix.Router and any crashes will be automatically reported to
 Honeybadger. It's best to `use Honeybadger.Plug` **after the Router plugs** so that
 exceptions due to non-matching routes are not reported to Honeybadger.
 
+##### Phoenix app
+
 ```elixir
-defmodule MyPlugApp do
-  use Plug.Router
-  use Honeybadger.Plug
-
-  [... the rest of your plug ...]
-end
-
 defmodule MyPhoenixApp.Router do
   use Crywolf.Web, :router
   use Honeybadger.Plug
@@ -85,6 +80,17 @@ defmodule MyPhoenixApp.Router do
   pipeline :browser do
     [...]
   end
+end
+```
+
+##### Plug app
+
+```elixir
+defmodule MyPlugApp do
+  use Plug.Router
+  use Honeybadger.Plug
+
+  [... the rest of your plug ...]
 end
 ```
 
