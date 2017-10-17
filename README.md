@@ -211,6 +211,16 @@ end
 ```
 ---
 
+## Proxy configuration
+
+If you server needs a proxy to access honeybadger, add the following to your config
+
+```elixir
+config :honeybadger,
+  proxy: "url",
+  proxy_auth: {"username", "password"}
+```
+
 ## Testing your Honeybadger setup in dev
 
 1. Set the HONEYBADGER_API_KEY as documented above
