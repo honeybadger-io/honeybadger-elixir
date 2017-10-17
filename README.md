@@ -228,7 +228,7 @@ Honeybadger.context(user_id: 5)
 Task.start(fn ->
   # this notify does not see the context set earlier
   # as this runs in a different elixir/erlang process.
-  Honeybadger.notify("Critical error")
+  Honeybadger.notify(%RuntimeError{message: "critical error"})
 end)
 ```
 
@@ -236,7 +236,7 @@ end)
 
 ## Proxy configuration
 
-If you server needs a proxy to access honeybadger, add the following to your config
+If your server needs a proxy to access honeybadger, add the following to your config
 
 ```elixir
 config :honeybadger,
