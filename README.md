@@ -24,7 +24,8 @@ end
 
 defp deps do
   [{:honeybadger, "~> 0.6"}]
-end ```
+end
+```
 
 ### 2. Set your API key and environment name
 
