@@ -7,6 +7,8 @@ adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - Increases the logging around client activity
   (honeybadger-io/honeybadger-elixir#20).
+- Explicitly allow sending notices with strings and maps. For example, it is now
+  possible to send a `RuntimeError` by calling `Honeybadger.notify("oops!")`.
 
 ### Changed
 - Use the latest exception's stacktrace whenever `notify` is called from a
