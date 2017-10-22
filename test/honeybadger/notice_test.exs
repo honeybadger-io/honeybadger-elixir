@@ -68,9 +68,9 @@ defmodule Honeybadger.NoticeTest do
     assert class == "ArgumentError"
   end
 
-  test "Honeybadger.DefaultFilter is active by default", %{notice: notice} do
-    assert Application.get_env(:honeybadger, :notice_filter) == Honeybadger.DefaultNoticeFilter
-    assert Application.get_env(:honeybadger, :filter) == Honeybadger.DefaultFilter
+  test "default active filters", %{notice: notice} do
+    assert Application.get_env(:honeybadger, :notice_filter) == Honeybadger.NoticeFilter.Default
+    assert Application.get_env(:honeybadger, :filter) == Honeybadger.Filter.Default
     assert Application.get_env(:honeybadger, :filter_keys) == [:password, :credit_card]
 
     refute get_in(notice.request, [:params, :password])
@@ -78,7 +78,7 @@ defmodule Honeybadger.NoticeTest do
 
   test "User implemented Filter works" do
     defmodule TestFilter do
-      use Honeybadger.FilterMixin
+      use Honeybadger.Filter.Mixin
 
       def filter_params(params),
         do: Map.drop(params, ["password"])
@@ -102,7 +102,7 @@ defmodule Honeybadger.NoticeTest do
     refute get_in(notice.request, [:params, "token"])
   end
 
-  test "Honeybadger.DefaultFilter filters according to config" do
+  test "Honeybadger.Filter.Default filters according to config" do
     orig_keys   = Application.get_env :honeybadger, :filter_keys
     Application.put_env :honeybadger, :filter_keys, [:password, :credit_card, :authorization]
     on_exit fn -> Application.put_env(:honeybadger, :filter_keys, orig_keys) end
@@ -124,7 +124,7 @@ defmodule Honeybadger.NoticeTest do
     refute get_in(notice.request, [:session, :password])
   end
 
-  test "Honeybadger.DefaultFilter filters entire session if filter_disable_session is set" do
+  test "Honeybadger.Filter.Default filters entire session if filter_disable_session is set" do
     orig_filter = Application.get_env :honeybadger, :filter
     orig_disable = Application.get_env :honeybadger, :filter_disable_session
     Application.put_env :honeybadger, :filter_disable_session, true
@@ -149,7 +149,7 @@ defmodule Honeybadger.NoticeTest do
     refute get_in(notice.request, [:params, "PaSSword"])
   end
 
-  test "Honeybadger.DefaultFilter filters url if filter_disable_url is set" do
+  test "Honeybadger.Filter.Default filters url if filter_disable_url is set" do
     orig_filter = Application.get_env :honeybadger, :filter
     orig_disable = Application.get_env :honeybadger, :filter_disable_url
     Application.put_env :honeybadger, :filter_disable_url, true
@@ -177,7 +177,7 @@ defmodule Honeybadger.NoticeTest do
     refute get_in(notice.request, [:session, :password])
   end
 
-  test "Honeybadger.DefaultFilter filters params if filter_disable_params is set" do
+  test "Honeybadger.Filter.Default filters params if filter_disable_params is set" do
     orig_disable = Application.get_env :honeybadger, :filter_disable_params
     Application.put_env :honeybadger, :filter_disable_params, true
     on_exit fn ->
