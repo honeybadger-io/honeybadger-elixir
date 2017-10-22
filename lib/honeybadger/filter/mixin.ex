@@ -37,15 +37,18 @@ defmodule Honeybadger.Filter.Mixin do
       def filter_session(session), do: filter_map(session)
       def filter_error_message(message), do: message
 
-      defp filter_map(map) do
-        case Honeybadger.get_env(:filter_keys) do
-          keys when is_list(keys) ->
-            filter_keys = Enum.map(keys, &canonicalize(&1))
-            drop_keys = Enum.filter(Map.keys(map),
-              &Enum.member?(filter_keys, canonicalize(&1)))
-            Map.drop(map, drop_keys)
-          _ -> map
-        end
+      @doc false
+      def filter_map(map) do
+        filter_map(map, Honeybadger.get_env(:filter_keys))
+      end
+      def filter_map(map, keys) when is_list(keys) do
+        filter_keys = Enum.map(keys, &canonicalize(&1))
+        drop_keys = Enum.filter(Map.keys(map), &Enum.member?(filter_keys, canonicalize(&1)))
+
+        Map.drop(map, drop_keys)
+      end
+      def filter_map(map, _keys) do
+        map
       end
 
       defp canonicalize(key) do

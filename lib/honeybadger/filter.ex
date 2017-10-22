@@ -21,6 +21,7 @@ defmodule Honeybadger.Filter do
 
   @doc """
   For applications that use `Honeybadger.Plug`, filter the cgi_data.
+
   `cgi_data` is a map of `String.t` to `String.t` which includes HTTP headers
   and other pre-defined request data (including `PATH_INFO`, `QUERY_STRING`,
   `SERVER_PORT` etc.).

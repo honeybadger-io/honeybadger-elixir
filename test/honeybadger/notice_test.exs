@@ -142,6 +142,7 @@ defmodule Honeybadger.NoticeTest do
   test "Honeybadger.Filter.Default filters url if filter_disable_url is set" do
     with_config([filter_disable_url: true], fn ->
       notice = filterable_notice()
+
       assert get_in(notice.request, [:params])
       refute get_in(notice.request, [:url])
       assert get_in(notice.request, [:session])
@@ -152,6 +153,9 @@ defmodule Honeybadger.NoticeTest do
 
       assert get_in(notice.request, [:cgi_data, "HTTP_HOST"]) == "honeybadger.io"
       refute get_in(notice.request, [:cgi_data, "PASSWORD"])
+      refute get_in(notice.request, [:cgi_data, "ORIGINAL_FULLPATH"])
+      refute get_in(notice.request, [:cgi_data, "QUERY_STRING"])
+      refute get_in(notice.request, [:cgi_data, "PATH_INFO"])
 
       assert get_in(notice.request, [:params, "unfiltered" ]) == "unfiltered"
       refute get_in(notice.request, [:params, "PaSSword"])
@@ -216,7 +220,10 @@ defmodule Honeybadger.NoticeTest do
         cgi_data: %{
           "HTTP_HOST" => "honeybadger.io",
           "Authorization" => "Basic whatever",
-          "PASSWORD" => "Why is there a password Header? Just to test"},
+          "PASSWORD" => "Why is there a password Header? Just to test",
+          "ORIGINAL_FULLPATH" => "/some/secret/place",
+          "QUERY_STRING" => "foo=bar",
+          "PATH_INFO" => "some/secret/place"},
         session: %{:credit_card => "1234",
                    "CREDIT_card" => "1234",
                    :password => "secret",
