@@ -1,6 +1,8 @@
 defmodule HoneybadgerTest do
   use Honeybadger.Case
 
+  doctest Honeybadger
+
   setup do
     {:ok, _} = Honeybadger.API.start(self())
 

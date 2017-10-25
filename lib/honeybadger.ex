@@ -174,12 +174,28 @@ defmodule Honeybadger do
           Honeybadger.notify(exception)
       end
 
+  Send a notification directly from a string, which will be sent as a
+  `RuntimeError`:
+
+      iex> Honeybadger.notify("custom error message")
+      :ok
+
+  Send a notification as a `class` and `message`:
+
+      iex> Honeybadger.notify(%{class: "SpecialError", message: "custom message"})
+      :ok
+
+  Send a notification as a `badarg` atom:
+
+      iex> Honeybadger.notify(:badarg, %{})
+      :ok
+
   If desired additional metadata can be provided as well:
 
-      Honeybadger.notify(%MyException{}, %{culprit_id: 123})
-      #=> :ok
+      iex> Honeybadger.notify(%RuntimeError{}, %{culprit_id: 123})
+      :ok
   """
-  @spec notify(Exception.t, Map.t, list()) :: :ok
+  @spec notify(Notice.noticeable, Map.t, list) :: :ok
   def notify(exception, metadata \\ %{}, stacktrace \\ nil) do
     exception
     |> Notice.new(contextual_metadata(metadata), backtrace(stacktrace))
