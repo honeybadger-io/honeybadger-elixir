@@ -252,6 +252,7 @@ config :honeybadger,
 config :honeybadger,
   exclude_envs: [:test]
 ```
+3. Run the `mix honeybadger.test` mix task task to simulate an error
 
 ## Changelog
 
