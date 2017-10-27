@@ -13,18 +13,25 @@ adheres to [Semantic Versioning](http://semver.org/).
 ### Changed
 - Use the latest exception's stacktrace whenever `notify` is called from a
   `try` expression.
-
-### Fixed
-- Get the environment directly from `Mix.env` and always compare the environment
-  names as atoms (honeybadger-io/honeybadger-elixir#94).
-- Drops HTTPoison in favor of directly using Hackney, which gives us access to a
-  connection pool.
+- Namespace modules related to `Filter` and `NoticeFilter`. This is largely an
+  internal restructuring, but any custom filters that used the
+  `Honeybadger.FilterMixin` will need to specify `Honeybadger.Filter.Mixin`
+  instead.
+- Drops `HTTPoison` in favor of directly using `Hackney`, which gives us access to
+  a connection pool.
 - Drops Meck and stubbing in favor of a local cowboy server
   (honeybadger-io/honeybadger-elixir#7).
+- Starts a supervision tree with the client as a child.
+
+### Fixed
+- Filtering CGI data now respects the `filter_disable_url` setting. All path
+  related fields (`ORIGINAL_FULLPATH`, `QUERY_STRING`, `PATH_INFO`) are filtered
+  now.
+- Get the environment directly from `Mix.env` and always compare the environment
+  names as atoms (honeybadger-io/honeybadger-elixir#94).
 - Changes notify from a macro to a function.
 - Stops spawning new tasks for every error, instead relying on async handling in
   the client (honeybadger-io/honeybadger-elixir#88).
-- Starts a supervision tree with the client as a child.
 
 ## [0.6.3] - 2017-05-04
 ### Changed

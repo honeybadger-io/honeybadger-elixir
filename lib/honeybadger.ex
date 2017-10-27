@@ -22,8 +22,8 @@ defmodule Honeybadger do
         proxy_auth: {"Username", "Password"},
         project_root: "/home/skynet",
         use_logger: true,
-        notice_filter: Honeybadger.DefaultNoticeFilter,
-        filter: Honeybadger.DefaultFilter,
+        notice_filter: Honeybadger.NoticeFilter.Default,
+        filter: Honeybadger.Filter.Default,
         filter_keys: [:password, :credit_card]
 
   ### Notifying
@@ -97,18 +97,18 @@ defmodule Honeybadger do
   filtering the default configuration is equivalent to:
 
       config :honeybadger,
-        filter: Honeybadger.DefaultFilter,
+        filter: Honeybadger.Filter.Default,
         filter_keys: [:password, :credit_card]
 
   This will remove any entries in the context, session, cgi_data and
   params that match one of the filter keys. The check is case insensitive
   and matches atoms or strings.
 
-  If the `DefaultFilter` does not suit your needs, you can implement your
+  If the `Filter.Default` does not suit your needs, you can implement your
   own filter. A simple filter looks like:
 
       defmodule MyApp.MyFilter do
-        use Honeybadger.FilterMixin
+        use Honeybadger.Filter.Mixin
 
         # drop password fields out of the context Map
         def filter_context(context), do: Map.drop(context, [:password])

@@ -1,5 +1,5 @@
 defmodule Honeybadger.NoticeTest do
-  use ExUnit.Case, async: false
+  use Honeybadger.Case, async: false
 
   doctest Honeybadger.Notice
 
@@ -37,11 +37,11 @@ defmodule Honeybadger.NoticeTest do
   end
 
   test "server information config", _ do
-    before = Application.get_env(:honeybadger, :environment_name)
-    Application.put_env(:honeybadger, :environment_name, "foo")
-    %Notice{server: server} = Notice.new(%RuntimeError{message: "Oops"}, %{}, [])
-    Application.put_env(:honeybadger, :environment_name, before)
-    assert "foo" == server[:environment_name]
+    with_config([environment_name: "foo"], fn ->
+      %Notice{server: server} = Notice.new(%RuntimeError{message: "Oops"}, %{}, [])
+
+      assert "foo" == server[:environment_name]
+    end)
   end
 
   test "error information", %{notice: %Notice{error: error}} do
@@ -68,17 +68,17 @@ defmodule Honeybadger.NoticeTest do
     assert class == "ArgumentError"
   end
 
-  test "Honeybadger.DefaultFilter is active by default", %{notice: notice} do
-    assert Application.get_env(:honeybadger, :notice_filter) == Honeybadger.DefaultNoticeFilter
-    assert Application.get_env(:honeybadger, :filter) == Honeybadger.DefaultFilter
-    assert Application.get_env(:honeybadger, :filter_keys) == [:password, :credit_card]
+  test "default active filters", %{notice: notice} do
+    assert Honeybadger.get_env(:notice_filter) == Honeybadger.NoticeFilter.Default
+    assert Honeybadger.get_env(:filter) == Honeybadger.Filter.Default
+    assert Honeybadger.get_env(:filter_keys) == [:password, :credit_card]
 
     refute get_in(notice.request, [:params, :password])
   end
 
   test "User implemented Filter works" do
     defmodule TestFilter do
-      use Honeybadger.FilterMixin
+      use Honeybadger.Filter.Mixin
 
       def filter_params(params),
         do: Map.drop(params, ["password"])
@@ -87,166 +87,149 @@ defmodule Honeybadger.NoticeTest do
         do: Regex.replace(~r/(Secret data: )(\w+)/, message, "\\1 xxx")
     end
 
-    orig_filter = Application.get_env :honeybadger, :filter
-    Application.put_env :honeybadger, :filter, TestFilter
-    on_exit fn -> Application.put_env(:honeybadger, :filter, orig_filter) end
+    with_config([filter: TestFilter], fn ->
+      notice = filterable_notice()
 
-    notice = filterable_notice()
-
-    assert get_in(notice.request, [:context, :foo])
-    refute get_in(notice.request, [:context, :password])
-    refute get_in(notice.request, [:params, "password"])
-    assert get_in(notice.request, [:params, "PaSSword"])
-    assert get_in(notice.request, [:params, "credit_card"])
-    refute notice.error.message =~ "XYZZY"
-    refute get_in(notice.request, [:params, "token"])
+      assert get_in(notice.request, [:context, :foo])
+      refute get_in(notice.request, [:context, :password])
+      refute get_in(notice.request, [:params, "password"])
+      assert get_in(notice.request, [:params, "PaSSword"])
+      assert get_in(notice.request, [:params, "credit_card"])
+      refute notice.error.message =~ "XYZZY"
+      refute get_in(notice.request, [:params, "token"])
+    end)
   end
 
-  test "Honeybadger.DefaultFilter filters according to config" do
-    orig_keys   = Application.get_env :honeybadger, :filter_keys
-    Application.put_env :honeybadger, :filter_keys, [:password, :credit_card, :authorization]
-    on_exit fn -> Application.put_env(:honeybadger, :filter_keys, orig_keys) end
+  test "Honeybadger.Filter.Default filters according to config" do
+    with_config([filter_keys: [:password, :credit_card, :authorization]], fn ->
+      notice = filterable_notice()
 
-    notice = filterable_notice()
+      # It leaves unfiltered elements alone
+      assert get_in(notice.request, [:context, :foo]) == "foo"
+      assert get_in(notice.request, [:cgi_data, "HTTP_HOST"]) == "honeybadger.io"
+      assert get_in(notice.request, [:params, "unfiltered" ]) == "unfiltered"
 
-    # It leaves unfiltered elements alone
-    assert get_in(notice.request, [:context, :foo]) == "foo"
-    assert get_in(notice.request, [:cgi_data, "HTTP_HOST"]) == "honeybadger.io"
-    assert get_in(notice.request, [:params, "unfiltered" ]) == "unfiltered"
-
-    # It filters sensitive data
-    refute get_in(notice.request, [:context, :password])
-    refute get_in(notice.request, [:cgi_data, "PASSWORD"])
-    refute get_in(notice.request, [:cgi_data, "Authorization"])
-    refute get_in(notice.request, [:cgi_data, "credit_card"])
-    refute get_in(notice.request, [:params, "password"])
-    refute get_in(notice.request, [:params, "PaSSword"])
-    refute get_in(notice.request, [:session, :password])
+      # It filters sensitive data
+      refute get_in(notice.request, [:context, :password])
+      refute get_in(notice.request, [:cgi_data, "PASSWORD"])
+      refute get_in(notice.request, [:cgi_data, "Authorization"])
+      refute get_in(notice.request, [:cgi_data, "credit_card"])
+      refute get_in(notice.request, [:params, "password"])
+      refute get_in(notice.request, [:params, "PaSSword"])
+      refute get_in(notice.request, [:session, :password])
+    end)
   end
 
-  test "Honeybadger.DefaultFilter filters entire session if filter_disable_session is set" do
-    orig_filter = Application.get_env :honeybadger, :filter
-    orig_disable = Application.get_env :honeybadger, :filter_disable_session
-    Application.put_env :honeybadger, :filter_disable_session, true
-    on_exit fn ->
-      Application.put_env(:honeybadger, :filter, orig_filter)
-      Application.put_env(:honeybadger, :filter_disable_session, orig_disable)
-    end
+  test "Honeybadger.Filter.Default filters entire session if filter_disable_session is set" do
+    with_config([filter_disable_session: true], fn ->
+      notice = filterable_notice()
+      assert get_in(notice.request, [:params])
+      assert get_in(notice.request, [:url])
+      refute get_in(notice.request, [:session])
 
-    notice = filterable_notice()
-    assert get_in(notice.request, [:params])
-    assert get_in(notice.request, [:url])
-    refute get_in(notice.request, [:session])
+      # Ensure normal filtering in other areas
+      assert get_in(notice.request, [:context, :foo]) == "foo"
+      refute get_in(notice.request, [:context, :password])
 
-    # Ensure normal filtering in other areas
-    assert get_in(notice.request, [:context, :foo]) == "foo"
-    refute get_in(notice.request, [:context, :password])
+      assert get_in(notice.request, [:cgi_data, "HTTP_HOST"]) == "honeybadger.io"
+      refute get_in(notice.request, [:cgi_data, "PASSWORD"])
 
-    assert get_in(notice.request, [:cgi_data, "HTTP_HOST"]) == "honeybadger.io"
-    refute get_in(notice.request, [:cgi_data, "PASSWORD"])
-
-    assert get_in(notice.request, [:params, "unfiltered" ]) == "unfiltered"
-    refute get_in(notice.request, [:params, "PaSSword"])
+      assert get_in(notice.request, [:params, "unfiltered" ]) == "unfiltered"
+      refute get_in(notice.request, [:params, "PaSSword"])
+    end)
   end
 
-  test "Honeybadger.DefaultFilter filters url if filter_disable_url is set" do
-    orig_filter = Application.get_env :honeybadger, :filter
-    orig_disable = Application.get_env :honeybadger, :filter_disable_url
-    Application.put_env :honeybadger, :filter_disable_url, true
-    on_exit fn ->
-      Application.put_env(:honeybadger, :filter, orig_filter)
-      Application.put_env(:honeybadger, :filter_disable_url, orig_disable)
-    end
+  test "Honeybadger.Filter.Default filters url if filter_disable_url is set" do
+    with_config([filter_disable_url: true], fn ->
+      notice = filterable_notice()
 
-    notice = filterable_notice()
-    assert get_in(notice.request, [:params])
-    refute get_in(notice.request, [:url])
-    assert get_in(notice.request, [:session])
+      assert get_in(notice.request, [:params])
+      refute get_in(notice.request, [:url])
+      assert get_in(notice.request, [:session])
 
-    # Ensure normal filtering in other areas
-    assert get_in(notice.request, [:context, :foo]) == "foo"
-    refute get_in(notice.request, [:context, :password])
+      # Ensure normal filtering in other areas
+      assert get_in(notice.request, [:context, :foo]) == "foo"
+      refute get_in(notice.request, [:context, :password])
 
-    assert get_in(notice.request, [:cgi_data, "HTTP_HOST"]) == "honeybadger.io"
-    refute get_in(notice.request, [:cgi_data, "PASSWORD"])
+      assert get_in(notice.request, [:cgi_data, "HTTP_HOST"]) == "honeybadger.io"
+      refute get_in(notice.request, [:cgi_data, "PASSWORD"])
+      refute get_in(notice.request, [:cgi_data, "ORIGINAL_FULLPATH"])
+      refute get_in(notice.request, [:cgi_data, "QUERY_STRING"])
+      refute get_in(notice.request, [:cgi_data, "PATH_INFO"])
 
-    assert get_in(notice.request, [:params, "unfiltered" ]) == "unfiltered"
-    refute get_in(notice.request, [:params, "PaSSword"])
+      assert get_in(notice.request, [:params, "unfiltered" ]) == "unfiltered"
+      refute get_in(notice.request, [:params, "PaSSword"])
 
-    assert get_in(notice.request, [:session, "not filtered"])
-    refute get_in(notice.request, [:session, :password])
+      assert get_in(notice.request, [:session, "not filtered"])
+      refute get_in(notice.request, [:session, :password])
+    end)
   end
 
-  test "Honeybadger.DefaultFilter filters params if filter_disable_params is set" do
-    orig_disable = Application.get_env :honeybadger, :filter_disable_params
-    Application.put_env :honeybadger, :filter_disable_params, true
-    on_exit fn ->
-      Application.put_env(:honeybadger, :filter_disable_params, orig_disable)
-    end
+  test "Honeybadger.Filter.Default filters params if filter_disable_params is set" do
+    with_config([filter_disable_params: true], fn ->
+      notice = filterable_notice()
 
-    notice = filterable_notice()
+      refute get_in(notice.request, [:params])
+      assert get_in(notice.request, [:url])
+      assert get_in(notice.request, [:session])
+      assert get_in(notice.request, [:cgi_data])
 
-    refute get_in(notice.request, [:params])
-    assert get_in(notice.request, [:url])
-    assert get_in(notice.request, [:session])
-    assert get_in(notice.request, [:cgi_data])
+      # Ensure normal filtering in other areas
+      assert get_in(notice.request, [:context, :foo]) == "foo"
+      refute get_in(notice.request, [:context, :password])
 
-    # Ensure normal filtering in other areas
-    assert get_in(notice.request, [:context, :foo]) == "foo"
-    refute get_in(notice.request, [:context, :password])
+      assert get_in(notice.request, [:cgi_data, "HTTP_HOST"]) == "honeybadger.io"
+      refute get_in(notice.request, [:cgi_data, "PASSWORD"])
 
-    assert get_in(notice.request, [:cgi_data, "HTTP_HOST"]) == "honeybadger.io"
-    refute get_in(notice.request, [:cgi_data, "PASSWORD"])
-
-    assert get_in(notice.request, [:session, "not filtered"])
-    refute get_in(notice.request, [:session, :password])
+      assert get_in(notice.request, [:session, "not filtered"])
+      refute get_in(notice.request, [:session, :password])
+    end)
   end
 
   test "Setting notice_filter to nil disables filtering" do
-    orig_notice_filter = Application.get_env :honeybadger, :notice_filter
-    Application.put_env :honeybadger, :notice_filter, nil
-    on_exit fn ->
-      Application.put_env(:honeybadger, :notice_filter, orig_notice_filter)
-    end
+    with_config([notice_filter: nil], fn ->
+      notice = filterable_notice()
 
-    notice = filterable_notice()
-
-    assert get_in(notice.request, [:params])
-    assert get_in(notice.request, [:url])
-    assert get_in(notice.request, [:session])
-    assert get_in(notice.request, [:cgi_data])
-    assert get_in(notice.request, [:context, :foo]) == "foo"
-    assert get_in(notice.request, [:context, :password])
-    assert get_in(notice.request, [:cgi_data, "HTTP_HOST"]) == "honeybadger.io"
-    assert get_in(notice.request, [:cgi_data, "PASSWORD"])
-    assert get_in(notice.request, [:session, "not filtered"])
-    assert get_in(notice.request, [:session, :password])
+      assert get_in(notice.request, [:params])
+      assert get_in(notice.request, [:url])
+      assert get_in(notice.request, [:session])
+      assert get_in(notice.request, [:cgi_data])
+      assert get_in(notice.request, [:context, :foo]) == "foo"
+      assert get_in(notice.request, [:context, :password])
+      assert get_in(notice.request, [:cgi_data, "HTTP_HOST"]) == "honeybadger.io"
+      assert get_in(notice.request, [:cgi_data, "PASSWORD"])
+      assert get_in(notice.request, [:session, "not filtered"])
+      assert get_in(notice.request, [:session, :password])
+    end)
   end
 
   defp filterable_notice do
-      exception = %RuntimeError{message: "Secret data: XYZZY"}
-      backtrace = []
-      metadata = %{
-        context: %{password: "123", foo: "foo"},
+    exception = %RuntimeError{message: "Secret data: XYZZY"}
+    backtrace = []
+    metadata = %{
+      context: %{password: "123", foo: "foo"},
 
-        plug_env: %{
-          url: "/some/secret/place",
-          component: SomeApp.PageController,
-          action: :show,
-          params: %{"password" => "a password",
-                    "credit_card" => "1234",
-                    "PaSSword" => "WhAtevER",
-                    "unfiltered" => "unfiltered"},
-          cgi_data: %{
-            "HTTP_HOST" => "honeybadger.io",
-            "Authorization" => "Basic whatever",
-            "PASSWORD" => "Why is there a password Header? Just to test"},
-          session: %{:credit_card => "1234",
-                     "CREDIT_card" => "1234",
-                     :password => "secret",
-                     "not filtered" => :not_filtered},
-        }
+      plug_env: %{
+        url: "/some/secret/place",
+        component: SomeApp.PageController,
+        action: :show,
+        params: %{"password" => "a password",
+                  "credit_card" => "1234",
+                  "PaSSword" => "WhAtevER",
+                  "unfiltered" => "unfiltered"},
+        cgi_data: %{
+          "HTTP_HOST" => "honeybadger.io",
+          "Authorization" => "Basic whatever",
+          "PASSWORD" => "Why is there a password Header? Just to test",
+          "ORIGINAL_FULLPATH" => "/some/secret/place",
+          "QUERY_STRING" => "foo=bar",
+          "PATH_INFO" => "some/secret/place"},
+        session: %{:credit_card => "1234",
+                   "CREDIT_card" => "1234",
+                   :password => "secret",
+                   "not filtered" => :not_filtered},
       }
-      Notice.new(exception, metadata, backtrace)
+    }
+    Notice.new(exception, metadata, backtrace)
   end
 end

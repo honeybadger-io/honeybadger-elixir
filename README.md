@@ -136,13 +136,13 @@ Before data is sent to Honeybadger, it is passed through a filter to remove sens
 
 ```elixir
 config :honeybadger,
-  filter: Honeybadger.DefaultFilter,
+  filter: Honeybadger.Filter.Default,
   filter_keys: [:password, :credit_card]
 ```
 
 This will remove any entries in the context, session, cgi_data and params that match one of the filter keys.  The filter is case insensitive and matches atoms or strings.
 
-If `Honeybadger.DefaultFilter` does not suit your needs, you can implement your own filter. See the `Honeybadger.FilterMixin` module doc for details on implementing your own filter.
+If `Honeybadger.Filter.Default` does not suit your needs, you can implement your own filter. See the `Honeybadger.Filter.Mixin` module doc for details on implementing your own filter.
 
 
 ## Advanced Configuration
@@ -167,12 +167,12 @@ Here are all of the options you can pass in the keyword list:
 | hostname     | Hostname of the system your application is running on                     | :inet.gethostname |
 | origin       | URL for the Honeybadger API                                               | "https://api.honeybadger.io" |
 | project_root | Directory root for where your application is running                      | System.cwd |
-| filter       | Module implementing `Honeybadger.Filter` to filter data before sending to Honeybadger.io         | `Honeybadger.DefaultFilter`|
-| filter_keys  | A list of keywords (atoms) to filter.  Only valid if `filter` is `Honeybadger.DefaultFilter` | [:password, :credit_card] |
+| filter       | Module implementing `Honeybadger.Filter` to filter data before sending to Honeybadger.io         | `Honeybadger.Filter.Default`|
+| filter_keys  | A list of keywords (atoms) to filter.  Only valid if `filter` is `Honeybadger.Filter.Default` | [:password, :credit_card] |
 | filter_disable_url | If true, will remove the request url | false |
 | filter_disable_session | If true, will remove the request session | false |
 | filter_disable_params | If true, will remove the request params | false |
-| notice_filter       | Module implementing `Honeybadger.NoticeFilter`. If `nil`, no filtering is done. | `Honeybadger.DefaultNoticeFilter`|
+| notice_filter       | Module implementing `Honeybadger.NoticeFilter`. If `nil`, no filtering is done. | `Honeybadger.NoticeFilter.Default`|
 
 ## Public Interface
 
