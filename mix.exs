@@ -8,6 +8,7 @@ defmodule Honeybadger.Mixfile do
      build_embedded: Mix.env() == :prod,
      start_permanent: Mix.env() == :prod,
      deps: deps(),
+     elixirc_paths: elixirc_paths(Mix.env),
      package: package(),
      name: "Honeybadger",
      homepage_url: "https://honeybadger.io",
@@ -16,6 +17,11 @@ defmodule Honeybadger.Mixfile do
      docs: [extras: ["README.md", "CHANGELOG.md"],
             main: "readme"]]
   end
+
+  # we use a non standard location for mix tasks as we don't want them to leak
+  # into the host apps mix tasks. This way our release task is shown only in our mix tasks
+  defp elixirc_paths(:dev), do: ["lib", "mix"]
+  defp elixirc_paths(_), do: ["lib"]
 
   def application do
     [applications: [:hackney, :logger, :poison],
