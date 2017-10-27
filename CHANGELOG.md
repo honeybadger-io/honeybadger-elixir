@@ -25,6 +25,7 @@ adheres to [Semantic Versioning](http://semver.org/).
 - Drops Meck and stubbing in favor of a local cowboy server
   (honeybadger-io/honeybadger-elixir#7).
 - Starts a supervision tree with the client as a child.
+- Report the controller and action name as component and action for phoenix apps
 
 ### Fixed
 - Filtering CGI data now respects the `filter_disable_url` setting. All path

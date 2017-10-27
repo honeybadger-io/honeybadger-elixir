@@ -17,13 +17,11 @@ defmodule Honeybadger.PlugTest do
   end
 
   test "exceptions on a non-existant route are ignored" do
-    exception = %FunctionClauseError{arity: 4,
-                                     function: :do_match,
-                                     module: Honeybadger.PlugTest.PlugApp}
-
     conn = conn(:get, "/not_found")
 
-    assert exception == catch_error(PlugApp.call conn, [])
+    # the way erlang errors are raised was changed in https://github.com/elixir-plug/plug/pull/518
+    # Plug now sends an error which is not normalized, hence the change to the test
+    assert :function_clause == catch_error(PlugApp.call conn, [])
   end
 
   test "build_plug_env/2" do
@@ -36,6 +34,21 @@ defmodule Honeybadger.PlugTest do
                  url: "/bang"}
 
     assert plug_env == Honeybadger.Plug.build_plug_env(conn, PlugApp)
+  end
+
+  test "build_plug_env/2 in phoenix" do
+    conn = conn(:get, "/bang?foo=bar")
+           |> put_private(:phoenix_controller, DanController)
+           |> put_private(:phoenix_action, :fight)
+
+    plug_env = %{action: "fight",
+                 cgi_data: Honeybadger.Plug.build_cgi_data(conn),
+                 component: "DanController",
+                 params: %{"foo" => "bar"},
+                 session: %{},
+                 url: "/bang"}
+
+    assert plug_env == Honeybadger.Plug.build_plug_env(conn, PlugApp, _phoenix = true)
   end
 
   test "build_cgi_data/1" do

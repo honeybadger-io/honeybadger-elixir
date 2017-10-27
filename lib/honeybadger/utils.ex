@@ -17,4 +17,25 @@ defmodule Honeybadger.Utils do
     |> Module.split()
     |> Enum.join(".")
   end
+
+  @doc """
+  Runs the given function inside a try and returns a tagged tuple with an
+  {:ok, result} on success and {:error, err} on error
+
+  # Example
+
+      iex> Honeybadger.Utils.safe_exec(fn -> 3 * 3 end)
+      {:ok, 9}
+
+      iex> Honeybadger.Utils.safe_exec(fn -> raise "Danny is sleeping!" end)
+      {:error, %RuntimeError{message: "Danny is sleeping!"}}
+  """
+  def safe_exec(fun) do
+    try do
+      {:ok, fun.()}
+    rescue
+      ex -> {:error, ex}
+    end
+  end
+
 end

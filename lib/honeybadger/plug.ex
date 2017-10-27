@@ -1,26 +1,19 @@
 defmodule Honeybadger.Plug do
-  alias Honeybadger.Utils
 
-  defmacro __using__(_env) do
+  defmacro __using__(opts) do
     quote do
       import Honeybadger.Plug
       require Honeybadger
+      use Plug.ErrorHandler
 
-      def call(conn, opts) do
-        try do
-          super(conn, opts)
-        catch
-          kind, reason ->
-            Plug.ErrorHandler.__catch__(conn, kind, reason, &handle_errors/2)
-        end
-      end
+      @phoenix Keyword.get(unquote(opts), :phoenix, :code.is_loaded(Phoenix))
 
       # Exceptions raised on non-existant Plug routes are ignored
       defp handle_errors(conn, %{reason: %FunctionClauseError{function: :do_match}} = ex) do
         nil
       end
 
-      if :code.is_loaded(Phoenix) do
+      if @phoenix do
         # Exceptions raised on non-existant Phoenix routes are ignored
         defp handle_errors(conn, %{reason: %Phoenix.Router.NoRouteError{}} = ex) do
           nil
@@ -28,14 +21,14 @@ defmodule Honeybadger.Plug do
       end
 
       defp handle_errors(conn, %{kind: _kind, reason: exception, stack: stack}) do
-        metadata = %{plug_env: build_plug_env(conn, __MODULE__),
+        metadata = %{plug_env: build_plug_env(conn, __MODULE__, @phoenix),
                      context: Honeybadger.context()}
         Honeybadger.notify(exception, metadata, stack)
       end
     end
   end
 
-  def build_plug_env(%Plug.Conn{} = conn, mod) do
+  def build_plug_env(%Plug.Conn{} = conn, mod, phoenix \\ false) do
     {conn, session} = try do
       Plug.Conn.fetch_session(conn)
       session = conn.session
@@ -50,9 +43,15 @@ defmodule Honeybadger.Plug do
            |> Plug.Conn.fetch_cookies
            |> Plug.Conn.fetch_query_params
 
+    conn_data_mod = if phoenix do
+      Honeybadger.PhoenixData
+    else
+      Honeybadger.PlugData
+    end
+
     %{url: conn.request_path,
-      component: Utils.module_to_string(mod),
-      action: "",
+      component: conn_data_mod.component(conn, mod),
+      action: conn_data_mod.action(conn),
       params: conn.params,
       session: session,
       cgi_data: build_cgi_data(conn)}
