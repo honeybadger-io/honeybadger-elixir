@@ -18,7 +18,7 @@ defmodule Honeybadger.Logger do
   end
 
   def handle_event(event, state) do
-    handle_error(event, state)
+    handle_error(event)
 
     {:ok, state}
   end
@@ -45,14 +45,12 @@ defmodule Honeybadger.Logger do
 
   ## Helpers
 
-  defp handle_error({:error_report, _gl, {_pid, _type, [message | _]}}, _state)
-      when is_list(message) do
+  defp handle_error({:error_report, _gl, {_pid, _type, [message | _]}}) when is_list(message) do
     try do
-      error_info = message[:error_info]
       context = get_in(message, [:dictionary, :honeybadger_context])
 
-      case error_info do
-        {_kind, {exception, stacktrace}, _stack} when is_list(stacktrace) ->
+      case message[:error_info] do
+        {_kind, {exception, stacktrace}, _stack} ->
           Honeybadger.notify(exception, context, stacktrace)
         {_kind, exception, stacktrace} ->
           Honeybadger.notify(exception, context, stacktrace)
@@ -68,7 +66,7 @@ defmodule Honeybadger.Logger do
     end
   end
 
-  defp handle_error(_event, _state) do
+  defp handle_error(_event) do
     :ok
   end
 end

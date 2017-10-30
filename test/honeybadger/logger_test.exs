@@ -31,12 +31,15 @@ defmodule Honeybadger.LoggerTest do
       raise RuntimeError, "Oops"
     end)
 
-    assert_receive {:api_request, _}
+    assert_receive {:api_request, notification}
+
+    assert %{"error" => %{"class" => "RuntimeError"}} = notification
+    assert %{"request" => %{"context" => %{"user_id" => 1}}} = notification
   end
 
   test "crashes do not cause recursive logging" do
     error_report = [[error_info: {:error, %RuntimeError{message: "Oops"}, []},
-                    dictionary: [honeybadger_context: [user_id: 1]]], []]
+                     dictionary: [honeybadger_context: [user_id: 1]]], []]
 
     log = capture_log(fn ->
       :error_logger.error_report(error_report)
@@ -52,7 +55,6 @@ defmodule Honeybadger.LoggerTest do
 
     Enum.each(message_types, fn(type) ->
       apply(:error_logger, type, ["Ignore me"])
-      Logger.flush()
 
       refute_receive {:api_request, _}
     end)
@@ -63,17 +65,14 @@ defmodule Honeybadger.LoggerTest do
       Float.parse("12.345e308")
     end)
 
-    Logger.flush()
-
-    assert_receive {:api_request, _}
+    assert_receive {:api_request, %{"error" => %{"class" => "ArgumentError"}}}
   end
 
   test "logging exceptions from GenServers" do
     {:ok, pid} = ErrorServer.start
 
     GenServer.cast(pid, :fail)
-    Logger.flush()
 
-    assert_receive {:api_request, _}
+    assert_receive {:api_request, %{"error" => %{"class" => "RuntimeError"}}}
   end
 end
