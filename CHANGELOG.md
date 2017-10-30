@@ -11,6 +11,8 @@ adheres to [Semantic Versioning](http://semver.org/).
   possible to send a `RuntimeError` by calling `Honeybadger.notify("oops!")`.
 
 ### Changed
+- Switch from `GenEvent` to implementing `gen_event` behaviour.
+- Remove `error_logger` backend on application stop.
 - Use the latest exception's stacktrace whenever `notify` is called from a
   `try` expression.
 - Namespace modules related to `Filter` and `NoticeFilter`. This is largely an
