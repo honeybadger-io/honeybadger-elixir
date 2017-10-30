@@ -17,14 +17,6 @@ defmodule Honeybadger.LoggerTest do
     end
   end
 
-  setup_all do
-    :error_logger.add_report_handler(Honeybadger.Logger)
-
-    on_exit fn ->
-      :error_logger.delete_report_handler(Honeybadger.Logger)
-    end
-  end
-
   setup do
     {:ok, _} = Honeybadger.API.start(self())
 
