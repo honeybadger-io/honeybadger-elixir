@@ -12,6 +12,8 @@ adheres to [Semantic Versioning](http://semver.org/).
 - Added Honeybadger test mix task which can be invoked using `mix honeybadger.test`
 
 ### Changed
+- Switch from `GenEvent` to implementing `gen_event` behaviour.
+- Remove `error_logger` backend on application stop.
 - Use the latest exception's stacktrace whenever `notify` is called from a
   `try` expression.
 - Namespace modules related to `Filter` and `NoticeFilter`. This is largely an

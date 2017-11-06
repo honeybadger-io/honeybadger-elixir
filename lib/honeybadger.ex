@@ -159,6 +159,13 @@ defmodule Honeybadger do
     Supervisor.start_link(children, strategy: :one_for_one)
   end
 
+  @doc false
+  def stop(_state) do
+    :error_logger.delete_report_handler(Honeybadger.Logger)
+
+    :ok
+  end
+
   @doc """
   Send an exception notification, if reporting is enabled.
 

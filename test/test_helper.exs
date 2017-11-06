@@ -12,7 +12,7 @@ defmodule Honeybadger.Case do
   end
 
   def with_config(opts, fun) when is_function(fun) do
-    original = Keyword.take(Application.get_all_env(:honeybadger), Keyword.keys(opts))
+    original = take_original_env(opts)
 
     try do
       put_all_env(opts)
@@ -25,7 +25,7 @@ defmodule Honeybadger.Case do
 
   def restart_with_config(opts) do
     :ok = Application.stop(:honeybadger)
-    original = Keyword.take(Application.get_all_env(:honeybadger), Keyword.keys(opts))
+    original = take_original_env(opts)
 
     put_all_env(opts)
 
@@ -48,6 +48,10 @@ defmodule Honeybadger.Case do
       :timer.sleep(100)
       Logger.flush()
     end)
+  end
+
+  defp take_original_env(opts) do
+    Keyword.take(Application.get_all_env(:honeybadger), Keyword.keys(opts))
   end
 
   defp put_all_env(opts) do
