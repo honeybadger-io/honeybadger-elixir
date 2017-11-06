@@ -254,6 +254,12 @@ config :honeybadger,
 ```
 3. Run the `mix honeybadger.test` mix task task to simulate an error
 
+## Version requirements
+- Erlang >= 18.0
+- Elixir >= 1.3
+- Plug >= 1.0
+- Phoenix >= 1.0 (This is an optional dependency and the version requirement applies only if you are using Phoenix)
+
 ## Changelog
 
 See https://github.com/honeybadger-io/honeybadger-elixir/blob/master/CHANGELOG.md

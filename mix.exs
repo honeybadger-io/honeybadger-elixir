@@ -45,7 +45,7 @@ defmodule Honeybadger.Mixfile do
   defp deps do
     [{:hackney, "~> 1.1"},
      {:poison, "~> 2.0 or ~> 3.0"},
-     {:plug, ">= 0.13.0 and < 2.0.0"},
+     {:plug, ">= 1.0.0 and < 2.0.0"},
 
      # Dev dependencies
      {:ex_doc, "~> 0.7", only: :dev},
