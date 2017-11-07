@@ -46,6 +46,7 @@ defmodule Honeybadger.Mixfile do
     [{:hackney, "~> 1.1"},
      {:poison, "~> 2.0 or ~> 3.0"},
      {:plug, ">= 1.0.0 and < 2.0.0"},
+     {:phoenix, ">= 1.0.0 and < 2.0.0", optional: true},
 
      # Dev dependencies
      {:ex_doc, "~> 0.7", only: :dev},
