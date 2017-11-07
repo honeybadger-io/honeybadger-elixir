@@ -4,6 +4,8 @@ CHANGELOG](http://keepachangelog.com/) for how to update this file. This project
 adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+
+## [v0.7.0] - 2017-11-07
 ### Added
 - Increases the logging around client activity
   (honeybadger-io/honeybadger-elixir#20).
