@@ -5,6 +5,12 @@ adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+- Safely convert binary `:environment_name` values to an atom. If the
+  environment was specified via `{:system, "HONEYBADGER_ENV"}` and the
+  `HONEYBADGER_ENV` value didn't already exist as an atom the app would fail to
+  boot.
+
 ## [v0.7.0] - 2017-11-07
 ### Added
 - Increases the logging around client activity

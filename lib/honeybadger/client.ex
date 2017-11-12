@@ -56,6 +56,9 @@ defmodule Honeybadger.Client do
 
       iex> Honeybadger.Client.enabled?(environment_name: :dev, exclude_envs: [:test])
       true
+
+      iex> Honeybadger.Client.enabled?(environment_name: "unexpected", exclude_envs: [:test])
+      true
   """
   @spec enabled?(Keyword.t) :: boolean
   def enabled?(opts) do
@@ -125,7 +128,7 @@ defmodule Honeybadger.Client do
   end
 
   defp maybe_to_atom(value) when is_binary(value) do
-    String.to_existing_atom(value)
+    String.to_atom(value)
   end
 
   defp maybe_to_atom(value) do
