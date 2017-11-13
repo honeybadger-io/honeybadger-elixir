@@ -1,33 +1,53 @@
 defmodule Honeybadger.Backtrace do
+  @moduledoc """
+  The Backtrace module contains functions for formatting system stacktraces.
+  """
 
-  def from_stacktrace(stacktrace) do
-    Enum.map stacktrace, &format_line/1
+  @app_context "app"
+  @all_context "all"
+
+  @doc """
+  Convert a system stacktrace into an API compatible backtrace.
+
+  The function expects a list of `:erlang.stack_item()` tuples.
+  """
+  def from_stacktrace(stacktrace) when is_list(stacktrace) do
+    Enum.map(stacktrace, &format_line/1)
   end
 
   defp format_line({mod, fun, args, []}) do
     format_line({mod, fun, args, [file: [], line: nil]})
   end
 
-  defp format_line({mod, fun, _args, [file: file, line: line]}) do
-    %{file: file |> convert_string, method: fun |> convert_string, number:
-      line, context: get_context(otp_app(), get_app(mod))}
+  defp format_line({mod, fun, args, [file: file, line: line]}) do
+    app = Honeybadger.get_env(:app)
+    filter_args = Honeybadger.get_env(:filter_args)
+
+    %{file: format_file(file),
+      method: format_method(fun, args),
+      args: format_args(args, filter_args),
+      number: line,
+      context: app_context(app, Application.get_application(mod))}
   end
 
-  defp get_app(module) do
-    case :application.get_application(module) do
-      {:ok, app} -> app
-      :undefined -> nil
-    end
+  defp app_context(app, app) when not is_nil(app), do: @app_context
+  defp app_context(_app1, _app2), do: @all_context
+
+  defp format_file(""), do: nil
+  defp format_file(file) when is_binary(file), do: file
+  defp format_file(file), do: file |> to_string() |> format_file()
+
+  defp format_method(fun, args) when is_list(args) do
+    format_method(fun, length(args))
+  end
+  defp format_method(fun, arity) when is_integer(arity) do
+    "#{fun}/#{arity}"
   end
 
-  defp otp_app do
-    Honeybadger.get_env(:app)
+  defp format_args(args, false = _filter) when is_list(args) do
+    Enum.map(args, &inspect/1)
   end
-
-  defp get_context(app, app) when app != nil, do: "app"
-  defp get_context(_app1, _app2),             do: "all"
-
-  defp convert_string(""), do: nil
-  defp convert_string(string) when is_binary(string), do: string
-  defp convert_string(obj), do: to_string(obj) |> convert_string
+  defp format_args(_arity, _filter) do
+    []
+  end
 end

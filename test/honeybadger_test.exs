@@ -47,11 +47,11 @@ defmodule HoneybadgerTest do
 
     traced = for %{"file" => file, "method" => fun} <- backtrace, do: {file, fun}
 
-    refute {"lib/process.ex", "info"} in traced
-    refute {"lib/honeybadger.ex", "backtrace"} in traced
-    refute {"lib/honeybadger.ex", "notify"} in traced
+    refute {"lib/process.ex", "info/1"} in traced
+    refute {"lib/honeybadger.ex", "backtrace/1"} in traced
+    refute {"lib/honeybadger.ex", "notify/3"} in traced
     assert {"test/honeybadger_test.exs",
-            "test sending a notice with exception stacktrace"} in traced
+            "test sending a notice with exception stacktrace/1"} in traced
   end
 
   test "fetching all application values" do
