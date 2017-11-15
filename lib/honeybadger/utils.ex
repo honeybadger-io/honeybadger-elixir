@@ -38,4 +38,17 @@ defmodule Honeybadger.Utils do
     end
   end
 
+  @default_excluded_envs [:dev, :test]
+  def default_excluded_envs, do: @default_excluded_envs
+
+  def enabled? do
+    exclude_envs =
+      Application.get_env(:honeybadger, :exclude_envs, default_excluded_envs())
+
+    environment_name =
+      Application.get_env(:honeybadger, :environment_name, Mix.env())
+
+    not (environment_name in exclude_envs)
+  end
+
 end

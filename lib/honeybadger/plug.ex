@@ -20,10 +20,14 @@ defmodule Honeybadger.Plug do
         end
       end
 
-      defp handle_errors(conn, %{kind: _kind, reason: exception, stack: stack}) do
-        metadata = %{plug_env: build_plug_env(conn, __MODULE__, @phoenix),
-                     context: Honeybadger.context()}
-        Honeybadger.notify(exception, metadata, stack)
+      if Honeybadger.Utils.enabled?() do
+        defp handle_errors(conn, %{kind: _kind, reason: exception, stack: stack}) do
+          metadata = %{plug_env: build_plug_env(conn, __MODULE__, @phoenix),
+            context: Honeybadger.context()}
+            Honeybadger.notify(exception, metadata, stack)
+        end
+      else
+        defp handle_errors(_conn, _err), do: :ok
       end
     end
   end
