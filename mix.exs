@@ -28,7 +28,7 @@ defmodule Honeybadger.Mixfile do
      env: [api_key: {:system, "HONEYBADGER_API_KEY"},
            app: nil,
            environment_name: Mix.env(),
-           exclude_envs: [:dev, :test],
+           exclude_envs: Honeybadger.Utils.default_excluded_envs(),
            origin: "https://api.honeybadger.io",
            proxy: nil,
            proxy_auth: {nil, nil},

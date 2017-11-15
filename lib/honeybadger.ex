@@ -140,6 +140,16 @@ defmodule Honeybadger do
 
   @doc false
   def start(_type, _opts) do
+    children = if Honeybadger.Utils.enabled?() do
+      supervisor_children()
+    else
+      null_supervisor_children()
+    end
+    Supervisor.start_link(children, strategy: :one_for_one)
+  end
+
+  def null_supervisor_children, do: []
+  def supervisor_children do
     import Supervisor.Spec
 
     config =
@@ -152,11 +162,9 @@ defmodule Honeybadger do
       :error_logger.add_report_handler(Honeybadger.Logger)
     end
 
-    children = [
+    [
       worker(Client, [config])
     ]
-
-    Supervisor.start_link(children, strategy: :one_for_one)
   end
 
   @doc false
@@ -203,10 +211,16 @@ defmodule Honeybadger do
       :ok
   """
   @spec notify(Notice.noticeable, Map.t, list) :: :ok
-  def notify(exception, metadata \\ %{}, stacktrace \\ nil) do
-    exception
-    |> Notice.new(contextual_metadata(metadata), backtrace(stacktrace))
-    |> Client.send_notice()
+  def notify(exception, metadata \\ %{}, stacktrace \\ nil)
+
+  if Honeybadger.Utils.enabled?() do
+    def notify(exception, metadata, stacktrace) do
+      exception
+      |> Notice.new(contextual_metadata(metadata), backtrace(stacktrace))
+      |> Client.send_notice()
+    end
+  else
+    def notify(_exception, _metadata, _stacktrace), do: :ok
   end
 
   def context do
