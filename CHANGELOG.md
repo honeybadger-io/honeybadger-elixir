@@ -10,6 +10,8 @@ adheres to [Semantic Versioning](http://semver.org/).
   environment was specified via `{:system, "HONEYBADGER_ENV"}` and the
   `HONEYBADGER_ENV` value didn't already exist as an atom the app would fail to
   boot.
+- Ignore the absence of "HONEYBADGER_API_KEY" when running in an excluded env
+
 
 ## [v0.7.0] - 2017-11-07
 ### Added

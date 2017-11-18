@@ -98,16 +98,14 @@ defmodule HoneybadgerTest do
     end
   end
 
-  test "an error is raised with an unset system env" do
+  test "an error is not raised with an unset system env" do
     on_exit(fn ->
       Application.delete_env(:honeybadger, :unused)
     end)
 
     Application.put_env(:honeybadger, :unused, {:system, "UNUSED"})
 
-    assert_raise ArgumentError, ~r/variable "UNUSED" is not set/, fn ->
-      Honeybadger.get_env(:unused)
-    end
+    assert Honeybadger.get_env(:unused) == nil
   end
 
   test "getting and setting the context" do

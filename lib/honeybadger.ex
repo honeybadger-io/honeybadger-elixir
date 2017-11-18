@@ -230,7 +230,7 @@ defmodule Honeybadger do
   def get_env(key) when is_atom(key) do
     case Application.fetch_env(:honeybadger, key) do
       {:ok, {:system, var}} when is_binary(var) ->
-        System.get_env(var) || raise ArgumentError, "system variable #{inspect(var)} is not set"
+        System.get_env(var)
       {:ok, value} ->
         value
       :error ->
