@@ -14,11 +14,10 @@ defmodule HoneybadgerTest do
 
     logged = capture_log(fn ->
       :ok = Honeybadger.notify(%RuntimeError{})
+      assert_receive {:api_request, _}
     end)
 
     assert logged =~ ~s|[Honeybadger] API success: "{}"|
-
-    assert_receive {:api_request, _}
   end
 
   test "sending a notice on an inactive environment doesn't make an HTTP request" do
