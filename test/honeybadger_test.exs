@@ -20,6 +20,22 @@ defmodule HoneybadgerTest do
     assert logged =~ ~s|[Honeybadger] API success: "{}"|
   end
 
+  test "warn if incomplete env" do
+    logged = capture_log(fn ->
+      restart_with_config(api_key: nil, environment_name: :test, exclude_envs: [])
+    end)
+
+    assert logged =~ ~s|mandatory :honeybadger config key api_key not set|
+  end
+
+  test "should not show warning if env is complete" do
+    logged = capture_log(fn ->
+      restart_with_config(api_key: "test", environment_name: :test, exclude_envs: [])
+    end)
+
+    refute logged =~ ~s|mandatory :honeybadger config key api_key not set|
+  end
+
   test "sending a notice on an inactive environment doesn't make an HTTP request" do
     restart_with_config(exclude_envs: [:dev, :test])
 

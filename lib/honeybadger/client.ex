@@ -71,10 +71,22 @@ defmodule Honeybadger.Client do
   # Callbacks
 
   def init(state) do
+    warn_if_incomplete_env(state)
     :ok = :hackney_pool.start_pool(__MODULE__, [max_connections: @max_connections])
 
     {:ok, state}
   end
+
+  @mandatory_keys ~w[api_key environment_name]a
+  defp warn_if_incomplete_env(%{enabled: true}) do
+    @mandatory_keys
+    |> Enum.each(fn key ->
+      if !Honeybadger.get_env(key) do
+        Logger.error("mandatory :honeybadger config key #{key} not set")
+      end
+    end)
+  end
+  defp warn_if_incomplete_env(_), do: :ok
 
   def terminate(_reason, _state) do
     :ok = :hackney_pool.stop_pool(__MODULE__)
