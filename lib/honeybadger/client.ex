@@ -15,7 +15,7 @@ defmodule Honeybadger.Client do
 
   # State
 
-  defstruct [:enabled, :headers, :proxy, :proxy_auth, :url]
+  defstruct [:api_key, :enabled, :headers, :proxy, :proxy_auth, :url]
 
   # API
 
@@ -28,6 +28,7 @@ defmodule Honeybadger.Client do
   @doc false
   def new(opts) do
     %__MODULE__{enabled: enabled?(opts),
+                api_key: get_env(opts, :api_key),
                 headers: build_headers(opts),
                 proxy: get_env(opts, :proxy),
                 proxy_auth: get_env(opts, :proxy_auth),
@@ -102,6 +103,10 @@ defmodule Honeybadger.Client do
   end
 
   def handle_cast({:notice, _notice}, %{enabled: false} = state) do
+    {:noreply, state}
+  end
+
+  def handle_cast({:notice, _notice}, %{api_key: nil} = state) do
     {:noreply, state}
   end
 

@@ -58,6 +58,18 @@ defmodule HoneybadgerTest do
     refute_receive {:api_request, _}
   end
 
+  test "sending a notice in an active environment without an API key doesn't make an HTTP request" do
+    restart_with_config(exclude_envs: [], api_key: nil)
+
+    logged = capture_log(fn ->
+      :ok = Honeybadger.notify(%RuntimeError{})
+      refute_receive {:api_request, _}
+    end)
+
+    refute logged =~ "[Honeybadger] API"
+  end
+
+
   test "sending a notice with exception stacktrace" do
     restart_with_config(exclude_envs: [])
 
