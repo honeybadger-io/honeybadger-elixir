@@ -28,6 +28,16 @@ defmodule HoneybadgerTest do
     assert logged =~ ~s|mandatory :honeybadger config key api_key not set|
   end
 
+  test "warn in an excluded env" do
+    logged =
+      capture_log(fn ->
+        restart_with_config(environment_name: :test, exclude_envs: [:test])
+      end)
+
+    assert logged =~
+             ~s|Development mode is enabled. Data will not be reported until you deploy your app.|
+  end
+
   test "should not show warning if env is complete" do
     logged = capture_log(fn ->
       restart_with_config(api_key: "test", environment_name: :test, exclude_envs: [])

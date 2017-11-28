@@ -72,6 +72,7 @@ defmodule Honeybadger.Client do
 
   def init(state) do
     warn_if_incomplete_env(state)
+    warn_in_dev_mode(state)
     :ok = :hackney_pool.start_pool(__MODULE__, [max_connections: @max_connections])
 
     {:ok, state}
@@ -87,6 +88,14 @@ defmodule Honeybadger.Client do
     end)
   end
   defp warn_if_incomplete_env(_), do: :ok
+
+  defp warn_in_dev_mode(%{enabled: false}) do
+    Logger.warn(
+      "Development mode is enabled. Data will not be reported until you deploy your app."
+    )
+  end
+
+  defp warn_in_dev_mode(_), do: :ok
 
   def terminate(_reason, _state) do
     :ok = :hackney_pool.stop_pool(__MODULE__)
