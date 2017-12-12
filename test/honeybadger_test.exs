@@ -14,11 +14,36 @@ defmodule HoneybadgerTest do
 
     logged = capture_log(fn ->
       :ok = Honeybadger.notify(%RuntimeError{})
+      assert_receive {:api_request, _}
     end)
 
     assert logged =~ ~s|[Honeybadger] API success: "{}"|
+  end
 
-    assert_receive {:api_request, _}
+  test "warn if incomplete env" do
+    logged = capture_log(fn ->
+      restart_with_config(api_key: nil, environment_name: :test, exclude_envs: [])
+    end)
+
+    assert logged =~ ~s|mandatory :honeybadger config key api_key not set|
+  end
+
+  test "warn in an excluded env" do
+    logged =
+      capture_log(fn ->
+        restart_with_config(environment_name: :test, exclude_envs: [:test])
+      end)
+
+    assert logged =~
+             ~s|Development mode is enabled. Data will not be reported until you deploy your app.|
+  end
+
+  test "should not show warning if env is complete" do
+    logged = capture_log(fn ->
+      restart_with_config(api_key: "test", environment_name: :test, exclude_envs: [])
+    end)
+
+    refute logged =~ ~s|mandatory :honeybadger config key api_key not set|
   end
 
   test "sending a notice on an inactive environment doesn't make an HTTP request" do
@@ -32,6 +57,18 @@ defmodule HoneybadgerTest do
 
     refute_receive {:api_request, _}
   end
+
+  test "sending a notice in an active environment without an API key doesn't make an HTTP request" do
+    restart_with_config(exclude_envs: [], api_key: nil)
+
+    logged = capture_log(fn ->
+      :ok = Honeybadger.notify(%RuntimeError{})
+      refute_receive {:api_request, _}
+    end)
+
+    refute logged =~ "[Honeybadger] API"
+  end
+
 
   test "sending a notice with exception stacktrace" do
     restart_with_config(exclude_envs: [])
@@ -99,16 +136,14 @@ defmodule HoneybadgerTest do
     end
   end
 
-  test "an error is raised with an unset system env" do
+  test "an error is not raised with an unset system env" do
     on_exit(fn ->
       Application.delete_env(:honeybadger, :unused)
     end)
 
     Application.put_env(:honeybadger, :unused, {:system, "UNUSED"})
 
-    assert_raise ArgumentError, ~r/variable "UNUSED" is not set/, fn ->
-      Honeybadger.get_env(:unused)
-    end
+    assert Honeybadger.get_env(:unused) == nil
   end
 
   test "getting and setting the context" do

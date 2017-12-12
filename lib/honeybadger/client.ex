@@ -15,7 +15,7 @@ defmodule Honeybadger.Client do
 
   # State
 
-  defstruct [:enabled, :headers, :proxy, :proxy_auth, :url]
+  defstruct [:api_key, :enabled, :headers, :proxy, :proxy_auth, :url]
 
   # API
 
@@ -28,6 +28,7 @@ defmodule Honeybadger.Client do
   @doc false
   def new(opts) do
     %__MODULE__{enabled: enabled?(opts),
+                api_key: get_env(opts, :api_key),
                 headers: build_headers(opts),
                 proxy: get_env(opts, :proxy),
                 proxy_auth: get_env(opts, :proxy_auth),
@@ -56,6 +57,9 @@ defmodule Honeybadger.Client do
 
       iex> Honeybadger.Client.enabled?(environment_name: :dev, exclude_envs: [:test])
       true
+
+      iex> Honeybadger.Client.enabled?(environment_name: "unexpected", exclude_envs: [:test])
+      true
   """
   @spec enabled?(Keyword.t) :: boolean
   def enabled?(opts) do
@@ -68,16 +72,41 @@ defmodule Honeybadger.Client do
   # Callbacks
 
   def init(state) do
+    warn_if_incomplete_env(state)
+    warn_in_dev_mode(state)
     :ok = :hackney_pool.start_pool(__MODULE__, [max_connections: @max_connections])
 
     {:ok, state}
   end
+
+  @mandatory_keys ~w[api_key environment_name]a
+  defp warn_if_incomplete_env(%{enabled: true}) do
+    @mandatory_keys
+    |> Enum.each(fn key ->
+      if !Honeybadger.get_env(key) do
+        Logger.error("mandatory :honeybadger config key #{key} not set")
+      end
+    end)
+  end
+  defp warn_if_incomplete_env(_), do: :ok
+
+  defp warn_in_dev_mode(%{enabled: false}) do
+    Logger.warn(
+      "Development mode is enabled. Data will not be reported until you deploy your app."
+    )
+  end
+
+  defp warn_in_dev_mode(_), do: :ok
 
   def terminate(_reason, _state) do
     :ok = :hackney_pool.stop_pool(__MODULE__)
   end
 
   def handle_cast({:notice, _notice}, %{enabled: false} = state) do
+    {:noreply, state}
+  end
+
+  def handle_cast({:notice, _notice}, %{api_key: nil} = state) do
     {:noreply, state}
   end
 
@@ -125,7 +154,7 @@ defmodule Honeybadger.Client do
   end
 
   defp maybe_to_atom(value) when is_binary(value) do
-    String.to_existing_atom(value)
+    String.to_atom(value)
   end
 
   defp maybe_to_atom(value) do

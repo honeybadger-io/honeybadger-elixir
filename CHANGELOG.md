@@ -10,6 +10,14 @@ adheres to [Semantic Versioning](http://semver.org/).
 - Include function arguments in notice backtraces. This is disabled by default,
   and can be enabled by setting `filter_args` to `false` in configuration.
 
+### Fixed
+- Safely convert binary `:environment_name` values to an atom. If the
+  environment was specified via `{:system, "HONEYBADGER_ENV"}` and the
+  `HONEYBADGER_ENV` value didn't already exist as an atom the app would fail to
+  boot.
+- Ignore the absence of "HONEYBADGER_API_KEY" when running in an excluded env
+
+
 ## [v0.7.0] - 2017-11-07
 ### Added
 - Increases the logging around client activity
