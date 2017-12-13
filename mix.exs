@@ -36,6 +36,7 @@ defmodule Honeybadger.Mixfile do
            notice_filter: Honeybadger.NoticeFilter.Default,
            filter: Honeybadger.Filter.Default,
            filter_keys: [:password, :credit_card],
+           filter_args: true,
            filter_disable_url: false,
            filter_disable_params: false,
            filter_disable_session: false],

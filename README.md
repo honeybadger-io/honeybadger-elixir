@@ -50,7 +50,7 @@ config :honeybadger,
 If `environment_name` is not set we will fall back to the value of `Mix.env()`.
 `Mix.env()` uses the atomized value of the `MIX_ENV` environment variable and
 defaults to `:dev` when the environment variable is not set. This should be good
-for most setups. If you want to have an environment_name which is different than
+for most setups. If you want to have an `environment_name` which is different than
 the `Mix.env()`, you should set `environment_name` in your `config.exs` files for each
 environment. This ensures that we can give you accurate environment information
 even during compile time. Explicitly setting the `environment_name` config
@@ -140,7 +140,7 @@ config :honeybadger,
   filter_keys: [:password, :credit_card]
 ```
 
-This will remove any entries in the context, session, cgi_data and params that match one of the filter keys.  The filter is case insensitive and matches atoms or strings.
+This will remove any entries in the `context`, `session`, `cgi_data` and `params` that match one of the filter keys.  The filter is case insensitive and matches atoms or strings.
 
 If `Honeybadger.Filter.Default` does not suit your needs, you can implement your own filter. See the `Honeybadger.Filter.Mixin` module doc for details on implementing your own filter.
 
@@ -157,22 +157,23 @@ config :honeybadger,
 
 Here are all of the options you can pass in the keyword list:
 
-| Name         | Description                                                               | Default |
-|--------------|---------------------------------------------------------------------------|---------|
-| api_key      | Your application's Honeybadger API key                                    | System.get_env("HONEYBADGER_API_KEY"))` |
-| environment_name | (required) The name of the environment your app is running in.                   | nil |
-| app          | Name of your app's OTP Application as an atom                             | Mix.Project.config[:app] |
-| use_logger   | Enable the Honeybadger Logger for handling errors outside of web requests | true |
-| exclude_envs | Environments that you want to disable Honeybadger notifications           | [:dev, :test] |
-| hostname     | Hostname of the system your application is running on                     | :inet.gethostname |
-| origin       | URL for the Honeybadger API                                               | "https://api.honeybadger.io" |
-| project_root | Directory root for where your application is running                      | System.cwd |
-| filter       | Module implementing `Honeybadger.Filter` to filter data before sending to Honeybadger.io         | `Honeybadger.Filter.Default`|
-| filter_keys  | A list of keywords (atoms) to filter.  Only valid if `filter` is `Honeybadger.Filter.Default` | [:password, :credit_card] |
-| filter_disable_url | If true, will remove the request url | false |
-| filter_disable_session | If true, will remove the request session | false |
-| filter_disable_params | If true, will remove the request params | false |
-| notice_filter       | Module implementing `Honeybadger.NoticeFilter`. If `nil`, no filtering is done. | `Honeybadger.NoticeFilter.Default`|
+| Name                     | Description                                                                                   | Default                                  |
+| ------------------------ | --------------------------------------------------------------------------------------------- | ---------------------------------------- |
+| `app`                    | Name of your app's OTP Application as an atom                                                 | `Mix.Project.config[:app]`               |
+| `api_key`                | Your application's Honeybadger API key                                                        | `System.get_env("HONEYBADGER_API_KEY"))` |
+| `environment_name`       | (required) The name of the environment your app is running in.                                | `nil`                                    |
+| `exclude_envs`           | Environments that you want to disable Honeybadger notifications                               | `[:dev, :test]`                          |
+| `hostname`               | Hostname of the system your application is running on                                         | `:inet.gethostname`                      |
+| `origin`                 | URL for the Honeybadger API                                                                   | `"https://api.honeybadger.io"`           |
+| `project_root`           | Directory root for where your application is running                                          | `System.cwd/0`                           |
+| `filter`                 | Module implementing `Honeybadger.Filter` to filter data before sending to Honeybadger.io      | `Honeybadger.Filter.Default`             |
+| `filter_keys`            | A list of keywords (atoms) to filter.  Only valid if `filter` is `Honeybadger.Filter.Default` | `[:password, :credit_card]`              |
+| `filter_args`            | If true, will remove function arguments in backtraces                                         | `true`                                   |
+| `filter_disable_url`     | If true, will remove the request url                                                          | `false`                                  |
+| `filter_disable_session` | If true, will remove the request session                                                      | `false`                                  |
+| `filter_disable_params`  | If true, will remove the request params                                                       | `false`                                  |
+| `notice_filter`          | Module implementing `Honeybadger.NoticeFilter`. If `nil`, no filtering is done.               | `Honeybadger.NoticeFilter.Default`       |
+| `use_logger`             | Enable the Honeybadger Logger for handling errors outside of web requests                     | `true`                                   |
 
 ## Public Interface
 

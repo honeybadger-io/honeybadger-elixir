@@ -4,6 +4,11 @@ CHANGELOG](http://keepachangelog.com/) for how to update this file. This project
 adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Added
+- Include function arity in notice backtraces. For example, the reported method
+  would be `notify/3` instead of `notify`.
+- Include function arguments in notice backtraces. This is disabled by default,
+  and can be enabled by setting `filter_args` to `false` in configuration.
 
 ### Fixed
 - Safely convert binary `:environment_name` values to an atom. If the
