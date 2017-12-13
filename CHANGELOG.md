@@ -11,7 +11,7 @@ adheres to [Semantic Versioning](http://semver.org/).
   and can be enabled by setting `filter_args` to `false` in configuration.
 
 ### Changed
-- Allow `handle_errors` from `Honeybadger.Plug` to be overridden
+- Allow `handle_errors` from `Honeybadger.Plug` to be overridden.
 
 ### Fixed
 - Safely convert binary `:environment_name` values to an atom. If the
