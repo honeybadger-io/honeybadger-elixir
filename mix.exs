@@ -4,7 +4,7 @@ defmodule Honeybadger.Mixfile do
   def project do
     [app: :honeybadger,
      version: "0.7.0",
-     elixir: "~> 1.2",
+     elixir: "~> 1.3",
      build_embedded: Mix.env() == :prod,
      start_permanent: Mix.env() == :prod,
      deps: deps(),
@@ -36,6 +36,7 @@ defmodule Honeybadger.Mixfile do
            notice_filter: Honeybadger.NoticeFilter.Default,
            filter: Honeybadger.Filter.Default,
            filter_keys: [:password, :credit_card],
+           filter_args: true,
            filter_disable_url: false,
            filter_disable_params: false,
            filter_disable_session: false],
