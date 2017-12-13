@@ -10,6 +10,9 @@ adheres to [Semantic Versioning](http://semver.org/).
 - Include function arguments in notice backtraces. This is disabled by default,
   and can be enabled by setting `filter_args` to `false` in configuration.
 
+### Changed
+- Allow `handle_errors` from `Honeybadger.Plug` to be overridden.
+
 ### Fixed
 - Safely convert binary `:environment_name` values to an atom. If the
   environment was specified via `{:system, "HONEYBADGER_ENV"}` and the
