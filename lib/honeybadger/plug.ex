@@ -9,22 +9,24 @@ defmodule Honeybadger.Plug do
       @phoenix Keyword.get(unquote(opts), :phoenix, :code.is_loaded(Phoenix))
 
       # Exceptions raised on non-existent Plug routes are ignored
-      defp handle_errors(conn, %{reason: %FunctionClauseError{function: :do_match}} = ex) do
+      def handle_errors(conn, %{reason: %FunctionClauseError{function: :do_match}} = ex) do
         nil
       end
 
       if @phoenix do
         # Exceptions raised on non-existent Phoenix routes are ignored
-        defp handle_errors(conn, %{reason: %Phoenix.Router.NoRouteError{}} = ex) do
+        def handle_errors(conn, %{reason: %Phoenix.Router.NoRouteError{}} = ex) do
           nil
         end
       end
 
-      defp handle_errors(conn, %{kind: _kind, reason: exception, stack: stack}) do
+      def handle_errors(conn, %{kind: _kind, reason: exception, stack: stack}) do
         metadata = %{plug_env: build_plug_env(conn, __MODULE__, @phoenix),
                      context: Honeybadger.context()}
         Honeybadger.notify(exception, metadata, stack)
       end
+
+      defoverridable [handle_errors: 2]
     end
   end
 
