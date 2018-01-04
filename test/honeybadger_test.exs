@@ -146,7 +146,7 @@ defmodule HoneybadgerTest do
     assert Honeybadger.get_env(:unused) == nil
   end
 
-  test "getting and setting the context" do
+  test "getting, setting and clearing the context" do
     assert %{} == Honeybadger.context()
 
     Honeybadger.context(user_id: 1)
@@ -154,5 +154,8 @@ defmodule HoneybadgerTest do
 
     Honeybadger.context(%{user_id: 2})
     assert %{user_id: 2} == Honeybadger.context()
+
+    Honeybadger.clear_context()
+    assert %{} == Honeybadger.context()
   end
 end

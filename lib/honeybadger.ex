@@ -137,6 +137,7 @@ defmodule Honeybadger do
   end
 
   @context :honeybadger_context
+  @type context :: map
 
   @doc false
   def start(_type, _opts) do
@@ -209,13 +210,32 @@ defmodule Honeybadger do
     |> Client.send_notice()
   end
 
+  @doc """
+  Retrieves the context that will get sent to the Honeybadger API when/if an
+  exception occurs in the current process.
+  """
+  @spec context :: context
   def context do
     (Process.get(@context) || %{}) |> Enum.into(Map.new)
   end
 
-  def context(keyword_or_map) do
-    Process.put(@context, Map.merge(context(), Enum.into(keyword_or_map, %{})))
+  @doc """
+  Merges `additional_context` into the the context that will get sent to the
+  Honeybadger API when/if an exception occurs in the current process.
+  """
+  @spec context(map | keyword) :: context
+  def context(additional_context) do
+    Process.put(@context, Map.merge(context(), Enum.into(additional_context, %{})))
     context()
+  end
+
+  @doc """
+  Clears the context that will get sent to the Honeybadger API when/if an
+  exception occurs in the current process.
+  """
+  @spec clear_context :: :ok
+  def clear_context do
+    Process.delete(@context)
   end
 
   @doc """
