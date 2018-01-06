@@ -4,17 +4,15 @@ if Code.ensure_loaded?(Plug) do
     alias Honeybadger.{PhoenixData, PlugData}
 
     @doc false
-    defmacro __using__(opts) do
+    defmacro __using__(_opts) do
       quote location: :keep do
         use Plug.ErrorHandler
 
-        @ignored Keyword.get(unquote(opts), :ignore, [])
-
         @conn_data_mod if Code.ensure_loaded?(Phoenix), do: PhoenixData, else: PlugData
 
-        for reason <- @ignored do
-          def handle_errors(_conn, %{reason: reason}), do: nil
-        end
+        def handle_errors(_conn, %{reason: %FunctionClauseError{function: :do_match}}), do: nil
+
+        def handle_errors(_conn, %{reason: %{plug_status: 404}}), do: nil
 
         def handle_errors(conn, %{reason: reason, stack: stack}) do
           metadata = %{

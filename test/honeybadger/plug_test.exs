@@ -1,11 +1,12 @@
 defmodule Honeybadger.PlugTest do
-  use ExUnit.Case, async: true
+  use Honeybadger.Case
   use Plug.Test
 
   defmodule PlugApp do
-    import Plug.Conn
     use Plug.Router
     use Honeybadger.Plug
+
+    import Plug.Conn
 
     plug(:match)
     plug(:dispatch)
@@ -14,14 +15,6 @@ defmodule Honeybadger.PlugTest do
       _ = conn
       raise RuntimeError, "Oops"
     end
-  end
-
-  test "exceptions on a non-existant route are ignored" do
-    conn = conn(:get, "/not_found")
-
-    # the way erlang errors are raised was changed in https://github.com/elixir-plug/plug/pull/518
-    # Plug now sends an error which is not normalized, hence the change to the test
-    assert :function_clause == catch_error(PlugApp.call(conn, []))
   end
 
   describe "build_plug_env/3" do
@@ -57,6 +50,32 @@ defmodule Honeybadger.PlugTest do
       }
 
       assert plug_env == Honeybadger.Plug.build_plug_env(conn, PlugApp, Honeybadger.PhoenixData)
+    end
+  end
+
+  describe "handle_errors/2" do
+    setup do
+      {:ok, _} = Honeybadger.API.start(self())
+
+      on_exit(&Honeybadger.API.stop/0)
+
+      restart_with_config(exclude_envs: [])
+    end
+
+    test "errors are reported" do
+      conn = conn(:get, "/bang")
+
+      assert %RuntimeError{} = catch_error(PlugApp.call(conn, []))
+
+      assert_receive {:api_request, _}
+    end
+
+    test "not found errors for plug are ignored" do
+      conn = conn(:get, "/not_found")
+
+      assert :function_clause == catch_error(PlugApp.call(conn, []))
+
+      refute_receive {:api_request, _}
     end
   end
 
