@@ -158,4 +158,18 @@ defmodule HoneybadgerTest do
     Honeybadger.clear_context()
     assert %{} == Honeybadger.context()
   end
+
+  test "setting context with invalid data type" do
+    assert_raise FunctionClauseError, fn ->
+      Honeybadger.context(nil)
+    end
+
+    assert_raise FunctionClauseError, fn ->
+      Honeybadger.context(true)
+    end
+
+    assert_raise FunctionClauseError, fn ->
+      Honeybadger.context(3)
+    end
+  end
 end

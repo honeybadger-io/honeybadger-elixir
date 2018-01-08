@@ -216,7 +216,7 @@ defmodule Honeybadger do
   """
   @spec context :: context
   def context do
-    (Process.get(@context) || %{}) |> Enum.into(Map.new)
+    Process.get(@context, %{})
   end
 
   @doc """
@@ -224,7 +224,7 @@ defmodule Honeybadger do
   Honeybadger API when/if an exception occurs in the current process.
   """
   @spec context(map | keyword) :: context
-  def context(additional_context) do
+  def context(additional_context) when is_map(additional_context) or is_list(additional_context) do
     Process.put(@context, Map.merge(context(), Enum.into(additional_context, %{})))
     context()
   end
