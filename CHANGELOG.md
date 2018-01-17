@@ -4,6 +4,8 @@ CHANGELOG](http://keepachangelog.com/) for how to update this file. This project
 adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+
+## [v0.8.0] - 2018-01-17
 ### Added
 - Include function arity in notice backtraces. For example, the reported method
   would be `notify/3` instead of `notify`.
