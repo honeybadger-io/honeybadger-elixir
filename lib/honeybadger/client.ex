@@ -22,17 +22,19 @@ defmodule Honeybadger.Client do
   def start_link(config_opts) do
     state = new(config_opts)
 
-    GenServer.start_link(__MODULE__, state, [name: __MODULE__])
+    GenServer.start_link(__MODULE__, state, name: __MODULE__)
   end
 
   @doc false
   def new(opts) do
-    %__MODULE__{enabled: enabled?(opts),
-                api_key: get_env(opts, :api_key),
-                headers: build_headers(opts),
-                proxy: get_env(opts, :proxy),
-                proxy_auth: get_env(opts, :proxy_auth),
-                url: get_env(opts, :origin) <> @notices_endpoint}
+    %__MODULE__{
+      enabled: enabled?(opts),
+      api_key: get_env(opts, :api_key),
+      headers: build_headers(opts),
+      proxy: get_env(opts, :proxy),
+      proxy_auth: get_env(opts, :proxy_auth),
+      url: get_env(opts, :origin) <> @notices_endpoint
+    }
   end
 
   @doc false
@@ -40,7 +42,9 @@ defmodule Honeybadger.Client do
     if pid = Process.whereis(__MODULE__) do
       GenServer.cast(pid, {:notice, notice})
     else
-      Logger.warn("[Honeybadger] Unable to notify, the :honeybadger client isn't running")
+      Logger.warn(fn ->
+        "[Honeybadger] Unable to notify, the :honeybadger client isn't running"
+      end)
     end
   end
 
@@ -61,12 +65,12 @@ defmodule Honeybadger.Client do
       iex> Honeybadger.Client.enabled?(environment_name: "unexpected", exclude_envs: [:test])
       true
   """
-  @spec enabled?(Keyword.t) :: boolean
+  @spec enabled?(Keyword.t()) :: boolean
   def enabled?(opts) do
     env_name = get_env(opts, :environment_name)
     excluded = get_env(opts, :exclude_envs)
 
-    not maybe_to_atom(env_name) in excluded
+    maybe_to_atom(env_name) not in excluded
   end
 
   # Callbacks
@@ -74,29 +78,10 @@ defmodule Honeybadger.Client do
   def init(state) do
     warn_if_incomplete_env(state)
     warn_in_dev_mode(state)
-    :ok = :hackney_pool.start_pool(__MODULE__, [max_connections: @max_connections])
+    :ok = :hackney_pool.start_pool(__MODULE__, max_connections: @max_connections)
 
     {:ok, state}
   end
-
-  @mandatory_keys ~w[api_key environment_name]a
-  defp warn_if_incomplete_env(%{enabled: true}) do
-    @mandatory_keys
-    |> Enum.each(fn key ->
-      if !Honeybadger.get_env(key) do
-        Logger.error("mandatory :honeybadger config key #{key} not set")
-      end
-    end)
-  end
-  defp warn_if_incomplete_env(_), do: :ok
-
-  defp warn_in_dev_mode(%{enabled: false}) do
-    Logger.warn(
-      "Development mode is enabled. Data will not be reported until you deploy your app."
-    )
-  end
-
-  defp warn_in_dev_mode(_), do: :ok
 
   def terminate(_reason, _state) do
     :ok = :hackney_pool.stop_pool(__MODULE__)
@@ -116,23 +101,25 @@ defmodule Honeybadger.Client do
     opts =
       state
       |> Map.take([:proxy, :proxy_auth])
-      |> Enum.into(Keyword.new)
+      |> Enum.into(Keyword.new())
       |> Keyword.put(:pool, __MODULE__)
 
     case :hackney.post(state.url, state.headers, payload, opts) do
       {:ok, code, _headers, ref} when code >= 200 and code <= 399 ->
-        Logger.debug("[Honeybadger] API success: #{inspect(body_from_ref(ref))}")
+        Logger.debug(fn -> "[Honeybadger] API success: #{inspect(body_from_ref(ref))}" end)
+
       {:ok, code, _headers, ref} when code >= 400 and code <= 504 ->
-        Logger.error("[Honeybadger] API failure: #{inspect(body_from_ref(ref))}")
+        Logger.error(fn -> "[Honeybadger] API failure: #{inspect(body_from_ref(ref))}" end)
+
       {:error, reason} ->
-        Logger.error("[Honeybadger] connection error: #{inspect(reason)}")
+        Logger.error(fn -> "[Honeybadger] connection error: #{inspect(reason)}" end)
     end
 
     {:noreply, state}
   end
 
   def handle_info(message, state) do
-    Logger.info("[Honeybadger] unexpected message: #{inspect(message)}")
+    Logger.info(fn -> "[Honeybadger] unexpected message: #{inspect(message)}" end)
 
     {:noreply, state}
   end
@@ -153,11 +140,25 @@ defmodule Honeybadger.Client do
     Keyword.get(opts, key, Honeybadger.get_env(key))
   end
 
-  defp maybe_to_atom(value) when is_binary(value) do
-    String.to_atom(value)
+  defp maybe_to_atom(value) when is_binary(value), do: String.to_atom(value)
+  defp maybe_to_atom(value), do: value
+
+  @mandatory_keys ~w[api_key environment_name]a
+  defp warn_if_incomplete_env(%{enabled: true}) do
+    for key <- @mandatory_keys do
+      unless Honeybadger.get_env(key) do
+        Logger.error(fn -> "mandatory :honeybadger config key #{key} not set" end)
+      end
+    end
   end
 
-  defp maybe_to_atom(value) do
-    value
+  defp warn_if_incomplete_env(_state), do: :ok
+
+  defp warn_in_dev_mode(%{enabled: false}) do
+    Logger.warn(fn ->
+      "Development mode is enabled. Data will not be reported until you deploy your app."
+    end)
   end
+
+  defp warn_in_dev_mode(_), do: :ok
 end
