@@ -4,6 +4,9 @@ CHANGELOG](http://keepachangelog.com/) for how to update this file. This project
 adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Changed
+- Use lazy logging within `Honeybadger.Client`, this allows compile time purging
+  when the log level is set higher.
 
 ## [v0.8.0] - 2018-01-17
 ### Added

@@ -15,17 +15,27 @@ defmodule Honeybadger.Client do
 
   # State
 
+  @type t :: %{
+          api_key: binary(),
+          enabled: boolean(),
+          headers: [{binary(), binary()}],
+          proxy: binary(),
+          proxy_auth: {binary(), binary()},
+          url: binary()
+        }
+
   defstruct [:api_key, :enabled, :headers, :proxy, :proxy_auth, :url]
 
   # API
 
-  def start_link(config_opts) do
-    state = new(config_opts)
-
-    GenServer.start_link(__MODULE__, state, name: __MODULE__)
+  @doc false
+  @spec start_link(Keyword.t()) :: GenServer.on_start()
+  def start_link(opts) do
+    GenServer.start_link(__MODULE__, new(opts), name: __MODULE__)
   end
 
   @doc false
+  @spec new(Keyword.t()) :: t()
   def new(opts) do
     %__MODULE__{
       enabled: enabled?(opts),
@@ -38,6 +48,7 @@ defmodule Honeybadger.Client do
   end
 
   @doc false
+  @spec send_notice(map()) :: :ok | {:error, term()}
   def send_notice(notice) when is_map(notice) do
     if pid = Process.whereis(__MODULE__) do
       GenServer.cast(pid, {:notice, notice})
@@ -70,23 +81,27 @@ defmodule Honeybadger.Client do
     env_name = get_env(opts, :environment_name)
     excluded = get_env(opts, :exclude_envs)
 
-    maybe_to_atom(env_name) not in excluded
+    not maybe_to_atom(env_name) in excluded
   end
 
   # Callbacks
 
-  def init(state) do
+  @impl GenServer
+  def init(%__MODULE__{} = state) do
     warn_if_incomplete_env(state)
     warn_in_dev_mode(state)
+
     :ok = :hackney_pool.start_pool(__MODULE__, max_connections: @max_connections)
 
     {:ok, state}
   end
 
+  @impl GenServer
   def terminate(_reason, _state) do
     :ok = :hackney_pool.stop_pool(__MODULE__)
   end
 
+  @impl GenServer
   def handle_cast({:notice, _notice}, %{enabled: false} = state) do
     {:noreply, state}
   end
@@ -118,6 +133,7 @@ defmodule Honeybadger.Client do
     {:noreply, state}
   end
 
+  @impl GenServer
   def handle_info(message, state) do
     Logger.info(fn -> "[Honeybadger] unexpected message: #{inspect(message)}" end)
 
@@ -143,7 +159,7 @@ defmodule Honeybadger.Client do
   defp maybe_to_atom(value) when is_binary(value), do: String.to_atom(value)
   defp maybe_to_atom(value), do: value
 
-  @mandatory_keys ~w[api_key environment_name]a
+  @mandatory_keys ~w(api_key environment_name)a
   defp warn_if_incomplete_env(%{enabled: true}) do
     for key <- @mandatory_keys do
       unless Honeybadger.get_env(key) do
@@ -160,5 +176,5 @@ defmodule Honeybadger.Client do
     end)
   end
 
-  defp warn_in_dev_mode(_), do: :ok
+  defp warn_in_dev_mode(_state), do: :ok
 end
