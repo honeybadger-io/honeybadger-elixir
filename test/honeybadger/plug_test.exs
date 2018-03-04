@@ -2,6 +2,14 @@ defmodule Honeybadger.PlugTest do
   use Honeybadger.Case
   use Plug.Test
 
+  defmodule CustomNotFound do
+    defexception [:message]
+  end
+
+  defimpl Plug.Exception, for: CustomNotFound do
+    def status(_), do: 404
+  end
+
   defmodule PlugApp do
     use Plug.Router
     use Honeybadger.Plug
@@ -12,6 +20,11 @@ defmodule Honeybadger.PlugTest do
     get "/bang" do
       _ = conn
       raise RuntimeError, "Oops"
+    end
+
+    get "/404_exception" do
+      _ = conn
+      raise Honeybadger.PlugTest.CustomNotFound, "Oops"
     end
   end
 
@@ -36,6 +49,14 @@ defmodule Honeybadger.PlugTest do
       conn = conn(:get, "/not_found")
 
       assert :function_clause == catch_error(PlugApp.call(conn, []))
+
+      refute_receive {:api_request, _}
+    end
+
+    test "exceptions that implement Plug.Exception and return a 404 are ignored" do
+      conn = conn(:get, "/404_exception")
+
+      assert %CustomNotFound{} = catch_error(PlugApp.call(conn, []))
 
       refute_receive {:api_request, _}
     end
