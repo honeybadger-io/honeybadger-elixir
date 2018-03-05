@@ -5,6 +5,7 @@ defmodule Honeybadger.Mixfile do
     [app: :honeybadger,
      version: "0.8.0",
      elixir: "~> 1.3",
+     consolidate_protocols: Mix.env() != :test,
      build_embedded: Mix.env() == :prod,
      start_permanent: Mix.env() == :prod,
      deps: deps(),

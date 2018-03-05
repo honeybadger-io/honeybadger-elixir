@@ -55,12 +55,14 @@ if Code.ensure_loaded?(Plug) do
         @spec handle_errors(Plug.Conn.t(), %{kind: atom(), reason: any(), stack: any()}) :: :ok
         def handle_errors(_conn, %{reason: %FunctionClauseError{function: :do_match}}), do: :ok
 
-        def handle_errors(_conn, %{reason: %{plug_status: 404}}), do: :ok
-
         def handle_errors(conn, %{reason: reason, stack: stack}) do
-          metadata = @plug_data.metadata(conn, __MODULE__)
-
-          Honeybadger.notify(reason, metadata, stack)
+          if Plug.Exception.status(reason) == 404 do
+            # 404 errors are not reported
+            :ok
+          else
+            metadata = @plug_data.metadata(conn, __MODULE__)
+            Honeybadger.notify(reason, metadata, stack)
+          end
         end
 
         defoverridable handle_errors: 2

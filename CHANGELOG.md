@@ -7,6 +7,8 @@ adheres to [Semantic Versioning](http://semver.org/).
 ### Changed
 - Use lazy logging within `Honeybadger.Client`, this allows compile time purging
   when the log level is set higher.
+### Fixed
+- Fix a regression which was causing `Not Found (404)` errors to be reported.
 
 ## [v0.8.0] - 2018-01-17
 ### Added
