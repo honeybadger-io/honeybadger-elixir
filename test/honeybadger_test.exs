@@ -35,7 +35,7 @@ defmodule HoneybadgerTest do
       end)
 
     assert logged =~
-             ~s|Development mode is enabled. Data will not be reported until you deploy your app.|
+             ~s|[Honeybadger] Development mode is enabled. Data will not be reported until you deploy your app.|
   end
 
   test "should not show warning if env is complete" do
