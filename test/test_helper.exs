@@ -1,6 +1,6 @@
 Logger.remove_backend(:console)
 
-ExUnit.start()
+ExUnit.start(assert_receive_timeout: 1000, refute_receive_timeout: 1000)
 
 defmodule Honeybadger.Case do
   use ExUnit.CaseTemplate
