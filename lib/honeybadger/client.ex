@@ -172,7 +172,7 @@ defmodule Honeybadger.Client do
 
   defp warn_in_dev_mode(%{enabled: false}) do
     Logger.warn(fn ->
-      "Development mode is enabled. Data will not be reported until you deploy your app."
+      "[Honeybadger] Development mode is enabled. Data will not be reported until you deploy your app."
     end)
   end
 
