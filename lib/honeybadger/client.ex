@@ -121,10 +121,12 @@ defmodule Honeybadger.Client do
 
     case :hackney.post(state.url, state.headers, payload, opts) do
       {:ok, code, _headers, ref} when code >= 200 and code <= 399 ->
-        Logger.debug(fn -> "[Honeybadger] API success: #{inspect(body_from_ref(ref))}" end)
+        body = body_from_ref(ref)
+        Logger.debug(fn -> "[Honeybadger] API success: #{inspect(body)}" end)
 
       {:ok, code, _headers, ref} when code >= 400 and code <= 504 ->
-        Logger.error(fn -> "[Honeybadger] API failure: #{inspect(body_from_ref(ref))}" end)
+        body = body_from_ref(ref)
+        Logger.error(fn -> "[Honeybadger] API failure: #{inspect(body)}" end)
 
       {:error, reason} ->
         Logger.error(fn -> "[Honeybadger] connection error: #{inspect(reason)}" end)
