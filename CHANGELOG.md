@@ -9,6 +9,7 @@ adheres to [Semantic Versioning](http://semver.org/).
   when the log level is set higher.
 ### Fixed
 - Fix a regression which was causing `Not Found (404)` errors to be reported.
+- Fix an issue caused by hackney because of unread response bodies.
 
 ## [v0.8.0] - 2018-01-17
 ### Added
