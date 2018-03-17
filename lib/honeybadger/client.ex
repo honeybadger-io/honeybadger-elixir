@@ -81,7 +81,7 @@ defmodule Honeybadger.Client do
     env_name = get_env(opts, :environment_name)
     excluded = get_env(opts, :exclude_envs)
 
-    not maybe_to_atom(env_name) in excluded
+    not (maybe_to_atom(env_name) in excluded)
   end
 
   # Callbacks

@@ -7,12 +7,14 @@ defmodule Honeybadger.NoticeTest do
 
   setup do
     exception = %RuntimeError{message: "Oops"}
+
     plug_env = %{
       url: "/pages/1",
       component: SomeApp.PageController,
       action: :show,
       params: %{page: 1, password: "123abc"}
     }
+
     metadata = %{plug_env: plug_env, tags: [:test], context: %{user_id: 1, account_id: 1}}
     stack = [{Kernel, :+, [1], [file: 'lib/elixir/lib/kernel.ex', line: 321]}]
     backtrace = Backtrace.from_stacktrace(stack)
@@ -25,15 +27,15 @@ defmodule Honeybadger.NoticeTest do
   test "notifier information", %{notice: %Notice{notifier: notifier}} do
     assert "https://github.com/honeybadger-io/honeybadger-elixir" == notifier[:url]
     assert "Honeybadger Elixir Notifier" == notifier[:name]
-    assert Honeybadger.Mixfile.project[:version] == notifier[:version]
+    assert Honeybadger.Mixfile.project()[:version] == notifier[:version]
   end
 
   test "server information", %{notice: %Notice{server: server}} do
-    hostname = :inet.gethostname |> elem(1) |> List.to_string
+    hostname = :inet.gethostname() |> elem(1) |> List.to_string()
 
-    assert :test      == server[:environment_name]
-    assert hostname   == server[:hostname]
-    assert System.cwd == server[:project_root]
+    assert :test == server[:environment_name]
+    assert hostname == server[:hostname]
+    assert System.cwd() == server[:project_root]
   end
 
   test "server information config", _ do
@@ -48,16 +50,25 @@ defmodule Honeybadger.NoticeTest do
     assert "RuntimeError" == error[:class]
     assert "Oops" == error[:message]
     assert [:test] == error[:tags]
-    assert [%{file: "lib/elixir/lib/kernel.ex", method: "+/1", args: [], number: 321, context: "all"}] == error[:backtrace]
+
+    assert [
+             %{
+               file: "lib/elixir/lib/kernel.ex",
+               method: "+/1",
+               args: [],
+               number: 321,
+               context: "all"
+             }
+           ] == error[:backtrace]
   end
 
   test "request information", %{notice: %Notice{request: request}} do
     assert %{
-      action: :show,
-      component: SomeApp.PageController,
-      params: %{page: 1},
-      url: "/pages/1"
-    } == Map.drop(request, [:context])
+             action: :show,
+             component: SomeApp.PageController,
+             params: %{page: 1},
+             url: "/pages/1"
+           } == Map.drop(request, [:context])
 
     assert %{user_id: 1, account_id: 1} == request[:context]
     refute [:test] == request[:tags]
@@ -80,8 +91,7 @@ defmodule Honeybadger.NoticeTest do
     defmodule TestFilter do
       use Honeybadger.Filter.Mixin
 
-      def filter_params(params),
-        do: Map.drop(params, ["password"])
+      def filter_params(params), do: Map.drop(params, ["password"])
 
       def filter_error_message(message),
         do: Regex.replace(~r/(Secret data: )(\w+)/, message, "\\1 xxx")
@@ -107,7 +117,7 @@ defmodule Honeybadger.NoticeTest do
       # It leaves unfiltered elements alone
       assert get_in(notice.request, [:context, :foo]) == "foo"
       assert get_in(notice.request, [:cgi_data, "HTTP_HOST"]) == "honeybadger.io"
-      assert get_in(notice.request, [:params, "unfiltered" ]) == "unfiltered"
+      assert get_in(notice.request, [:params, "unfiltered"]) == "unfiltered"
 
       # It filters sensitive data
       refute get_in(notice.request, [:context, :password])
@@ -134,7 +144,7 @@ defmodule Honeybadger.NoticeTest do
       assert get_in(notice.request, [:cgi_data, "HTTP_HOST"]) == "honeybadger.io"
       refute get_in(notice.request, [:cgi_data, "PASSWORD"])
 
-      assert get_in(notice.request, [:params, "unfiltered" ]) == "unfiltered"
+      assert get_in(notice.request, [:params, "unfiltered"]) == "unfiltered"
       refute get_in(notice.request, [:params, "PaSSword"])
     end)
   end
@@ -157,7 +167,7 @@ defmodule Honeybadger.NoticeTest do
       refute get_in(notice.request, [:cgi_data, "QUERY_STRING"])
       refute get_in(notice.request, [:cgi_data, "PATH_INFO"])
 
-      assert get_in(notice.request, [:params, "unfiltered" ]) == "unfiltered"
+      assert get_in(notice.request, [:params, "unfiltered"]) == "unfiltered"
       refute get_in(notice.request, [:params, "PaSSword"])
 
       assert get_in(notice.request, [:session, "not filtered"])
@@ -206,30 +216,36 @@ defmodule Honeybadger.NoticeTest do
   defp filterable_notice do
     exception = %RuntimeError{message: "Secret data: XYZZY"}
     backtrace = []
+
     metadata = %{
       context: %{password: "123", foo: "foo"},
-
       plug_env: %{
         url: "/some/secret/place",
         component: SomeApp.PageController,
         action: :show,
-        params: %{"password" => "a password",
-                  "credit_card" => "1234",
-                  "PaSSword" => "WhAtevER",
-                  "unfiltered" => "unfiltered"},
+        params: %{
+          "password" => "a password",
+          "credit_card" => "1234",
+          "PaSSword" => "WhAtevER",
+          "unfiltered" => "unfiltered"
+        },
         cgi_data: %{
           "HTTP_HOST" => "honeybadger.io",
           "Authorization" => "Basic whatever",
           "PASSWORD" => "Why is there a password Header? Just to test",
           "ORIGINAL_FULLPATH" => "/some/secret/place",
           "QUERY_STRING" => "foo=bar",
-          "PATH_INFO" => "some/secret/place"},
-        session: %{:credit_card => "1234",
-                   "CREDIT_card" => "1234",
-                   :password => "secret",
-                   "not filtered" => :not_filtered},
+          "PATH_INFO" => "some/secret/place"
+        },
+        session: %{
+          :credit_card => "1234",
+          "CREDIT_card" => "1234",
+          :password => "secret",
+          "not filtered" => :not_filtered
+        }
       }
     }
+
     Notice.new(exception, metadata, backtrace)
   end
 end

@@ -9,18 +9,18 @@ defmodule Honeybadger.Notice do
 
   @typep error :: %{class: atom | iodata, message: iodata, tags: list, backtrace: list}
 
-  @type noticeable :: Exception.t | Map.t | String.t | atom
+  @type noticeable :: Exception.t() | Map.t() | String.t() | atom
 
-  @typep notifier :: %{name: String.t, url: String.t, version: String.t}
+  @typep notifier :: %{name: String.t(), url: String.t(), version: String.t()}
 
-  @typep server :: %{environment_name: atom, hostname: String.t, project_root: Path.t}
+  @typep server :: %{environment_name: atom, hostname: String.t(), project_root: Path.t()}
 
   @type t :: %__MODULE__{
-    notifier: notifier,
-    server: server,
-    error: error,
-    request: Map.t
-  }
+          notifier: notifier,
+          server: server,
+          error: error,
+          request: Map.t()
+        }
 
   @enforce_keys [:notifier, :server, :error, :request]
 
@@ -40,7 +40,7 @@ defmodule Honeybadger.Notice do
       iex> Honeybadger.Notice.new(%RuntimeError{message: "oops"}, %{}, []).error
       %{backtrace: [], class: "RuntimeError", message: "oops", tags: []}
   """
-  @spec new(noticeable, Map.t, list) :: t
+  @spec new(noticeable, Map.t(), list) :: t
   def new(error, metadata, backtrace)
 
   def new(message, metadata, backtrace) when is_binary(message) do
@@ -69,6 +69,7 @@ defmodule Honeybadger.Notice do
   defp create(error, metadata) do
     error = Map.put(error, :tags, Map.get(metadata, :tags, []))
     context = Map.get(metadata, :context, %{})
+
     request =
       metadata
       |> Map.get(:plug_env, %{})
@@ -78,21 +79,21 @@ defmodule Honeybadger.Notice do
     |> filter(Honeybadger.get_env(:notice_filter))
   end
 
-  url = get_in(Honeybadger.Mixfile.project, [:package, :links, "GitHub"])
-  version = Honeybadger.Mixfile.project[:version]
+  url = get_in(Honeybadger.Mixfile.project(), [:package, :links, "GitHub"])
+  version = Honeybadger.Mixfile.project()[:version]
 
   defp filter(notice, nil), do: notice
   defp filter(notice, app_filter), do: app_filter.filter(notice)
 
   defp notifier do
-    %{name: "Honeybadger Elixir Notifier",
-      url: unquote(url),
-      version: unquote(version)}
+    %{name: "Honeybadger Elixir Notifier", url: unquote(url), version: unquote(version)}
   end
 
   defp server do
-    %{environment_name: Honeybadger.get_env(:environment_name),
+    %{
+      environment_name: Honeybadger.get_env(:environment_name),
       hostname: Honeybadger.get_env(:hostname),
-      project_root: Honeybadger.get_env(:project_root)}
+      project_root: Honeybadger.get_env(:project_root)
+    }
   end
 end

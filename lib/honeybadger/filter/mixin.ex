@@ -41,12 +41,14 @@ defmodule Honeybadger.Filter.Mixin do
       def filter_map(map) do
         filter_map(map, Honeybadger.get_env(:filter_keys))
       end
+
       def filter_map(map, keys) when is_list(keys) do
         filter_keys = Enum.map(keys, &canonicalize(&1))
         drop_keys = Enum.filter(Map.keys(map), &Enum.member?(filter_keys, canonicalize(&1)))
 
         Map.drop(map, drop_keys)
       end
+
       def filter_map(map, _keys) do
         map
       end
@@ -57,8 +59,11 @@ defmodule Honeybadger.Filter.Mixin do
         |> String.downcase()
       end
 
-      defoverridable [filter_context: 1, filter_params: 1, filter_cgi_data: 1,
-                      filter_session: 1, filter_error_message: 1]
+      defoverridable filter_context: 1,
+                     filter_params: 1,
+                     filter_cgi_data: 1,
+                     filter_session: 1,
+                     filter_error_message: 1
     end
   end
 end

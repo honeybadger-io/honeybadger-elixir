@@ -12,18 +12,20 @@ defmodule HoneybadgerTest do
   test "sending a notice on an active environment" do
     restart_with_config(exclude_envs: [])
 
-    logged = capture_log(fn ->
-      :ok = Honeybadger.notify(%RuntimeError{})
-      assert_receive {:api_request, _}
-    end)
+    logged =
+      capture_log(fn ->
+        :ok = Honeybadger.notify(%RuntimeError{})
+        assert_receive {:api_request, _}
+      end)
 
     assert logged =~ ~s|[Honeybadger] API success: "{}"|
   end
 
   test "warn if incomplete env" do
-    logged = capture_log(fn ->
-      restart_with_config(api_key: nil, environment_name: :test, exclude_envs: [])
-    end)
+    logged =
+      capture_log(fn ->
+        restart_with_config(api_key: nil, environment_name: :test, exclude_envs: [])
+      end)
 
     assert logged =~ ~s|mandatory :honeybadger config key api_key not set|
   end
@@ -39,9 +41,10 @@ defmodule HoneybadgerTest do
   end
 
   test "should not show warning if env is complete" do
-    logged = capture_log(fn ->
-      restart_with_config(api_key: "test", environment_name: :test, exclude_envs: [])
-    end)
+    logged =
+      capture_log(fn ->
+        restart_with_config(api_key: "test", environment_name: :test, exclude_envs: [])
+      end)
 
     refute logged =~ ~s|mandatory :honeybadger config key api_key not set|
   end
@@ -49,9 +52,10 @@ defmodule HoneybadgerTest do
   test "sending a notice on an inactive environment doesn't make an HTTP request" do
     restart_with_config(exclude_envs: [:dev, :test])
 
-    logged = capture_log(fn ->
-      :ok = Honeybadger.notify(%RuntimeError{})
-    end)
+    logged =
+      capture_log(fn ->
+        :ok = Honeybadger.notify(%RuntimeError{})
+      end)
 
     refute logged =~ "[Honeybadger] API"
 
@@ -61,14 +65,14 @@ defmodule HoneybadgerTest do
   test "sending a notice in an active environment without an API key doesn't make an HTTP request" do
     restart_with_config(exclude_envs: [], api_key: nil)
 
-    logged = capture_log(fn ->
-      :ok = Honeybadger.notify(%RuntimeError{})
-      refute_receive {:api_request, _}
-    end)
+    logged =
+      capture_log(fn ->
+        :ok = Honeybadger.notify(%RuntimeError{})
+        refute_receive {:api_request, _}
+      end)
 
     refute logged =~ "[Honeybadger] API"
   end
-
 
   test "sending a notice with exception stacktrace" do
     restart_with_config(exclude_envs: [])
@@ -87,8 +91,8 @@ defmodule HoneybadgerTest do
     refute {"lib/process.ex", "info/1"} in traced
     refute {"lib/honeybadger.ex", "backtrace/1"} in traced
     refute {"lib/honeybadger.ex", "notify/3"} in traced
-    assert {"test/honeybadger_test.exs",
-            "test sending a notice with exception stacktrace/1"} in traced
+
+    assert {"test/honeybadger_test.exs", "test sending a notice with exception stacktrace/1"} in traced
   end
 
   test "fetching all application values" do

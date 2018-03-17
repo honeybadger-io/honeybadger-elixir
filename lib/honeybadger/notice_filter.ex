@@ -9,5 +9,5 @@ defmodule Honeybadger.NoticeFilter do
         notice_filter: MyApp.MyNoticeFilter
   """
 
-  @callback filter(Honeybadger.Notice.t) :: Honeybadger.Notice.t
+  @callback filter(Honeybadger.Notice.t()) :: Honeybadger.Notice.t()
 end
