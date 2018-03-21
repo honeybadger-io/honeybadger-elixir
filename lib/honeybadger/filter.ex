@@ -33,10 +33,9 @@ defmodule Honeybadger.Filter do
   """
   @callback filter_session(map) :: map
 
-
   @doc """
   Filter the error message string.  This is the message from the most
   recently thrown error.
   """
-  @callback filter_error_message(String.t) :: String.t
+  @callback filter_error_message(String.t()) :: String.t()
 end

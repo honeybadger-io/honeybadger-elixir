@@ -127,13 +127,13 @@ defmodule Honeybadger do
 
   defmodule MissingEnvironmentNameError do
     defexception message: """
-    The environment_name setting is required so that we can report the correct
-    environment name to Honeybadger. Please configure environment_name in your
-    config.exs and environment specific config files to have accurate reporting
-    of errors.
+                 The environment_name setting is required so that we can report the correct
+                 environment name to Honeybadger. Please configure environment_name in your
+                 config.exs and environment specific config files to have accurate reporting
+                 of errors.
 
-    config :honeybadger, :environment_name, :dev
-    """
+                 config :honeybadger, :environment_name, :dev
+                 """
   end
 
   @context :honeybadger_context
@@ -203,7 +203,7 @@ defmodule Honeybadger do
       iex> Honeybadger.notify(%RuntimeError{}, %{culprit_id: 123})
       :ok
   """
-  @spec notify(Notice.noticeable, Map.t, list) :: :ok
+  @spec notify(Notice.noticeable(), Map.t(), list) :: :ok
   def notify(exception, metadata \\ %{}, stacktrace \\ nil) do
     exception
     |> Notice.new(contextual_metadata(metadata), backtrace(stacktrace))
@@ -224,7 +224,8 @@ defmodule Honeybadger do
   Honeybadger API when/if an exception occurs in the current process.
   """
   @spec context(map | keyword) :: context
-  def context(additional_context) when is_map(additional_context) or is_list(additional_context) do
+  def context(additional_context)
+      when is_map(additional_context) or is_list(additional_context) do
     Process.put(@context, Map.merge(context(), Enum.into(additional_context, %{})))
     context()
   end
@@ -251,8 +252,10 @@ defmodule Honeybadger do
     case Application.fetch_env(:honeybadger, key) do
       {:ok, {:system, var}} when is_binary(var) ->
         System.get_env(var)
+
       {:ok, value} ->
         value
+
       :error ->
         raise ArgumentError, "the configuration parameter #{inspect(key)} is not set"
     end
@@ -308,11 +311,13 @@ defmodule Honeybadger do
   defp backtrace(nil) do
     backtrace(System.stacktrace())
   end
+
   defp backtrace([]) do
     {:current_stacktrace, stacktrace} = Process.info(self(), :current_stacktrace)
 
     backtrace(stacktrace)
   end
+
   defp backtrace(stacktrace) do
     Backtrace.from_stacktrace(stacktrace)
   end
@@ -320,6 +325,7 @@ defmodule Honeybadger do
   defp contextual_metadata(%{context: _} = metadata) do
     metadata
   end
+
   defp contextual_metadata(metadata) do
     %{context: metadata}
   end

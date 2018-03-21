@@ -81,7 +81,7 @@ defmodule Honeybadger.Client do
     env_name = get_env(opts, :environment_name)
     excluded = get_env(opts, :exclude_envs)
 
-    not maybe_to_atom(env_name) in excluded
+    not (maybe_to_atom(env_name) in excluded)
   end
 
   # Callbacks
@@ -120,11 +120,11 @@ defmodule Honeybadger.Client do
       |> Keyword.put(:pool, __MODULE__)
 
     case :hackney.post(state.url, state.headers, payload, opts) do
-      {:ok, code, _headers, ref} when code >= 200 and code <= 399 ->
+      {:ok, code, _headers, ref} when code in 200..399 ->
         body = body_from_ref(ref)
         Logger.debug(fn -> "[Honeybadger] API success: #{inspect(body)}" end)
 
-      {:ok, code, _headers, ref} when code >= 400 and code <= 504 ->
+      {:ok, code, _headers, ref} when code in 400..599 ->
         body = body_from_ref(ref)
         Logger.error(fn -> "[Honeybadger] API failure: #{inspect(body)}" end)
 

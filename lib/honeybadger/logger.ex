@@ -28,7 +28,7 @@ defmodule Honeybadger.Logger do
   end
 
   def handle_call(request, _state) do
-    exit {:bad_call, request}
+    exit({:bad_call, request})
   end
 
   def handle_info(_msg, state) do
@@ -52,6 +52,7 @@ defmodule Honeybadger.Logger do
       case message[:error_info] do
         {_kind, {exception, stacktrace}, _stack} ->
           Honeybadger.notify(exception, context, stacktrace)
+
         {_kind, exception, stacktrace} ->
           Honeybadger.notify(exception, context, stacktrace)
       end

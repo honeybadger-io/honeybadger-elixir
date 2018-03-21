@@ -38,12 +38,18 @@ defmodule Honeybadger.LoggerTest do
   end
 
   test "crashes do not cause recursive logging" do
-    error_report = [[error_info: {:error, %RuntimeError{message: "Oops"}, []},
-                     dictionary: [honeybadger_context: [user_id: 1]]], []]
+    error_report = [
+      [
+        error_info: {:error, %RuntimeError{message: "Oops"}, []},
+        dictionary: [honeybadger_context: [user_id: 1]]
+      ],
+      []
+    ]
 
-    log = capture_log(fn ->
-      :error_logger.error_report(error_report)
-    end)
+    log =
+      capture_log(fn ->
+        :error_logger.error_report(error_report)
+      end)
 
     assert log =~ "Unable to notify Honeybadger! BadMapError: "
 
@@ -53,7 +59,7 @@ defmodule Honeybadger.LoggerTest do
   test "log levels lower than :error_report are ignored" do
     message_types = [:info_msg, :info_report, :warning_msg, :error_msg]
 
-    Enum.each(message_types, fn(type) ->
+    Enum.each(message_types, fn type ->
       apply(:error_logger, type, ["Ignore me"])
 
       refute_receive {:api_request, _}
@@ -69,7 +75,7 @@ defmodule Honeybadger.LoggerTest do
   end
 
   test "logging exceptions from GenServers" do
-    {:ok, pid} = ErrorServer.start
+    {:ok, pid} = ErrorServer.start()
 
     GenServer.cast(pid, :fail)
 
