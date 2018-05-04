@@ -62,7 +62,7 @@ defmodule Honeybadger.Mixfile do
 
       # Test dependencies
       {:meck, "~> 0.8.3", only: :test},
-      {:cowboy, "~> 1.0.0", only: :test}
+      {:cowboy, "~> 1.1.2", only: :test}
     ]
   end
 
