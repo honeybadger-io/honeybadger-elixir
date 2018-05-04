@@ -84,7 +84,7 @@ defmodule Honeybadger.API do
   def call(%Conn{method: "POST"} = conn, test) do
     {:ok, body, conn} = read_body(conn)
 
-    send(test, {:api_request, Poison.decode!(body)})
+    send(test, {:api_request, Jason.decode!(body)})
 
     send_resp(conn, 200, "{}")
   end

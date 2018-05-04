@@ -110,26 +110,19 @@ defmodule Honeybadger.Client do
     {:noreply, state}
   end
 
-  def handle_cast({:notice, notice}, %{enabled: true} = state) do
-    payload = Poison.encode!(notice)
+  def handle_cast({:notice, notice}, %{enabled: true, url: url, headers: headers} = state) do
+    case Jason.encode(notice) do
+      {:ok, payload} ->
+        opts =
+          state
+          |> Map.take([:proxy, :proxy_auth])
+          |> Enum.into(Keyword.new())
+          |> Keyword.put(:pool, __MODULE__)
 
-    opts =
-      state
-      |> Map.take([:proxy, :proxy_auth])
-      |> Enum.into(Keyword.new())
-      |> Keyword.put(:pool, __MODULE__)
+        post_notice(url, headers, payload, opts)
 
-    case :hackney.post(state.url, state.headers, payload, opts) do
-      {:ok, code, _headers, ref} when code in 200..399 ->
-        body = body_from_ref(ref)
-        Logger.debug(fn -> "[Honeybadger] API success: #{inspect(body)}" end)
-
-      {:ok, code, _headers, ref} when code in 400..599 ->
-        body = body_from_ref(ref)
-        Logger.error(fn -> "[Honeybadger] API failure: #{inspect(body)}" end)
-
-      {:error, reason} ->
-        Logger.error(fn -> "[Honeybadger] connection error: #{inspect(reason)}" end)
+      {:error, %Jason.EncodeError{message: message}} ->
+        Logger.warn(fn -> "[Honeybadger] Notice encoding failed: #{message}" end)
     end
 
     {:noreply, state}
@@ -142,7 +135,26 @@ defmodule Honeybadger.Client do
     {:noreply, state}
   end
 
-  # Helpers
+  # API Integration
+
+  defp build_headers(opts) do
+    [{"X-API-Key", get_env(opts, :api_key)}] ++ @headers
+  end
+
+  defp post_notice(url, headers, payload, opts) do
+    case :hackney.post(url, headers, payload, opts) do
+      {:ok, code, _headers, ref} when code in 200..399 ->
+        body = body_from_ref(ref)
+        Logger.debug(fn -> "[Honeybadger] API success: #{inspect(body)}" end)
+
+      {:ok, code, _headers, ref} when code in 400..599 ->
+        body = body_from_ref(ref)
+        Logger.error(fn -> "[Honeybadger] API failure: #{inspect(body)}" end)
+
+      {:error, reason} ->
+        Logger.error(fn -> "[Honeybadger] connection error: #{inspect(reason)}" end)
+    end
+  end
 
   defp body_from_ref(ref) do
     ref
@@ -150,9 +162,7 @@ defmodule Honeybadger.Client do
     |> elem(1)
   end
 
-  defp build_headers(opts) do
-    [{"X-API-Key", get_env(opts, :api_key)}] ++ @headers
-  end
+  # Incomplete Env
 
   defp get_env(opts, key) do
     Keyword.get(opts, key, Honeybadger.get_env(key))

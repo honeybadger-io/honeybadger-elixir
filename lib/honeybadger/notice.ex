@@ -22,8 +22,8 @@ defmodule Honeybadger.Notice do
           request: Map.t()
         }
 
+  @derive Jason.Encoder
   @enforce_keys [:notifier, :server, :error, :request]
-
   defstruct [:notifier, :server, :error, :request]
 
   @doc """
