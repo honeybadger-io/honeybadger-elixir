@@ -175,7 +175,9 @@ defmodule Honeybadger.Client do
   defp warn_if_incomplete_env(%{enabled: true}) do
     for key <- @mandatory_keys do
       unless Honeybadger.get_env(key) do
-        Logger.error(fn -> "mandatory :honeybadger config key #{key} not set" end)
+        Logger.error(fn ->
+          "[Honeybadger] Mandatory config key :#{key} not set"
+        end)
       end
     end
   end
@@ -183,8 +185,9 @@ defmodule Honeybadger.Client do
   defp warn_if_incomplete_env(_state), do: :ok
 
   defp warn_in_dev_mode(%{enabled: false}) do
-    Logger.warn(fn ->
-      "[Honeybadger] Development mode is enabled. Data will not be reported until you deploy your app."
+    Logger.info(fn ->
+      "[Honeybadger] Development mode is enabled. " <>
+        "Data will not be reported until you deploy your app."
     end)
   end
 
