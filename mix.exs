@@ -28,7 +28,7 @@ defmodule Honeybadger.Mixfile do
 
   def application do
     [
-      applications: [:hackney, :logger, :poison],
+      applications: [:hackney, :logger, :jason],
       env: [
         api_key: {:system, "HONEYBADGER_API_KEY"},
         app: nil,
@@ -53,7 +53,7 @@ defmodule Honeybadger.Mixfile do
   defp deps do
     [
       {:hackney, "~> 1.1"},
-      {:poison, "~> 2.0 or ~> 3.0"},
+      {:jason, "~> 1.0"},
       {:plug, ">= 1.0.0 and < 2.0.0", optional: true},
       {:phoenix, ">= 1.0.0 and < 2.0.0", optional: true},
 
@@ -61,7 +61,6 @@ defmodule Honeybadger.Mixfile do
       {:ex_doc, "~> 0.7", only: :dev},
 
       # Test dependencies
-      {:meck, "~> 0.8.3", only: :test},
       {:cowboy, "~> 1.1.2", only: :test}
     ]
   end
