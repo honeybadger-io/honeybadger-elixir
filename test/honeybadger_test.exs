@@ -27,7 +27,7 @@ defmodule HoneybadgerTest do
         restart_with_config(api_key: nil, environment_name: :test, exclude_envs: [])
       end)
 
-    assert logged =~ ~s|mandatory :honeybadger config key api_key not set|
+    assert logged =~ ~s|[Honeybadger] Mandatory config key :api_key not set|
   end
 
   test "warn in an excluded env" do
