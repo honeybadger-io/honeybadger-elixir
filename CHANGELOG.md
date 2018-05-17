@@ -3,6 +3,16 @@ All notable changes to this project will be documented in this file. See [Keep a
 CHANGELOG](http://keepachangelog.com/) for how to update this file. This project
 adheres to [Semantic Versioning](http://semver.org/).
 
+### Changed
+- Replace Poison with Jason for JSON encoding.
+- Reduce the log level used for dev mode warning.
+- Update dependenices.
+
+### Fixed
+- Fix crashes caused by json encoding error, we now print an error on stdout
+  when this happens.
+
+
 ## [v0.9.0] - 2018-03-21
 ### Changed
 - Use lazy logging within `Honeybadger.Client`, this allows compile time purging
