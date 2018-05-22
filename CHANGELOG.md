@@ -9,8 +9,8 @@ adheres to [Semantic Versioning](http://semver.org/).
 - Update dependenices.
 
 ### Fixed
-- Fix crashes caused by json encoding error, we now print an error on stdout
-  when this happens.
+- Fix crashes caused by JSON encoding error, we now log an error when there is a
+  JSON encoding error.
 
 
 ## [v0.9.0] - 2018-03-21
