@@ -308,18 +308,18 @@ defmodule Honeybadger do
     config
   end
 
-  defp backtrace(nil) do
-    backtrace(System.stacktrace())
-  end
-
   defp backtrace([]) do
     {:current_stacktrace, stacktrace} = Process.info(self(), :current_stacktrace)
 
     backtrace(stacktrace)
   end
 
-  defp backtrace(stacktrace) do
+  defp backtrace(stacktrace) when is_list(stacktrace) do
     Backtrace.from_stacktrace(stacktrace)
+  end
+
+  defp backtrace(_stacktrace) do
+    backtrace(System.stacktrace())
   end
 
   defp contextual_metadata(%{context: _} = metadata) do
