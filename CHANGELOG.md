@@ -3,7 +3,14 @@ All notable changes to this project will be documented in this file. See [Keep a
 CHANGELOG](http://keepachangelog.com/) for how to update this file. This project
 adheres to [Semantic Versioning](http://semver.org/).
 
+### Changed
+- Replace Poison with Jason for JSON encoding.
+- Reduce the log level used for dev mode warning.
+- Update dependenices.
+
 ### Fixed
+- Fix crashes caused by JSON encoding error, we now log an error when there is a
+  JSON encoding error.
 - Send notifications even when the stacktrace isn't a list. Errors reported from
   the error logger can occasionally have a malformed stacktrace, which would
   raise another exception prevent the notification from being sent.
