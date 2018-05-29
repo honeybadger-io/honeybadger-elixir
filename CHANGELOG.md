@@ -11,7 +11,9 @@ adheres to [Semantic Versioning](http://semver.org/).
 ### Fixed
 - Fix crashes caused by JSON encoding error, we now log an error when there is a
   JSON encoding error.
-
+- Send notifications even when the stacktrace isn't a list. Errors reported from
+  the error logger can occasionally have a malformed stacktrace, which would
+  raise another exception prevent the notification from being sent.
 
 ## [v0.9.0] - 2018-03-21
 ### Changed
@@ -36,7 +38,7 @@ adheres to [Semantic Versioning](http://semver.org/).
   environment was specified via `{:system, "HONEYBADGER_ENV"}` and the
   `HONEYBADGER_ENV` value didn't already exist as an atom the app would fail to
   boot.
-- Ignore the absence of "HONEYBADGER_API_KEY" when running in an excluded env
+- Ignore the absence of `HONEYBADGER_API_KEY` when running in an excluded env
 
 
 ## [v0.7.0] - 2017-11-07
