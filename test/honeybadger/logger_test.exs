@@ -46,14 +46,25 @@ defmodule Honeybadger.LoggerTest do
       []
     ]
 
-    log =
-      capture_log(fn ->
-        :error_logger.error_report(error_report)
-      end)
+    log = capture_log(fn -> :error_logger.error_report(error_report) end)
 
     assert log =~ "Unable to notify Honeybadger! BadMapError: "
 
     refute_receive {:api_request, _}
+  end
+
+  test "crashes with malformed stacktraces still trigger a notification" do
+    error_report = [
+      [
+        error_info: {:error, %RuntimeError{message: "Bad"}, "not_a_stack"},
+        dictionary: [honeybadger_context: %{user_id: 1}]
+      ],
+      []
+    ]
+
+    :error_logger.error_report(error_report)
+
+    assert_receive {:api_request, _}
   end
 
   test "log levels lower than :error_report are ignored" do
