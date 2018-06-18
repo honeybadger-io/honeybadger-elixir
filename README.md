@@ -248,10 +248,10 @@ config :honeybadger,
 ## Testing your Honeybadger setup in dev
 
 1. Set the HONEYBADGER_API_KEY as documented above
-2. Remove `:dev` from the `excluded_envs` by adding this to your config/dev.exs
+2. Remove `:dev` from the `exclude_envs` by adding this to your config/dev.exs
 ```elixir
 config :honeybadger,
-  excluded_envs: [:test]
+  exclude_envs: [:test]
 ```
 3. Run the `mix honeybadger.test` mix task task to simulate an error
 
