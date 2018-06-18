@@ -251,7 +251,7 @@ config :honeybadger,
 2. Remove `:dev` from the `excluded_envs` by adding this to your config/dev.exs
 ```elixir
 config :honeybadger,
-  exclude_envs: [:test]
+  excluded_envs: [:test]
 ```
 3. Run the `mix honeybadger.test` mix task task to simulate an error
 
