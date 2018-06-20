@@ -31,7 +31,6 @@ defmodule Honeybadger.PlugDataTest do
   describe "build_cgi_data/1" do
     test "general CGI data is extracted" do
       conn = conn(:get, "/bang")
-      {_, remote_port} = conn.peer
 
       cgi_data = %{
         "CONTENT_LENGTH" => [],
@@ -39,7 +38,7 @@ defmodule Honeybadger.PlugDataTest do
         "PATH_INFO" => "bang",
         "QUERY_STRING" => "",
         "REMOTE_ADDR" => "127.0.0.1",
-        "REMOTE_PORT" => remote_port,
+        "REMOTE_PORT" => 111317,
         "REQUEST_METHOD" => "GET",
         "SCRIPT_NAME" => "",
         "SERVER_ADDR" => "127.0.0.1",

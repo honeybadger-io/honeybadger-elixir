@@ -92,12 +92,18 @@ if Code.ensure_loaded?(Plug) do
       end)
     end
 
-    defp remote_addr(%Conn{remote_ip: remote_ip}) do
+    defp remote_addr(%Conn{} = conn) do
+      %{ address: remote_ip } = Conn.get_peer_data(conn)
+
       remote_ip
       |> :inet.ntoa()
       |> List.to_string()
     end
 
-    defp remote_port(%Conn{peer: {_, port}}), do: port
+    defp remote_port(%Conn{} = conn) do
+      %{ port: port } = Conn.get_peer_data(conn)
+
+      port
+    end
   end
 end
