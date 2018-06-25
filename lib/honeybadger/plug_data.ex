@@ -98,6 +98,21 @@ if Code.ensure_loaded?(Plug) do
       |> List.to_string()
     end
 
-    defp remote_port(%Conn{peer: {_, port}}), do: port
+    defp remote_port(conn) do
+      cond do
+        function_exported?(Conn, :get_peer_data, 1) ->
+          conn
+          |> Conn.get_peer_data()
+          |> Map.get(:port)
+
+        Map.has_key?(conn, :peer) ->
+          conn
+          |> Map.get(:peer)
+          |> elem(1)
+
+        true ->
+          nil
+      end
+    end
   end
 end
