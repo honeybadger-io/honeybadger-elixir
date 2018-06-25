@@ -4,6 +4,9 @@ CHANGELOG](http://keepachangelog.com/) for how to update this file. This project
 adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Changed
+- Handle fetching peer info when using Plug 1.6. This is implemented in a
+  backward compatible manner, so versions < 1.6 will continue to work.
 
 ## [v0.10.0] - 2018-05-29
 ### Changed

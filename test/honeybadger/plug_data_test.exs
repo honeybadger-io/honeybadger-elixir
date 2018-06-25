@@ -31,7 +31,7 @@ defmodule Honeybadger.PlugDataTest do
   describe "build_cgi_data/1" do
     test "general CGI data is extracted" do
       conn = conn(:get, "/bang")
-      {_, remote_port} = conn.peer
+      %{port: remote_port} = get_peer_data(conn)
 
       cgi_data = %{
         "CONTENT_LENGTH" => [],
