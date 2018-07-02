@@ -8,6 +8,9 @@ adheres to [Semantic Versioning](http://semver.org/).
 - Handle fetching peer info when using Plug 1.6. This is implemented in a
   backward compatible manner, so versions < 1.6 will continue to work.
 
+### Fixed
+- Fix crashes caused by presence of structs in the context.
+
 ## [v0.10.1] - 2018-06-27
 - Fetch peer information for multiple plug versions
 - Bump phoenix from 1.3.2 to 1.3.3
