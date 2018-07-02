@@ -3,14 +3,14 @@ defmodule Honeybadger.JSONTest do
 
   alias Honeybadger.{Notice, JSON}
 
+  defmodule Req do
+    defstruct [:ip]
+  end
+
   describe "encode" do
     test "encodes notice" do
       notice = Notice.new(%RuntimeError{message: "oops"}, %{}, [])
       assert JSON.encode(notice) == Jason.encode(notice)
-    end
-
-    defmodule Req do
-      defstruct [:ip]
     end
 
     test "encodes notice when context has structs" do
