@@ -7,9 +7,6 @@
     "scripts/*.exs",
     "test/**/*.{ex,exs}"
   ],
-
   import_deps: [],
-
-  locals_without_parens: [
-  ]
+  locals_without_parens: []
 ]

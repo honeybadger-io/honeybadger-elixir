@@ -111,7 +111,7 @@ defmodule Honeybadger.Client do
   end
 
   def handle_cast({:notice, notice}, %{enabled: true, url: url, headers: headers} = state) do
-    case Jason.encode(notice) do
+    case Honeybadger.JSON.encode(notice) do
       {:ok, payload} ->
         opts =
           state
