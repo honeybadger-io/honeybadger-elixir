@@ -4,14 +4,17 @@ CHANGELOG](http://keepachangelog.com/) for how to update this file. This project
 adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+
+## [v0.10.2] - 2018-07-02
+### Fixed
+- Fix crashes caused by presence of structs in the context.
+
+## [v0.10.1] - 2018-06-27
 ### Changed
 - Handle fetching peer info when using Plug 1.6. This is implemented in a
   backward compatible manner, so versions < 1.6 will continue to work.
 
 ### Fixed
-- Fix crashes caused by presence of structs in the context.
-
-## [v0.10.1] - 2018-06-27
 - Fetch peer information for multiple plug versions
 - Bump phoenix from 1.3.2 to 1.3.3
 - Bump hackney from 1.12.1 to 1.13.0
