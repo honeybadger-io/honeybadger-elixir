@@ -14,7 +14,7 @@ defmodule Honeybadger.JSONTest do
     end
 
     test "encodes notice when context has structs" do
-      {:ok, json} =
+      {:ok, json_encoded} =
         Notice.new(
           %RuntimeError{message: "oops"},
           %{
@@ -28,7 +28,21 @@ defmodule Honeybadger.JSONTest do
         )
         |> JSON.encode()
 
-      assert json == ""
+      {:ok, jason_encoded} =
+        Notice.new(
+          %RuntimeError{message: "oops"},
+          %{
+            context: %{
+              req: %{ip: "one"},
+              reqs: [%{ip: "two"}],
+              tups: [%{ip: "three"}, %{ip: "four"}]
+            }
+          },
+          []
+        )
+        |> Jason.encode()
+
+      assert json_encoded == jason_encoded
     end
   end
 end
