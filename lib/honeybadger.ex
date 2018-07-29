@@ -204,7 +204,7 @@ defmodule Honeybadger do
       :ok
   """
   @spec notify(Notice.noticeable(), Map.t(), list) :: :ok
-  def notify(exception, metadata \\ %{}, stacktrace \\ nil) do
+  def notify(exception, metadata \\ %{}, stacktrace \\ []) do
     exception
     |> Notice.new(contextual_metadata(metadata), backtrace(stacktrace))
     |> Client.send_notice()
@@ -308,18 +308,14 @@ defmodule Honeybadger do
     config
   end
 
-  defp backtrace([]) do
-    {:current_stacktrace, stacktrace} = Process.info(self(), :current_stacktrace)
-
-    backtrace(stacktrace)
-  end
-
-  defp backtrace(stacktrace) when is_list(stacktrace) do
+  defp backtrace([_stack_item | _stack_items] = stacktrace) do
     Backtrace.from_stacktrace(stacktrace)
   end
 
   defp backtrace(_stacktrace) do
-    backtrace(System.stacktrace())
+    {:current_stacktrace, stacktrace} = Process.info(self(), :current_stacktrace)
+
+    backtrace(stacktrace)
   end
 
   defp contextual_metadata(%{context: _} = metadata) do

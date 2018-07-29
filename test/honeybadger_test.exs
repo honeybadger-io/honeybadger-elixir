@@ -81,7 +81,7 @@ defmodule HoneybadgerTest do
       raise RuntimeError
     rescue
       exception ->
-        :ok = Honeybadger.notify(exception)
+        :ok = Honeybadger.notify(exception, %{}, System.stacktrace())
     end
 
     assert_receive {:api_request, %{"error" => %{"backtrace" => backtrace}}}
@@ -91,7 +91,6 @@ defmodule HoneybadgerTest do
     refute {"lib/process.ex", "info/1"} in traced
     refute {"lib/honeybadger.ex", "backtrace/1"} in traced
     refute {"lib/honeybadger.ex", "notify/3"} in traced
-
     assert {"test/honeybadger_test.exs", "test sending a notice with exception stacktrace/1"} in traced
   end
 
