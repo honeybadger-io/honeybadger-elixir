@@ -4,9 +4,12 @@ CHANGELOG](http://keepachangelog.com/) for how to update this file. This project
 adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+
+## [v0.10.3] - 2018-07-02
 ### Fixed
 - Prevent crashes reporting `:badmatch` when fetching the current stacktrace
   from a dead process.
+- Updated dependencies.
 
 ## [v0.10.2] - 2018-07-02
 ### Fixed
