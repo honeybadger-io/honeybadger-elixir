@@ -4,6 +4,8 @@ CHANGELOG](http://keepachangelog.com/) for how to update this file. This project
 adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Added
+- Use `Logger.metadata` to enrich the Honeybadger context for all notices
 
 ## [v0.10.3] - 2018-07-02
 ### Fixed
