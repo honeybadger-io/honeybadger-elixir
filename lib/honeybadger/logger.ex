@@ -75,8 +75,10 @@ defmodule Honeybadger.Logger do
   end
 
   defp merge_metadata(%{} = context, {_, metadata}) when is_list(metadata) do
-    metadata = Map.new(metadata)
-    Map.merge(metadata, context)
+    metadata
+    |> Map.new()
+    |> Map.merge(context)
   end
+
   defp merge_metadata(context, _md), do: context
 end

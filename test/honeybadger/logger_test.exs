@@ -49,7 +49,9 @@ defmodule Honeybadger.LoggerTest do
     assert_receive {:api_request, notification}
 
     assert %{"error" => %{"class" => "RuntimeError"}} = notification
-    assert %{"request" => %{"context" => %{"user_id" => 1, "name" => "Danny", "age" => 2}}} = notification
+
+    assert %{"request" => %{"context" => %{"user_id" => 1, "name" => "Danny", "age" => 2}}} =
+             notification
   end
 
   test "crashes do not cause recursive logging" do
