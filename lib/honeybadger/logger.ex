@@ -47,7 +47,10 @@ defmodule Honeybadger.Logger do
 
   defp handle_error({:error_report, _gl, {_pid, _type, [message | _]}}) when is_list(message) do
     try do
-      context = get_in(message, [:dictionary, :honeybadger_context])
+      context =
+        message
+        |> get_in([:dictionary, :honeybadger_context])
+        |> merge_metadata(get_in(message, [:dictionary, :logger_metadata]))
 
       case message[:error_info] do
         {_kind, {exception, stacktrace}, _stack} ->
@@ -70,4 +73,12 @@ defmodule Honeybadger.Logger do
   defp handle_error(_event) do
     :ok
   end
+
+  defp merge_metadata(%{} = context, {_, metadata}) when is_list(metadata) do
+    metadata
+    |> Map.new()
+    |> Map.merge(context)
+  end
+
+  defp merge_metadata(context, _md), do: context
 end

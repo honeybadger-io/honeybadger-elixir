@@ -37,6 +37,23 @@ defmodule Honeybadger.LoggerTest do
     assert %{"request" => %{"context" => %{"user_id" => 1}}} = notification
   end
 
+  test "uses metadata as context" do
+    :proc_lib.spawn(fn ->
+      Logger.metadata(name: "Danny")
+      Logger.metadata(age: 2)
+      Logger.metadata(user_id: 3)
+      Honeybadger.context(user_id: 1)
+      raise RuntimeError, "Oops"
+    end)
+
+    assert_receive {:api_request, notification}
+
+    assert %{"error" => %{"class" => "RuntimeError"}} = notification
+
+    assert %{"request" => %{"context" => %{"user_id" => 1, "name" => "Danny", "age" => 2}}} =
+             notification
+  end
+
   test "crashes do not cause recursive logging" do
     error_report = [
       [
