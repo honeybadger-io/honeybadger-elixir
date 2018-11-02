@@ -61,7 +61,7 @@ defmodule Honeybadger.Mixfile do
       {:ex_doc, "~> 0.7", only: :dev},
 
       # Test dependencies
-      {:cowboy, "~> 1.1.2", only: :test}
+      {:plug_cowboy, "~> 1.0", only: :test}
     ]
   end
 
