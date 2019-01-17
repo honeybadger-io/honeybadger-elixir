@@ -63,5 +63,24 @@ defmodule Honeybadger.PlugDataTest do
                PlugData.build_cgi_data(conn)
              )
     end
+
+    test "handles invalid remote ip" do
+      conn = %{conn(:get, "/bang") | remote_ip: nil}
+      %{port: remote_port} = get_peer_data(conn)
+
+      assert PlugData.build_cgi_data(conn) == %{
+               "CONTENT_LENGTH" => [],
+               "ORIGINAL_FULLPATH" => "/bang",
+               "PATH_INFO" => "bang",
+               "QUERY_STRING" => "",
+               "REMOTE_ADDR" => "",
+               "REMOTE_PORT" => remote_port,
+               "REQUEST_METHOD" => "GET",
+               "SCRIPT_NAME" => "",
+               "SERVER_ADDR" => "127.0.0.1",
+               "SERVER_NAME" => Application.get_env(:honeybadger, :hostname),
+               "SERVER_PORT" => 80
+             }
+    end
   end
 end

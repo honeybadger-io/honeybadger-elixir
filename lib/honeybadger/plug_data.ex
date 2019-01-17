@@ -93,9 +93,13 @@ if Code.ensure_loaded?(Plug) do
     end
 
     defp remote_addr(%Conn{remote_ip: remote_ip}) do
-      remote_ip
-      |> :inet.ntoa()
-      |> List.to_string()
+      case :inet.ntoa(remote_ip) do
+        {:error, :einval} ->
+          to_string(remote_ip)
+
+        charlist ->
+          List.to_string(charlist)
+      end
     end
 
     defp remote_port(conn) do
