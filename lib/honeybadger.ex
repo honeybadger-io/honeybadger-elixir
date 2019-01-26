@@ -203,7 +203,7 @@ defmodule Honeybadger do
       iex> Honeybadger.notify(%RuntimeError{}, %{culprit_id: 123})
       :ok
   """
-  @spec notify(Notice.noticeable(), Map.t(), list) :: :ok
+  @spec notify(Notice.noticeable(), map, list) :: :ok
   def notify(exception, metadata \\ %{}, stacktrace \\ []) do
     exception
     |> Notice.new(contextual_metadata(metadata), backtrace(stacktrace))
