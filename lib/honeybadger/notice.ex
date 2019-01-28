@@ -9,7 +9,7 @@ defmodule Honeybadger.Notice do
 
   @typep error :: %{class: atom | iodata, message: iodata, tags: list, backtrace: list}
 
-  @type noticeable :: Exception.t() | Map.t() | String.t() | atom
+  @type noticeable :: Exception.t() | String.t() | map | atom
 
   @typep notifier :: %{name: String.t(), url: String.t(), version: String.t()}
 
@@ -19,7 +19,7 @@ defmodule Honeybadger.Notice do
           notifier: notifier,
           server: server,
           error: error,
-          request: Map.t()
+          request: map
         }
 
   @derive Jason.Encoder
@@ -40,7 +40,7 @@ defmodule Honeybadger.Notice do
       iex> Honeybadger.Notice.new(%RuntimeError{message: "oops"}, %{}, []).error
       %{backtrace: [], class: "RuntimeError", message: "oops", tags: []}
   """
-  @spec new(noticeable, Map.t(), list) :: t
+  @spec new(noticeable, map, list) :: t
   def new(error, metadata, backtrace)
 
   def new(message, metadata, backtrace) when is_binary(message) do
