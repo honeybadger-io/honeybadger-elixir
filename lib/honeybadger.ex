@@ -290,7 +290,7 @@ defmodule Honeybadger do
 
     config
     |> Keyword.put_new_lazy(:hostname, hostname)
-    |> Keyword.put_new_lazy(:project_root, &System.cwd/0)
+    |> Keyword.put_new_lazy(:project_root, &File.cwd!/0)
   end
 
   defp verify_environment_name!(config) do
