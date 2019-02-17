@@ -151,16 +151,14 @@ defmodule HoneybadgerTest do
   end
 
   test "getting, setting and clearing the context" do
-    assert %{} == Honeybadger.context()
+    assert Honeybadger.context() == %{}
 
-    Honeybadger.context(user_id: 1)
-    assert %{user_id: 1} == Honeybadger.context()
+    assert Honeybadger.context(user_id: 1) == %{user_id: 1}
+    assert Honeybadger.context(%{user_id: 2}) == %{user_id: 2}
+    assert Honeybadger.context() == %{user_id: 2}
 
-    Honeybadger.context(%{user_id: 2})
-    assert %{user_id: 2} == Honeybadger.context()
-
-    Honeybadger.clear_context()
-    assert %{} == Honeybadger.context()
+    :ok = Honeybadger.clear_context()
+    assert Honeybadger.context() == %{}
   end
 
   test "setting context with invalid data type" do

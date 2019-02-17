@@ -35,7 +35,7 @@ defmodule Honeybadger.NoticeTest do
 
     assert :test == server[:environment_name]
     assert hostname == server[:hostname]
-    assert System.cwd() == server[:project_root]
+    assert File.cwd!() == server[:project_root]
   end
 
   test "server information config", _ do

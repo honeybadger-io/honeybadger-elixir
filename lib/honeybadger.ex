@@ -136,9 +136,6 @@ defmodule Honeybadger do
                  """
   end
 
-  @context :honeybadger_context
-  @type context :: map
-
   @doc false
   def start(_type, _opts) do
     import Supervisor.Spec
@@ -150,7 +147,7 @@ defmodule Honeybadger do
       |> persist_all_env()
 
     if config[:use_logger] do
-      :error_logger.add_report_handler(Honeybadger.Logger)
+      _ = Logger.add_backend(Honeybadger.Logger)
     end
 
     children = [
@@ -158,13 +155,6 @@ defmodule Honeybadger do
     ]
 
     Supervisor.start_link(children, strategy: :one_for_one)
-  end
-
-  @doc false
-  def stop(_state) do
-    :error_logger.delete_report_handler(Honeybadger.Logger)
-
-    :ok
   end
 
   @doc """
@@ -211,32 +201,44 @@ defmodule Honeybadger do
   end
 
   @doc """
-  Retrieves the context that will get sent to the Honeybadger API when/if an
-  exception occurs in the current process.
+  Retrieves the context that will be sent to the Honeybadger API when an exception occurs in the
+  current process.
+
+  Context is stored as Logger metadata, and is in fact an alias for `Logger.metadata/0`.
   """
-  @spec context :: context
+  @spec context() :: map()
   def context do
-    Process.get(@context, %{})
+    Logger.metadata() |> Map.new()
   end
 
   @doc """
-  Merges `additional_context` into the the context that will get sent to the
-  Honeybadger API when/if an exception occurs in the current process.
+  Store additional context in the process metadata.
+
+  This function will merge the given map or keyword list into the existing metadata, with the
+  exception of setting a key to `nil`, which will remove that key from the metadata.
+
+  Context is stored as Logger metadata.
   """
-  @spec context(map | keyword) :: context
-  def context(additional_context)
-      when is_map(additional_context) or is_list(additional_context) do
-    Process.put(@context, Map.merge(context(), Enum.into(additional_context, %{})))
+  @spec context(map() | keyword()) :: map()
+  def context(map) when is_map(map), do: context(Keyword.new(map))
+
+  def context(keyword) do
+    Logger.metadata(keyword)
+
     context()
   end
 
   @doc """
-  Clears the context that will get sent to the Honeybadger API when/if an
-  exception occurs in the current process.
+  Clears the context.
+
+  Note that because context is stored as logger metadata, clearing the context will clear _all_
+  metadata.
   """
-  @spec clear_context :: :ok
+  @spec clear_context() :: :ok
   def clear_context do
-    Process.delete(@context)
+    Logger.reset_metadata()
+
+    :ok
   end
 
   @doc """

@@ -26,81 +26,44 @@ defmodule Honeybadger.LoggerTest do
   end
 
   test "logging a crash" do
-    :proc_lib.spawn(fn ->
-      Honeybadger.context(user_id: 1)
+    Task.start(fn -> raise RuntimeError, "Oops" end)
+
+    assert_receive {:api_request, notification}
+
+    assert %{"error" => %{"class" => "RuntimeError"}} = notification
+  end
+
+  test "includes logger metadata as context" do
+    Task.start(fn ->
+      Logger.metadata(age: 2, name: "Danny", user_id: 3)
+
       raise RuntimeError, "Oops"
     end)
 
     assert_receive {:api_request, notification}
 
-    assert %{"error" => %{"class" => "RuntimeError"}} = notification
-    assert %{"request" => %{"context" => %{"user_id" => 1}}} = notification
+    %{"error" => error, "request" => %{"context" => context}} = notification
+
+    assert %{"class" => "RuntimeError"} = error
+    assert %{"age" => 2, "name" => "Danny", "user_id" => 3} = context
   end
 
-  test "uses metadata as context" do
-    :proc_lib.spawn(fn ->
-      Logger.metadata(name: "Danny")
-      Logger.metadata(age: 2)
-      Logger.metadata(user_id: 3)
-      Honeybadger.context(user_id: 1)
-      raise RuntimeError, "Oops"
-    end)
+  test "log levels lower than :error are ignored" do
+    Logger.metadata(crash_reason: {%RuntimeError{}, []})
 
-    assert_receive {:api_request, notification}
-
-    assert %{"error" => %{"class" => "RuntimeError"}} = notification
-
-    assert %{"request" => %{"context" => %{"user_id" => 1, "name" => "Danny", "age" => 2}}} =
-             notification
-  end
-
-  test "crashes do not cause recursive logging" do
-    error_report = [
-      [
-        error_info: {:error, %RuntimeError{message: "Oops"}, []},
-        dictionary: [honeybadger_context: [user_id: 1]]
-      ],
-      []
-    ]
-
-    log = capture_log(fn -> :error_logger.error_report(error_report) end)
-
-    assert log =~ "Unable to notify Honeybadger! BadMapError: "
+    Logger.info(fn -> "This is not a real error" end)
 
     refute_receive {:api_request, _}
   end
 
-  test "crashes with malformed stacktraces still trigger a notification" do
-    error_report = [
-      [
-        error_info: {:error, %RuntimeError{message: "Bad"}, "not_a_stack"},
-        dictionary: [honeybadger_context: %{user_id: 1}]
-      ],
-      []
-    ]
-
-    :error_logger.error_report(error_report)
-
-    assert_receive {:api_request, _}
-  end
-
-  test "log levels lower than :error_report are ignored" do
-    message_types = [:info_msg, :info_report, :warning_msg, :error_msg]
-
-    Enum.each(message_types, fn type ->
-      apply(:error_logger, type, ["Ignore me"])
-
-      refute_receive {:api_request, _}
-    end)
-  end
-
-  test "logging exceptions from Tasks" do
-    Task.start(fn ->
-      Float.parse("12.345e308")
-    end)
-
-    assert_receive {:api_request, %{"error" => %{"class" => "ArgumentError"}}}
-  end
+  # GenServer terminating with an Elixir error
+  # GenServer terminating with an Erlang error
+  # GenServer terminating because of an exit
+  # GenServer stopping
+  # GenEvent terminating
+  # Process raising an error
+  # Task with anonymous function raising an error
+  # Task with mfa raising an error
 
   test "logging exceptions from GenServers" do
     {:ok, pid} = ErrorServer.start()
