@@ -36,8 +36,9 @@ defmodule Honeybadger do
         raise RunTimeError, message: "Oops"
       rescue
         exception ->
-          metadata = %{user_id: 1, account: "A Very Important Customer"}
-          Honeybadger.notify(exception, metadata)
+          context = %{user_id: 1, account: "A Very Important Customer"}
+
+          Honeybadger.notify(exception, context, __STACKTRACE__)
       end
 
   Note that `notify` may be used outside of `try`, but it will use a different
@@ -163,13 +164,19 @@ defmodule Honeybadger do
   This is the primary way to do manual error reporting and it is also used
   internally to deliver logged errors.
 
+  ## Stacktrace
+
+  Accessing the stacktrace outside of a rescue/catch is deprecated. Notifiations should happen
+  inside of a rescue/catch block so that the stacktrace can be provided with `__STACKTRACE__`.
+  Stacktraces _must_ be provided and won't be automatically extracted from the current process.
+
   ## Example
 
       try do
         do_something_risky()
       rescue
         exception ->
-          Honeybadger.notify(exception)
+          Honeybadger.notify(exception, %{}, __STACKTRACE__)
       end
 
   Send a notification directly from a string, which will be sent as a
@@ -185,7 +192,7 @@ defmodule Honeybadger do
 
   Send a notification as a `badarg` atom:
 
-      iex> Honeybadger.notify(:badarg, %{})
+      iex> Honeybadger.notify(:badarg)
       :ok
 
   If desired additional metadata can be provided as well:
@@ -193,10 +200,12 @@ defmodule Honeybadger do
       iex> Honeybadger.notify(%RuntimeError{}, %{culprit_id: 123})
       :ok
   """
-  @spec notify(Notice.noticeable(), map, list) :: :ok
+  @spec notify(Notice.noticeable(), map(), list()) :: :ok
   def notify(exception, metadata \\ %{}, stacktrace \\ []) do
+    backtrace = Backtrace.from_stacktrace(stacktrace)
+
     exception
-    |> Notice.new(contextual_metadata(metadata), backtrace(stacktrace))
+    |> Notice.new(contextual_metadata(metadata), backtrace)
     |> Client.send_notice()
   end
 
@@ -308,17 +317,6 @@ defmodule Honeybadger do
     end)
 
     config
-  end
-
-  defp backtrace([_stack_item | _stack_items] = stacktrace) do
-    Backtrace.from_stacktrace(stacktrace)
-  end
-
-  defp backtrace(_stacktrace) do
-    case Process.info(self(), :current_stacktrace) do
-      {:current_stacktrace, stacktrace} -> Backtrace.from_stacktrace(stacktrace)
-      _unknown -> []
-    end
   end
 
   defp contextual_metadata(%{context: _} = metadata) do

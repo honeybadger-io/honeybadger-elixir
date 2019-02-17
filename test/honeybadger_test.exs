@@ -81,7 +81,7 @@ defmodule HoneybadgerTest do
       raise RuntimeError
     rescue
       exception ->
-        :ok = Honeybadger.notify(exception, %{}, System.stacktrace())
+        :ok = Honeybadger.notify(exception, %{}, __STACKTRACE__)
     end
 
     assert_receive {:api_request, %{"error" => %{"backtrace" => backtrace}}}
