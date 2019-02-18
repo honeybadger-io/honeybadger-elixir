@@ -24,13 +24,18 @@ defmodule Honeybadger.Logger do
     {:ok, state}
   end
 
-  def handle_event({:error, _gl, {Logger, _msg, _ts, metadata}}, state) do
+  def handle_event({:error, _gl, {Logger, message, _ts, metadata}}, state) do
+    details = extract_details(message)
+    context = extract_context(metadata)
+
+    full_context = Map.merge(details, context)
+
     case Keyword.get(metadata, :crash_reason) do
       {reason, stacktrace} ->
-        Honeybadger.notify(reason, extract_context(metadata), stacktrace)
+        Honeybadger.notify(reason, full_context, stacktrace)
 
       reason when is_atom(reason) and not is_nil(reason) ->
-        Honeybadger.notify(reason, extract_context(metadata), [])
+        Honeybadger.notify(reason, full_context, [])
 
       _ ->
         :ok
@@ -60,9 +65,31 @@ defmodule Honeybadger.Logger do
 
   ## Helpers
 
+  @standard_metadata ~w(ancestors callers crash_reason file function line module pid)a
+
   defp extract_context(metadata) do
     metadata
-    |> Keyword.drop([:ancestors, :callers, :crash_reason, :pid])
+    |> Keyword.drop(@standard_metadata)
     |> Map.new()
+  end
+
+  defp extract_details([["GenServer ", _pid, _res, _stack, _last, _, _, last], _, state]) do
+    %{last_message: last, state: state}
+  end
+
+  defp extract_details([[":gen_event handler ", name, _, _, _, _stack, _last, last], _, state]) do
+    %{name: name, last_message: last, state: state}
+  end
+
+  defp extract_details(["Process ", pid | _]) do
+    %{name: pid}
+  end
+
+  defp extract_details(["Task " <> _, _, "\nFunction: " <> fun, "\n    Args: " <> args]) do
+    %{function: fun, args: args}
+  end
+
+  defp extract_details(_message) do
+    %{}
   end
 end
