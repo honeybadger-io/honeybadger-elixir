@@ -3,6 +3,9 @@ defmodule Honeybadger.Backtrace do
   The Backtrace module contains functions for formatting system stacktraces.
   """
 
+  @type location :: {:file, string()} | {:line, pos_integer()}
+  @type stack_item :: {module(), atom(), arity() | [term()], [location()]}
+
   @inspect_opts charlists: :as_lists,
                 limit: 5,
                 printable_limit: 1024,
@@ -18,7 +21,7 @@ defmodule Honeybadger.Backtrace do
       ...> Honeybadger.Backtrace.from_stacktrace([stack_item])
       [%{file: nil, number: nil, method: "funky/1", args: [], context: "all"}]
   """
-  @spec from_stacktrace(list(:erlang.stack_item())) :: list(map)
+  @spec from_stacktrace([stack_item()]) :: list(map)
   def from_stacktrace(stacktrace) when is_list(stacktrace) do
     Enum.map(stacktrace, &format_line/1)
   end

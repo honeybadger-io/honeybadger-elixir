@@ -15,10 +15,10 @@ defmodule Honeybadger.Client do
 
   # State
 
-  @type t :: %{
+  @type t :: %__MODULE__{
           api_key: binary(),
           enabled: boolean(),
-          headers: [{binary(), binary()}],
+          headers: [{binary(), term()}],
           proxy: binary(),
           proxy_auth: {binary(), binary()},
           url: binary()
@@ -38,8 +38,8 @@ defmodule Honeybadger.Client do
   @spec new(Keyword.t()) :: t()
   def new(opts) do
     %__MODULE__{
-      enabled: enabled?(opts),
       api_key: get_env(opts, :api_key),
+      enabled: enabled?(opts),
       headers: build_headers(opts),
       proxy: get_env(opts, :proxy),
       proxy_auth: get_env(opts, :proxy_auth),

@@ -1,24 +1,42 @@
 language: elixir
-matrix:
-  include:
-    - otp_release: 18.3
-      elixir: 1.4
-    - otp_release: 19.3
-      elixir: 1.4
-    - otp_release: 20.0
-      elixir: 1.4
-    - otp_release: 20.1
-      elixir: 1.4
-    - otp_release: 19.3
-      elixir: 1.5
-    - otp_release: 20.0
-      elixir: 1.5
-    - otp_release: 20.1
-      elixir: 1.5
-    - otp_release: 20.1
-      elixir: 1.6
-    - otp_release: 21.0
-      elixir: 1.7
-    - otp_release: 21.0
-      elixir: 1.8
 sudo: false
+elixir:
+  - 1.4
+  - 1.5
+  - 1.6
+  - 1.7
+  - 1.8
+otp_release:
+  - 20.3
+  - 21.2
+matrix:
+  exclude:
+    - otp_release: 21.2
+      elixir: 1.4
+    - otp_release: 21.2
+      elixir: 1.5
+    - otp_release: 21.2
+      elixir: 1.6
+env:
+  - MIX_ENV=test
+script:
+  - mix test
+cache:
+  directories:
+    - ~/.mix
+    - ~/.hex
+    - deps
+    - _build
+jobs:
+  include:
+    - stage: format
+      env:
+        - MIX_ENV=dev
+      script: mix format --check-formatted
+      elixir: 1.8
+    - stage: dialyzer
+      env:
+        - MIX_ENV=dev
+      before_script: travis_wait mix dialyzer --plt
+      script: mix dialyzer --halt-exit-status
+      elixir: 1.8

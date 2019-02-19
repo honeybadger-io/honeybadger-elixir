@@ -11,12 +11,22 @@ defmodule Honeybadger.Mixfile do
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       elixirc_paths: elixirc_paths(Mix.env()),
+
+      # Hex
       package: package(),
       name: "Honeybadger",
       homepage_url: "https://honeybadger.io",
       source_url: "https://github.com/honeybadger-io/honeybadger-elixir",
       description:
         "Elixir client, Plug and error_logger for integrating with the Honeybadger.io exception tracker",
+
+      # Dialyzer
+      dialyzer: [
+        plt_add_apps: [:plug, :mix],
+        flags: [:error_handling, :race_conditions, :underspecs]
+      ],
+
+      # Docs
       docs: [extras: ["README.md", "CHANGELOG.md"], main: "readme"]
     ]
   end
@@ -58,7 +68,8 @@ defmodule Honeybadger.Mixfile do
       {:phoenix, ">= 1.0.0 and < 2.0.0", optional: true},
 
       # Dev dependencies
-      {:ex_doc, "~> 0.7", only: :dev},
+      {:ex_doc, "~> 0.7", only: :dev, runtime: false},
+      {:dialyxir, "~> 0.5", only: :dev, runtime: false},
 
       # Test dependencies
       {:plug_cowboy, ">= 1.0.0 and < 2.0.0", only: :test}
