@@ -155,6 +155,15 @@ config :honeybadger,
   environment_name: :prod
 ```
 
+If you'd rather read, eg., `environment_name` from the OS environment, you can do like this:
+
+```elixir
+config :honeybadger,
+  environment_name: {:system, "HONEYBADGER_ENV"}
+```
+
+_NOTE: This works only for the string options, and `environment_name`._
+
 Here are all of the options you can pass in the keyword list:
 
 | Name                     | Description                                                                                   | Default                                  |
