@@ -3,20 +3,6 @@ defmodule Honeybadger.LoggerTest do
 
   require Logger
 
-  defmodule ErrorServer do
-    use GenServer
-
-    def start do
-      GenServer.start(__MODULE__, [])
-    end
-
-    def init(_), do: {:ok, []}
-
-    def handle_cast(:fail, _state) do
-      raise RuntimeError, "Crashing"
-    end
-  end
-
   setup do
     {:ok, _} = Honeybadger.API.start(self())
 
@@ -25,88 +11,121 @@ defmodule Honeybadger.LoggerTest do
     on_exit(&Honeybadger.API.stop/0)
   end
 
-  test "logging a crash" do
-    :proc_lib.spawn(fn ->
-      Honeybadger.context(user_id: 1)
-      raise RuntimeError, "Oops"
-    end)
+  test "GenServer terminating with an error" do
+    defmodule MyGenServer do
+      use GenServer
 
-    assert_receive {:api_request, notification}
+      def start_link(_opts) do
+        GenServer.start(__MODULE__, [meta: :data], name: Elixir.MyGenServer)
+      end
 
-    assert %{"error" => %{"class" => "RuntimeError"}} = notification
-    assert %{"request" => %{"context" => %{"user_id" => 1}}} = notification
+      def init(opts), do: {:ok, opts}
+
+      def handle_cast(:raise_error, state) do
+        Map.fetch!(%{}, :bad_key)
+
+        {:noreply, state}
+      end
+    end
+
+    {:ok, pid} = start_supervised(MyGenServer)
+
+    GenServer.cast(pid, :raise_error)
+
+    assert_receive {:api_request, %{"error" => error, "request" => request}}
+
+    assert error["class"] == "KeyError"
+
+    assert request["context"]["registered_name"] == "Elixir.MyGenServer"
+    assert request["context"]["last_message"] =~ "$gen_cast"
+    assert request["context"]["state"] == "[meta: :data]"
   end
 
-  test "uses metadata as context" do
-    :proc_lib.spawn(fn ->
-      Logger.metadata(name: "Danny")
-      Logger.metadata(age: 2)
-      Logger.metadata(user_id: 3)
-      Honeybadger.context(user_id: 1)
-      raise RuntimeError, "Oops"
-    end)
+  test "GenEvent terminating with an error" do
+    defmodule MyEventHandler do
+      @behaviour :gen_event
 
-    assert_receive {:api_request, notification}
+      def init(state), do: {:ok, state}
+      def terminate(_reason, _state), do: :ok
+      def code_change(_old_vsn, state, _extra), do: {:ok, state}
+      def handle_call(_request, state), do: {:ok, :ok, state}
+      def handle_info(_message, state), do: {:ok, state}
 
-    assert %{"error" => %{"class" => "RuntimeError"}} = notification
+      def handle_event(:raise_error, state) do
+        raise "Oops"
 
-    assert %{"request" => %{"context" => %{"user_id" => 1, "name" => "Danny", "age" => 2}}} =
-             notification
+        {:ok, state}
+      end
+    end
+
+    {:ok, manager} = :gen_event.start()
+    :ok = :gen_event.add_handler(manager, MyEventHandler, {})
+
+    :gen_event.notify(manager, :raise_error)
+
+    assert_receive {:api_request, %{"error" => error, "request" => request}}
+
+    assert error["class"] == "RuntimeError"
+
+    assert request["context"]["name"] == "Honeybadger.LoggerTest.MyEventHandler"
+    assert request["context"]["last_message"] =~ ":raise_error"
+    assert request["context"]["state"] == "{}"
   end
 
-  test "crashes do not cause recursive logging" do
-    error_report = [
-      [
-        error_info: {:error, %RuntimeError{message: "Oops"}, []},
-        dictionary: [honeybadger_context: [user_id: 1]]
-      ],
-      []
-    ]
+  test "process raising an error" do
+    pid = spawn(fn -> raise "Oops" end)
 
-    log = capture_log(fn -> :error_logger.error_report(error_report) end)
+    assert_receive {:api_request, %{"error" => error, "request" => request}}
 
-    assert log =~ "Unable to notify Honeybadger! BadMapError: "
+    assert error["class"] == "RuntimeError"
+
+    assert request["context"]["name"] == inspect(pid)
+  end
+
+  test "task with anonymous function raising an error" do
+    Task.start(fn -> raise "Oops" end)
+
+    assert_receive {:api_request, %{"error" => error, "request" => request}}
+
+    assert error["class"] == "RuntimeError"
+    assert error["message"] == "Oops"
+
+    assert request["context"]["function"] =~ ~r/\A#Function<.* in Honeybadger\.LoggerTest/
+    assert request["context"]["args"] == "[]"
+  end
+
+  test "task with mfa raising an error" do
+    defmodule MyModule do
+      def raise_error(message), do: raise(message)
+    end
+
+    Task.start(MyModule, :raise_error, ["my message"])
+
+    assert_receive {:api_request, %{"error" => error, "request" => request}}
+
+    assert request["context"]["function"] =~ "&Honeybadger.LoggerTest.MyModule.raise_error/1"
+    assert request["context"]["args"] == ~s(["my message"])
+  end
+
+  test "includes additional logger metadata as context" do
+    Task.start(fn ->
+      Logger.metadata(age: 2, name: "Danny", user_id: 3)
+
+      raise "Oops"
+    end)
+
+    assert_receive {:api_request, %{"request" => request}}
+
+    assert request["context"]["age"] == 2
+    assert request["context"]["name"] == "Danny"
+    assert request["context"]["user_id"] == 3
+  end
+
+  test "log levels lower than :error are ignored" do
+    Logger.metadata(crash_reason: {%RuntimeError{}, []})
+
+    Logger.info(fn -> "This is not a real error" end)
 
     refute_receive {:api_request, _}
-  end
-
-  test "crashes with malformed stacktraces still trigger a notification" do
-    error_report = [
-      [
-        error_info: {:error, %RuntimeError{message: "Bad"}, "not_a_stack"},
-        dictionary: [honeybadger_context: %{user_id: 1}]
-      ],
-      []
-    ]
-
-    :error_logger.error_report(error_report)
-
-    assert_receive {:api_request, _}
-  end
-
-  test "log levels lower than :error_report are ignored" do
-    message_types = [:info_msg, :info_report, :warning_msg, :error_msg]
-
-    Enum.each(message_types, fn type ->
-      apply(:error_logger, type, ["Ignore me"])
-
-      refute_receive {:api_request, _}
-    end)
-  end
-
-  test "logging exceptions from Tasks" do
-    Task.start(fn ->
-      Float.parse("12.345e308")
-    end)
-
-    assert_receive {:api_request, %{"error" => %{"class" => "ArgumentError"}}}
-  end
-
-  test "logging exceptions from GenServers" do
-    {:ok, pid} = ErrorServer.start()
-
-    GenServer.cast(pid, :fail)
-
-    assert_receive {:api_request, %{"error" => %{"class" => "RuntimeError"}}}
   end
 end

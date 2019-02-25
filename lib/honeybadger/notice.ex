@@ -48,8 +48,7 @@ defmodule Honeybadger.Notice do
   end
 
   def new(%{class: class, message: message}, metadata, backtrace) do
-    %{class: class, message: message, backtrace: backtrace}
-    |> create(metadata)
+    create(%{class: class, message: message, backtrace: backtrace}, metadata)
   end
 
   def new(exception, metadata, backtrace) do

@@ -3,7 +3,7 @@ defmodule Honeybadger.Backtrace do
   The Backtrace module contains functions for formatting system stacktraces.
   """
 
-  @type location :: {:file, string()} | {:line, pos_integer()}
+  @type location :: {:file, binary()} | {:line, pos_integer()}
   @type stack_item :: {module(), atom(), arity() | [term()], [location()]}
 
   @inspect_opts charlists: :as_lists,

@@ -4,8 +4,8 @@ defmodule Honeybadger.Mixfile do
   def project do
     [
       app: :honeybadger,
-      version: "0.10.3",
-      elixir: "~> 1.4",
+      version: "0.11.0",
+      elixir: "~> 1.7",
       consolidate_protocols: Mix.env() != :test,
       build_embedded: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,

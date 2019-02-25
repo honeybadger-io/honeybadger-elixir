@@ -36,8 +36,9 @@ defmodule Honeybadger do
         raise RunTimeError, message: "Oops"
       rescue
         exception ->
-          metadata = %{user_id: 1, account: "A Very Important Customer"}
-          Honeybadger.notify(exception, metadata)
+          context = %{user_id: 1, account: "A Very Important Customer"}
+
+          Honeybadger.notify(exception, context, __STACKTRACE__)
       end
 
   Note that `notify` may be used outside of `try`, but it will use a different
@@ -136,9 +137,6 @@ defmodule Honeybadger do
                  """
   end
 
-  @context :honeybadger_context
-  @type context :: map
-
   @doc false
   def start(_type, _opts) do
     import Supervisor.Spec
@@ -150,7 +148,7 @@ defmodule Honeybadger do
       |> persist_all_env()
 
     if config[:use_logger] do
-      :error_logger.add_report_handler(Honeybadger.Logger)
+      _ = Logger.add_backend(Honeybadger.Logger)
     end
 
     children = [
@@ -160,18 +158,17 @@ defmodule Honeybadger do
     Supervisor.start_link(children, strategy: :one_for_one)
   end
 
-  @doc false
-  def stop(_state) do
-    :error_logger.delete_report_handler(Honeybadger.Logger)
-
-    :ok
-  end
-
   @doc """
   Send an exception notification, if reporting is enabled.
 
   This is the primary way to do manual error reporting and it is also used
   internally to deliver logged errors.
+
+  ## Stacktrace
+
+  Accessing the stacktrace outside of a rescue/catch is deprecated. Notifiations should happen
+  inside of a rescue/catch block so that the stacktrace can be provided with `__STACKTRACE__`.
+  Stacktraces _must_ be provided and won't be automatically extracted from the current process.
 
   ## Example
 
@@ -179,7 +176,7 @@ defmodule Honeybadger do
         do_something_risky()
       rescue
         exception ->
-          Honeybadger.notify(exception)
+          Honeybadger.notify(exception, %{}, __STACKTRACE__)
       end
 
   Send a notification directly from a string, which will be sent as a
@@ -195,7 +192,7 @@ defmodule Honeybadger do
 
   Send a notification as a `badarg` atom:
 
-      iex> Honeybadger.notify(:badarg, %{})
+      iex> Honeybadger.notify(:badarg)
       :ok
 
   If desired additional metadata can be provided as well:
@@ -203,40 +200,54 @@ defmodule Honeybadger do
       iex> Honeybadger.notify(%RuntimeError{}, %{culprit_id: 123})
       :ok
   """
-  @spec notify(Notice.noticeable(), map, list) :: :ok
+  @spec notify(Notice.noticeable(), map(), list()) :: :ok
   def notify(exception, metadata \\ %{}, stacktrace \\ []) do
+    backtrace = Backtrace.from_stacktrace(stacktrace)
+
     exception
-    |> Notice.new(contextual_metadata(metadata), backtrace(stacktrace))
+    |> Notice.new(contextual_metadata(metadata), backtrace)
     |> Client.send_notice()
   end
 
   @doc """
-  Retrieves the context that will get sent to the Honeybadger API when/if an
-  exception occurs in the current process.
+  Retrieves the context that will be sent to the Honeybadger API when an exception occurs in the
+  current process.
+
+  Context is stored as Logger metadata, and is in fact an alias for `Logger.metadata/0`.
   """
-  @spec context :: context
+  @spec context() :: map()
   def context do
-    Process.get(@context, %{})
+    Logger.metadata() |> Map.new()
   end
 
   @doc """
-  Merges `additional_context` into the the context that will get sent to the
-  Honeybadger API when/if an exception occurs in the current process.
+  Store additional context in the process metadata.
+
+  This function will merge the given map or keyword list into the existing metadata, with the
+  exception of setting a key to `nil`, which will remove that key from the metadata.
+
+  Context is stored as Logger metadata.
   """
-  @spec context(map | keyword) :: context
-  def context(additional_context)
-      when is_map(additional_context) or is_list(additional_context) do
-    Process.put(@context, Map.merge(context(), Enum.into(additional_context, %{})))
+  @spec context(map() | keyword()) :: map()
+  def context(map) when is_map(map), do: context(Keyword.new(map))
+
+  def context(keyword) do
+    Logger.metadata(keyword)
+
     context()
   end
 
   @doc """
-  Clears the context that will get sent to the Honeybadger API when/if an
-  exception occurs in the current process.
+  Clears the context.
+
+  Note that because context is stored as logger metadata, clearing the context will clear _all_
+  metadata.
   """
-  @spec clear_context :: :ok
+  @spec clear_context() :: :ok
   def clear_context do
-    Process.delete(@context)
+    Logger.reset_metadata()
+
+    :ok
   end
 
   @doc """
@@ -306,17 +317,6 @@ defmodule Honeybadger do
     end)
 
     config
-  end
-
-  defp backtrace([_stack_item | _stack_items] = stacktrace) do
-    Backtrace.from_stacktrace(stacktrace)
-  end
-
-  defp backtrace(_stacktrace) do
-    case Process.info(self(), :current_stacktrace) do
-      {:current_stacktrace, stacktrace} -> Backtrace.from_stacktrace(stacktrace)
-      _unknown -> []
-    end
   end
 
   defp contextual_metadata(%{context: _} = metadata) do

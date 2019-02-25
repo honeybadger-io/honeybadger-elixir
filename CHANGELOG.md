@@ -1,11 +1,23 @@
 # Changelog
+
 All notable changes to this project will be documented in this file. See [Keep a
 CHANGELOG](http://keepachangelog.com/) for how to update this file. This project
 adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Changed
+- Switch from Erlang's `:error_logger` to an Elixir 1.7 and Erlang/OTP 21+
+  `Logger` backend. This provides more consistent error reporting and enhanced
+  integration with Logger metadata.
+- Stop automatically extracting stacktraces for calls to `Honeybadger.notice/3`.
+  The generated stacktrace was unreliably and frequently listed the Honeybadger
+  reporter's internals, rather than application code. Manual calls to `notice/3`
+  should happen within a `rescue/catch` block and use the `__STACKTRACE__`
+  macro.
+
 ### Added
-- Use `Logger.metadata` to enrich the Honeybadger context for all notices
+- Use `Logger.metadata` as the basis for Honeybadger context in all logger
+  generated notices
 
 ## [v0.10.3] - 2018-07-02
 ### Fixed
@@ -34,11 +46,11 @@ adheres to [Semantic Versioning](http://semver.org/).
 - Update dependenices.
 
 ### Fixed
-- Fix crashes caused by JSON encoding error, we now log an error when there is a
+
   JSON encoding error.
 - Send notifications even when the stacktrace isn't a list. Errors reported from
   the error logger can occasionally have a malformed stacktrace, which would
-  raise another exception prevent the notification from being sent.
+  raise another exception and prevent the notification from being sent.
 
 ## [v0.9.0] - 2018-03-21
 ### Changed
