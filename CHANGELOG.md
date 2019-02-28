@@ -7,6 +7,12 @@ adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 
 ## [v0.11.0] - 2019-02-28
+When upgrading to v0.11, users should be aware of a few important changes:
+
+- You must be on Elixir 1.7+ and Erlang/OTP 21+
+- Due to the deprecation of `System.stacktrace/0` and the introduction of [`__STACKTRACE__`](https://hexdocs.pm/elixir/Kernel.SpecialForms.html#__STACKTRACE__/0), manually calling `Honeybadger.notify/3` will no longer include a stacktrace by default. See the [issue discussion](https://github.com/honeybadger-io/honeybadger-elixir/pull/204) for more details
+- A stacktrace can be manually provided from within a rescue/catch block via the __STACKTRACE__ macro, e.g. `Honeybadger.notify(SomeError, %{my: :context}, __STACKTRACE__)`
+
 ### Changed
 - Switch from Erlang's `:error_logger` to an Elixir 1.7 and Erlang/OTP 21+
   `Logger` backend. This provides more consistent error reporting and enhanced
