@@ -19,6 +19,10 @@ adheres to [Semantic Versioning](http://semver.org/).
 - Use `Logger.metadata` as the basis for Honeybadger context in all logger
   generated notices
 
+### Fixed
+- Fix Map.t() isn't a valid dialyzer type (#198)
+- Try to convert remote IP to string in case of parsing failure
+
 ## [v0.10.3] - 2018-07-02
 ### Fixed
 - Prevent crashes reporting `:badmatch` when fetching the current stacktrace
