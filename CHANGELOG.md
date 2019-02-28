@@ -5,6 +5,8 @@ CHANGELOG](http://keepachangelog.com/) for how to update this file. This project
 adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+
+## [v0.11.0] - 2019-02-28
 ### Changed
 - Switch from Erlang's `:error_logger` to an Elixir 1.7 and Erlang/OTP 21+
   `Logger` backend. This provides more consistent error reporting and enhanced
