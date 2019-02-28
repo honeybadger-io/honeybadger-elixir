@@ -4,6 +4,8 @@
 
 Elixir Plug, Logger and client for the :zap: [Honeybadger error notifier](https://www.honeybadger.io/).
 
+**Upgrading to v0.11?** [See the release notes](https://github.com/honeybadger-io/honeybadger-elixir/blob/master/CHANGELOG.md#v0110---2019-02-28)
+
 ## Getting Started
 
 [<img src="https://docs-honeybadger.s3.amazonaws.com/elixirsips.jpg" alt="ElixirSips" width=600/>](https://honeybadger.wistia.com/medias/krtqjywtp3)
@@ -113,7 +115,7 @@ try do
   File.read! "this_file_really_should_exist_dang_it.txt"
 rescue
   exception ->
-    Honeybadger.notify(exception)
+    Honeybadger.notify(exception, %{}, __STACKTRACE__)
 end
 ```
 
@@ -200,7 +202,7 @@ try do
 rescue
   exception ->
     context = %{user_id: 5, account_name: "Foo"}
-    Honeybadger.notify(exception, context)
+    Honeybadger.notify(exception, context, __STACKTRACE__)
 end
 ```
 
