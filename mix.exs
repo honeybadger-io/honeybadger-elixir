@@ -72,7 +72,7 @@ defmodule Honeybadger.Mixfile do
       {:dialyxir, "~> 0.5", only: :dev, runtime: false},
 
       # Test dependencies
-      {:plug_cowboy, ">= 1.0.0 and < 2.0.0", only: :test}
+      {:plug_cowboy, ">= 1.0.0 and < 3.0.0", only: :test}
     ]
   end
 
