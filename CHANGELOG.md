@@ -5,6 +5,8 @@ CHANGELOG](http://keepachangelog.com/) for how to update this file. This project
 adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Added
+- Added `:revision` configuration option
 
 ## [v0.11.0] - 2019-02-28
 When upgrading to v0.11, users should be aware of a few important changes:
