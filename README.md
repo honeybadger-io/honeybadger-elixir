@@ -161,7 +161,8 @@ If you'd rather read, eg., `environment_name` from the OS environment, you can d
 
 ```elixir
 config :honeybadger,
-  environment_name: {:system, "HONEYBADGER_ENV"}
+  environment_name: {:system, "HONEYBADGER_ENV"},
+  revision: {:system, "HEROKU_SLUG_COMMIT"}
 ```
 
 _NOTE: This works only for the string options, and `environment_name`._
@@ -177,6 +178,7 @@ Here are all of the options you can pass in the keyword list:
 | `hostname`               | Hostname of the system your application is running on                                         | `:inet.gethostname`                      |
 | `origin`                 | URL for the Honeybadger API                                                                   | `"https://api.honeybadger.io"`           |
 | `project_root`           | Directory root for where your application is running                                          | `System.cwd/0`                           |
+| `revision`               | The project's git revision                                                                    | `nil`                                    |
 | `filter`                 | Module implementing `Honeybadger.Filter` to filter data before sending to Honeybadger.io      | `Honeybadger.Filter.Default`             |
 | `filter_keys`            | A list of keywords (atoms) to filter.  Only valid if `filter` is `Honeybadger.Filter.Default` | `[:password, :credit_card]`              |
 | `filter_args`            | If true, will remove function arguments in backtraces                                         | `true`                                   |

@@ -21,6 +21,7 @@ defmodule Honeybadger do
         proxy: "http://proxy.net:PORT",
         proxy_auth: {"Username", "Password"},
         project_root: "/home/skynet",
+        revision: System.get_env("GIT_REVISION"),
         use_logger: true,
         notice_filter: Honeybadger.NoticeFilter.Default,
         filter: Honeybadger.Filter.Default,
@@ -302,6 +303,7 @@ defmodule Honeybadger do
     config
     |> Keyword.put_new_lazy(:hostname, hostname)
     |> Keyword.put_new_lazy(:project_root, &File.cwd!/0)
+    |> Keyword.put_new(:revision, nil)
   end
 
   defp verify_environment_name!(config) do

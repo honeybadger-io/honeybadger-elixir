@@ -13,7 +13,12 @@ defmodule Honeybadger.Notice do
 
   @typep notifier :: %{name: String.t(), url: String.t(), version: String.t()}
 
-  @typep server :: %{environment_name: atom, hostname: String.t(), project_root: Path.t()}
+  @typep server :: %{
+           environment_name: atom,
+           hostname: String.t(),
+           project_root: Path.t(),
+           revision: String.t()
+         }
 
   @type t :: %__MODULE__{
           notifier: notifier,
@@ -92,7 +97,8 @@ defmodule Honeybadger.Notice do
     %{
       environment_name: Honeybadger.get_env(:environment_name),
       hostname: Honeybadger.get_env(:hostname),
-      project_root: Honeybadger.get_env(:project_root)
+      project_root: Honeybadger.get_env(:project_root),
+      revision: Honeybadger.get_env(:revision)
     }
   end
 end
