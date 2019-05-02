@@ -95,6 +95,22 @@ defmodule HoneybadgerTest do
     assert {"test/honeybadger_test.exs", "test sending a notice with exception stacktrace/1"} in traced
   end
 
+  test "sending a notice includes extra information" do
+    restart_with_config(exclude_envs: [])
+    fun = fn :hi -> nil end
+
+    try do
+      fun.(:boom)
+    rescue
+      exception ->
+        :ok = Honeybadger.notify(exception, %{}, __STACKTRACE__)
+    end
+
+    assert_receive {:api_request, %{"error" => error}}
+    assert error["class"] == "FunctionClauseError"
+    assert String.contains?(error["message"], ":boom")
+  end
+
   test "fetching all application values" do
     on_exit(fn ->
       Application.delete_env(:honeybadger, :option_a)

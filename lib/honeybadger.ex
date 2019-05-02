@@ -203,6 +203,7 @@ defmodule Honeybadger do
   """
   @spec notify(Notice.noticeable(), map(), list()) :: :ok
   def notify(exception, metadata \\ %{}, stacktrace \\ []) do
+    {exception, _} = Exception.blame(:error, exception, stacktrace)
     backtrace = Backtrace.from_stacktrace(stacktrace)
 
     exception
