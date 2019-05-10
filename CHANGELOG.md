@@ -7,6 +7,7 @@ adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 ### Added
 - Added `:revision` configuration option
+- Automatically call `Exception.blame/3` to record additional information in the exception
 
 ## [v0.11.0] - 2019-02-28
 When upgrading to v0.11, users should be aware of a few important changes:
