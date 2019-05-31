@@ -5,6 +5,8 @@ CHANGELOG](http://keepachangelog.com/) for how to update this file. This project
 adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+
+## [v0.12.0] - 2019-05-30
 ### Added
 - Added `:revision` configuration option
 - Automatically call `Exception.blame/3` to record additional information in the exception
