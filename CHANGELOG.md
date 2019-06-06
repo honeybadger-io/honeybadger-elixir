@@ -5,6 +5,8 @@ CHANGELOG](http://keepachangelog.com/) for how to update this file. This project
 adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+#### Fixed
+- Call `Exception.blame/3` after normalizing string errors, which prevents reporint all string messages as Erlang errors. (#225)
 
 ## [v0.12.0] - 2019-05-30
 ### Added

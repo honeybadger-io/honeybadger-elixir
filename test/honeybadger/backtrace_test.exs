@@ -3,8 +3,6 @@ defmodule Honeybadger.BacktraceTest do
 
   alias Honeybadger.Backtrace
 
-  doctest Backtrace
-
   test "converting a stacktrace to the format Honeybadger expects" do
     stacktrace = [
       {:erlang, :some_func, [{:ok, 123}], []},

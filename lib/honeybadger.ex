@@ -125,7 +125,7 @@ defmodule Honeybadger do
 
   use Application
 
-  alias Honeybadger.{Backtrace, Client, Notice}
+  alias Honeybadger.{Client, Notice}
 
   defmodule MissingEnvironmentNameError do
     defexception message: """
@@ -203,11 +203,8 @@ defmodule Honeybadger do
   """
   @spec notify(Notice.noticeable(), map(), list()) :: :ok
   def notify(exception, metadata \\ %{}, stacktrace \\ []) do
-    {exception, _} = Exception.blame(:error, exception, stacktrace)
-    backtrace = Backtrace.from_stacktrace(stacktrace)
-
     exception
-    |> Notice.new(contextual_metadata(metadata), backtrace)
+    |> Notice.new(contextual_metadata(metadata), stacktrace)
     |> Client.send_notice()
   end
 

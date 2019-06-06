@@ -1,26 +1,24 @@
 defmodule Honeybadger.Backtrace do
-  @moduledoc """
-  The Backtrace module contains functions for formatting system stacktraces.
-  """
+  @moduledoc false
 
-  @type location :: {:file, binary()} | {:line, pos_integer()}
-  @type stack_item :: {module(), atom(), arity() | [term()], [location()]}
+  @typep location :: {:file, binary()} | {:line, pos_integer()}
+  @typep stack_item :: {module(), atom(), arity() | [term()], [location()]}
+
+  @type line :: %{
+          file: binary(),
+          method: binary(),
+          args: [binary()],
+          number: pos_integer(),
+          context: binary()
+        }
+
+  @type t :: [line()]
 
   @inspect_opts charlists: :as_lists,
                 limit: 5,
                 printable_limit: 1024,
                 pretty: false
 
-  @doc """
-  Convert a system stacktrace into an API compatible backtrace.
-
-  When `filter_args` is disabled the arguments will be included. Arguments are
-  inspected and reported as binaries, regardless of the original format.
-
-      iex> stack_item = {:erlang, :funky, [{:ok, 123}], []}
-      ...> Honeybadger.Backtrace.from_stacktrace([stack_item])
-      [%{file: nil, number: nil, method: "funky/1", args: [], context: "all"}]
-  """
   @spec from_stacktrace([stack_item()]) :: list(map)
   def from_stacktrace(stacktrace) when is_list(stacktrace) do
     Enum.map(stacktrace, &format_line/1)
@@ -50,13 +48,8 @@ defmodule Honeybadger.Backtrace do
   defp format_file(file) when is_binary(file), do: file
   defp format_file(file), do: file |> to_string() |> format_file()
 
-  defp format_method(fun, args) when is_list(args) do
-    format_method(fun, length(args))
-  end
-
-  defp format_method(fun, arity) when is_integer(arity) do
-    "#{fun}/#{arity}"
-  end
+  defp format_method(fun, args) when is_list(args), do: format_method(fun, length(args))
+  defp format_method(fun, arity) when is_integer(arity), do: "#{fun}/#{arity}"
 
   defp format_args(args, false = _filter) when is_list(args) do
     Enum.map(args, &Kernel.inspect(&1, @inspect_opts))
