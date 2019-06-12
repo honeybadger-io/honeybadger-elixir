@@ -3,7 +3,7 @@ defmodule Honeybadger.NoticeTest do
 
   doctest Honeybadger.Notice
 
-  alias Honeybadger.{Backtrace, Notice}
+  alias Honeybadger.Notice
 
   setup do
     exception = %RuntimeError{message: "Oops"}
@@ -17,9 +17,8 @@ defmodule Honeybadger.NoticeTest do
 
     metadata = %{plug_env: plug_env, tags: [:test], context: %{user_id: 1, account_id: 1}}
     stack = [{Kernel, :+, [1], [file: 'lib/elixir/lib/kernel.ex', line: 321]}]
-    backtrace = Backtrace.from_stacktrace(stack)
 
-    notice = Notice.new(exception, metadata, backtrace)
+    notice = Notice.new(exception, metadata, stack)
 
     {:ok, [notice: notice]}
   end
@@ -75,7 +74,8 @@ defmodule Honeybadger.NoticeTest do
   end
 
   test "erlang error normalization", _ do
-    %{error: %{class: class}} = Notice.new(:badarg, %{}, nil)
+    %{error: %{class: class}} = Notice.new(:badarg, %{}, [])
+
     assert class == "ArgumentError"
   end
 
@@ -87,7 +87,7 @@ defmodule Honeybadger.NoticeTest do
     refute get_in(notice.request, [:params, :password])
   end
 
-  test "User implemented Filter works" do
+  test "user implemented filter works" do
     defmodule TestFilter do
       use Honeybadger.Filter.Mixin
 
@@ -196,7 +196,7 @@ defmodule Honeybadger.NoticeTest do
     end)
   end
 
-  test "Setting notice_filter to nil disables filtering" do
+  test "setting notice_filter to nil disables filtering" do
     with_config([notice_filter: nil], fn ->
       notice = filterable_notice()
 

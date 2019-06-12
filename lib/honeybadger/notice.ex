@@ -1,96 +1,68 @@
 defmodule Honeybadger.Notice do
-  @moduledoc """
-  A `Honeybadger.Notice` struct is used to bundle an exception with system
-  information.
-  """
+  @doc false
 
-  alias __MODULE__
-  alias Honeybadger.Utils
+  alias Honeybadger.{Backtrace, Utils}
 
-  @typep error :: %{class: atom | iodata, message: iodata, tags: list, backtrace: list}
+  @type error :: %{class: atom | iodata, message: iodata, tags: list, backtrace: list}
+  @type notifier :: %{name: String.t(), url: String.t(), version: String.t()}
 
-  @type noticeable :: Exception.t() | String.t() | map | atom
+  @type server :: %{
+          environment_name: atom,
+          hostname: String.t(),
+          project_root: Path.t(),
+          revision: String.t()
+        }
 
-  @typep notifier :: %{name: String.t(), url: String.t(), version: String.t()}
-
-  @typep server :: %{
-           environment_name: atom,
-           hostname: String.t(),
-           project_root: Path.t(),
-           revision: String.t()
-         }
+  @type noticeable :: Exception.t() | String.t() | map() | atom()
 
   @type t :: %__MODULE__{
-          notifier: notifier,
-          server: server,
-          error: error,
-          request: map
+          notifier: notifier(),
+          server: server(),
+          error: error(),
+          request: map()
         }
+
+  @url get_in(Honeybadger.Mixfile.project(), [:package, :links, "GitHub"])
+  @version Honeybadger.Mixfile.project()[:version]
+  @notifier %{name: "Honeybadger Elixir Notifier", url: @url, version: @version}
 
   @derive Jason.Encoder
   @enforce_keys [:notifier, :server, :error, :request]
   defstruct [:notifier, :server, :error, :request]
 
-  @doc """
-  Create a new `Honeybadger.Notice` struct for various error types.
+  @spec new(noticeable(), map(), list()) :: t()
+  def new(error, metadata, stacktrace)
 
-  ## Example
-
-      iex> Honeybadger.Notice.new("oops", %{}, []).error
-      %{backtrace: [], class: "RuntimeError", message: "oops", tags: []}
-
-      iex> Honeybadger.Notice.new(:badarg, %{}, []).error
-      %{backtrace: [], class: "ArgumentError", message: "argument error", tags: []}
-
-      iex> Honeybadger.Notice.new(%RuntimeError{message: "oops"}, %{}, []).error
-      %{backtrace: [], class: "RuntimeError", message: "oops", tags: []}
-  """
-  @spec new(noticeable, map, list) :: t
-  def new(error, metadata, backtrace)
-
-  def new(message, metadata, backtrace) when is_binary(message) do
-    new(%RuntimeError{message: message}, metadata, backtrace)
+  def new(message, metadata, stacktrace)
+      when is_binary(message) and is_map(metadata) and is_list(stacktrace) do
+    new(%RuntimeError{message: message}, metadata, stacktrace)
   end
 
-  def new(%{class: class, message: message}, metadata, backtrace) do
-    create(%{class: class, message: message, backtrace: backtrace}, metadata)
-  end
-
-  def new(exception, metadata, backtrace) do
-    exception = Exception.normalize(:error, exception)
+  def new(exception, metadata, stacktrace) when is_map(metadata) and is_list(stacktrace) do
+    {exception, stacktrace} = Exception.blame(:error, exception, stacktrace)
 
     %{__struct__: exception_mod} = exception
 
     error = %{
       class: Utils.module_to_string(exception_mod),
       message: exception_mod.message(exception),
-      backtrace: backtrace
+      backtrace: Backtrace.from_stacktrace(stacktrace),
+      tags: Map.get(metadata, :tags, [])
     }
-
-    create(error, metadata)
-  end
-
-  defp create(error, metadata) do
-    error = Map.put(error, :tags, Map.get(metadata, :tags, []))
-    context = Map.get(metadata, :context, %{})
 
     request =
       metadata
       |> Map.get(:plug_env, %{})
-      |> Map.put(:context, context)
+      |> Map.put(:context, Map.get(metadata, :context, %{}))
 
-    %Notice{error: error, request: request, notifier: notifier(), server: server()}
-    |> filter(Honeybadger.get_env(:notice_filter))
+    filter(%__MODULE__{error: error, request: request, notifier: @notifier, server: server()})
   end
 
-  url = get_in(Honeybadger.Mixfile.project(), [:package, :links, "GitHub"])
-  version = Honeybadger.Mixfile.project()[:version]
-
-  defp filter(notice, nil), do: notice
-  defp filter(notice, app_filter), do: app_filter.filter(notice)
-
-  defp notifier do
-    %{name: "Honeybadger Elixir Notifier", url: unquote(url), version: unquote(version)}
+  defp filter(notice) do
+    case Honeybadger.get_env(:notice_filter) do
+      nil -> notice
+      notice_filter -> notice_filter.filter(notice)
+    end
   end
 
   defp server do

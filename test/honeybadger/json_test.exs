@@ -7,10 +7,16 @@ defmodule Honeybadger.JSONTest do
     defstruct [:ip]
   end
 
-  describe "encode" do
+  describe "encode/1" do
     test "encodes notice" do
       notice = Notice.new(%RuntimeError{message: "oops"}, %{}, [])
-      assert JSON.encode(notice) == Jason.encode(notice)
+
+      assert {:ok, encoded} = JSON.encode(notice)
+
+      assert encoded =~ ~s|"notifier"|
+      assert encoded =~ ~s|"server"|
+      assert encoded =~ ~s|"error"|
+      assert encoded =~ ~s|"request"|
     end
 
     test "encodes notice when context has structs" do
