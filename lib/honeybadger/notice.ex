@@ -5,7 +5,12 @@ defmodule Honeybadger.Notice do
 
   @type error :: %{class: atom | iodata, message: iodata, tags: list, backtrace: list}
   @type notifier :: %{name: String.t(), url: String.t(), version: String.t()}
-  @type breadcrumb :: %{category: String.t(), message: String.t(), metadata: map(), timestamp: DateTime.t()}
+  @type breadcrumb :: %{
+          category: String.t(),
+          message: String.t(),
+          metadata: map(),
+          timestamp: DateTime.t()
+        }
   @type breadcrumbs :: %{enabled: Bool.t(), trail: [breadcrumb()]}
 
   @type server :: %{
@@ -58,7 +63,13 @@ defmodule Honeybadger.Notice do
       |> Map.get(:plug_env, %{})
       |> Map.put(:context, Map.get(metadata, :context, %{}))
 
-    filter(%__MODULE__{breadcrumbs: %{}, error: error, request: request, notifier: @notifier, server: server()})
+    filter(%__MODULE__{
+      breadcrumbs: %{},
+      error: error,
+      request: request,
+      notifier: @notifier,
+      server: server()
+    })
   end
 
   defp filter(notice) do

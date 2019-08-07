@@ -2,13 +2,13 @@ defmodule Honeybadger.Breadcrumbs.Breadcrumb do
   @derive Jason.Encoder
 
   @type t :: %__MODULE__{
-    message: String.t(),
-    category: String.t(),
-    timestamp: String.t(),
-    metadata: map(),
-  }
+          message: String.t(),
+          category: String.t(),
+          timestamp: String.t(),
+          metadata: map()
+        }
 
-  @enforce_keys  [:message, :category, :timestamp, :metadata]
+  @enforce_keys [:message, :category, :timestamp, :metadata]
   defstruct [:message, :category, :timestamp, :metadata]
 
   def new(message, opts) do
@@ -16,7 +16,7 @@ defmodule Honeybadger.Breadcrumbs.Breadcrumb do
       message: message,
       category: opts[:category],
       timestamp: DateTime.utc_now(),
-      metadata: opts[:metadata],
+      metadata: opts[:metadata]
     }
   end
 end

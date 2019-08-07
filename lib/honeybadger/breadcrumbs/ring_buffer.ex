@@ -5,7 +5,7 @@ defmodule Honeybadger.Breadcrumbs.RingBuffer do
     %__MODULE__{buffer: [], size: size, ct: 0}
   end
 
-  def add(ring = %{ct: ct, size: ct, buffer: [_head | rest] }, item) do
+  def add(ring = %{ct: ct, size: ct, buffer: [_head | rest]}, item) do
     %__MODULE__{ring | buffer: rest ++ [item]}
   end
 
