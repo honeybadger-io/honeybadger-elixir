@@ -1,4 +1,6 @@
 defmodule Honeybadger.Breadcrumbs.RingBuffer do
+  @type t :: %__MODULE__{buffer: [], size: integer(), ct: integer()}
+
   defstruct [:buffer, :size, :ct]
 
   def new(size) do

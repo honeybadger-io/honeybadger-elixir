@@ -11,7 +11,7 @@ defmodule Honeybadger.Notice do
           metadata: map(),
           timestamp: DateTime.t()
         }
-  @type breadcrumbs :: %{enabled: Bool.t(), trail: [breadcrumb()]}
+  @type breadcrumbs :: %{enabled: boolean(), trail: [breadcrumb()]}
 
   @type server :: %{
           environment_name: atom,

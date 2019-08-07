@@ -20,7 +20,7 @@ defmodule Honeybadger.Client do
   @buffer_impl RingBuffer
 
   @type t :: %__MODULE__{
-          breadcrumbs: [],
+          breadcrumbs: @buffer_impl.t(),
           breadcrumbs_enabled: boolean(),
           api_key: binary(),
           enabled: boolean(),
