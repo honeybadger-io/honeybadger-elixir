@@ -125,7 +125,7 @@ defmodule Honeybadger do
 
   use Application
 
-  alias Honeybadger.{Client, Notice}
+  alias Honeybadger.{Client, Notice, Breadcrumbs}
 
   defmodule MissingEnvironmentNameError do
     defexception message: """
@@ -206,6 +206,10 @@ defmodule Honeybadger do
     exception
     |> Notice.new(contextual_metadata(metadata), stacktrace)
     |> Client.send_notice()
+  end
+
+  def add_breadcrumb(message, opts \\ []) do
+    Client.add_breadcrumb(message, opts)
   end
 
   @doc """

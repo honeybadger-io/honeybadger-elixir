@@ -5,6 +5,8 @@ defmodule Honeybadger.Client do
 
   require Logger
 
+  alias Honeybadger.Breadcrumbs.{RingBuffer, Breadcrumb}
+
   @headers [
     {"Accept", "application/json"},
     {"Content-Type", "application/json"},
@@ -15,7 +17,11 @@ defmodule Honeybadger.Client do
 
   # State
 
+  @buffer_impl RingBuffer
+
   @type t :: %__MODULE__{
+          breadcrumbs: [],
+          breadcrumbs_enabled: boolean(),
           api_key: binary(),
           enabled: boolean(),
           headers: [{binary(), term()}],
@@ -24,7 +30,7 @@ defmodule Honeybadger.Client do
           url: binary()
         }
 
-  defstruct [:api_key, :enabled, :headers, :proxy, :proxy_auth, :url]
+  defstruct [:breadcrumbs, :breadcrumbs_enabled, :api_key, :enabled, :headers, :proxy, :proxy_auth, :url]
 
   # API
 
@@ -38,6 +44,8 @@ defmodule Honeybadger.Client do
   @spec new(Keyword.t()) :: t()
   def new(opts) do
     %__MODULE__{
+      breadcrumbs: @buffer_impl.new(40),
+      breadcrumbs_enabled: get_env(opts, :breadcrumbs_enabled),
       api_key: get_env(opts, :api_key),
       enabled: enabled?(opts),
       headers: build_headers(opts),
@@ -48,15 +56,29 @@ defmodule Honeybadger.Client do
   end
 
   @doc false
-  @spec send_notice(map()) :: :ok | {:error, term()}
-  def send_notice(notice) when is_map(notice) do
+  def with_pid(op, f) do
     if pid = Process.whereis(__MODULE__) do
-      GenServer.cast(pid, {:notice, notice})
+      f.(pid)
     else
       Logger.warn(fn ->
-        "[Honeybadger] Unable to notify, the :honeybadger client isn't running"
+        "[Honeybadger] Unable to #{op}, the :honeybadger client isn't running"
       end)
     end
+  end
+
+  @doc false
+  @spec send_notice(map()) :: :ok | {:error, term()}
+  def send_notice(notice) when is_map(notice) do
+    with_pid("notify", fn (pid) -> GenServer.cast(pid, {:notice, notice}) end)
+  end
+
+  @doc false
+  @breadcrumb_defaults [metadata: %{}, category: "custom"]
+  @spec add_breadcrumb(String.t(), [metadata: map(), category: String.t()]) :: :ok | {:error, term()}
+  def add_breadcrumb(message, opts \\ []) do
+    with_pid("add breadcrumb", fn (pid) ->
+      GenServer.call(pid, {:breadcrumb, Breadcrumb.new(message, Enum.into(opts, @breadcrumb_defaults))})
+    end)
   end
 
   @doc """
@@ -110,8 +132,13 @@ defmodule Honeybadger.Client do
     {:noreply, state}
   end
 
-  def handle_cast({:notice, notice}, %{enabled: true, url: url, headers: headers} = state) do
-    case Honeybadger.JSON.encode(notice) do
+  def handle_cast({:notice, notice}, %{enabled: true, url: url, headers: headers, breadcrumbs: breadcrumbs, breadcrumbs_enabled: breadcrumbs_enabled} = state) do
+    notice_with_breadcrumbs = Map.put(notice, :breadcrumbs, %{
+      enabled: breadcrumbs_enabled,
+      trail: @buffer_impl.to_list(breadcrumbs)
+    })
+
+    case Honeybadger.JSON.encode(notice_with_breadcrumbs) do
       {:ok, payload} ->
         opts =
           state
@@ -126,6 +153,14 @@ defmodule Honeybadger.Client do
     end
 
     {:noreply, state}
+  end
+
+  def handle_call({:breadcrumb, _}, _from, %{breadcrumbs_enabled: false} = state) do
+    {:reply, :ignored, state}
+  end
+
+  def handle_call({:breadcrumb, breadcrumb}, _from, state) do
+    {:reply, :ok, Map.update!(state, :breadcrumbs, &(@buffer_impl.add(&1, breadcrumb)))}
   end
 
   @impl GenServer

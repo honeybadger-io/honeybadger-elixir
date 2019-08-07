@@ -5,6 +5,8 @@ defmodule Honeybadger.Notice do
 
   @type error :: %{class: atom | iodata, message: iodata, tags: list, backtrace: list}
   @type notifier :: %{name: String.t(), url: String.t(), version: String.t()}
+  @type breadcrumb :: %{category: String.t(), message: String.t(), metadata: map(), timestamp: DateTime.t()}
+  @type breadcrumbs :: %{enabled: Bool.t(), trail: [breadcrumb()]}
 
   @type server :: %{
           environment_name: atom,
@@ -19,6 +21,7 @@ defmodule Honeybadger.Notice do
           notifier: notifier(),
           server: server(),
           error: error(),
+          breadcrumbs: breadcrumbs(),
           request: map()
         }
 
@@ -27,8 +30,8 @@ defmodule Honeybadger.Notice do
   @notifier %{name: "Honeybadger Elixir Notifier", url: @url, version: @version}
 
   @derive Jason.Encoder
-  @enforce_keys [:notifier, :server, :error, :request]
-  defstruct [:notifier, :server, :error, :request]
+  @enforce_keys [:breadcrumbs, :notifier, :server, :error, :request]
+  defstruct [:breadcrumbs, :notifier, :server, :error, :request]
 
   @spec new(noticeable(), map(), list()) :: t()
   def new(error, metadata, stacktrace)
@@ -55,7 +58,7 @@ defmodule Honeybadger.Notice do
       |> Map.get(:plug_env, %{})
       |> Map.put(:context, Map.get(metadata, :context, %{}))
 
-    filter(%__MODULE__{error: error, request: request, notifier: @notifier, server: server()})
+    filter(%__MODULE__{breadcrumbs: %{}, error: error, request: request, notifier: @notifier, server: server()})
   end
 
   defp filter(notice) do
