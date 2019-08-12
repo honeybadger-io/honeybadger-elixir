@@ -208,8 +208,12 @@ defmodule Honeybadger do
     |> Client.send_notice()
   end
 
+  @doc """
+  Stores a breadcrumb
+  """
+  @spec add_breadcrumb(String.t(), metadata: map(), category: String.t()) :: :ok | nil
   def add_breadcrumb(message, opts \\ []) do
-    Client.add_breadcrumb(message, opts)
+    Breadcrumbs.Breadcrumb.new(message, opts) |> Breadcrumbs.Collector.add()
   end
 
   @doc """

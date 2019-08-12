@@ -42,7 +42,7 @@ defmodule Honeybadger.Mixfile do
       env: [
         api_key: {:system, "HONEYBADGER_API_KEY"},
         app: nil,
-        breadcrumbs_enabled: true,
+        breadcrumbs_enabled: false,
         environment_name: Mix.env(),
         exclude_envs: [:dev, :test],
         origin: "https://api.honeybadger.io",

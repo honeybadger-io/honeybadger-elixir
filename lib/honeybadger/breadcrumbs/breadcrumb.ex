@@ -4,7 +4,7 @@ defmodule Honeybadger.Breadcrumbs.Breadcrumb do
   @type t :: %__MODULE__{
           message: String.t(),
           category: String.t(),
-          timestamp: String.t(),
+          timestamp: DateTime.t(),
           metadata: map()
         }
 
@@ -14,9 +14,9 @@ defmodule Honeybadger.Breadcrumbs.Breadcrumb do
   def new(message, opts) do
     %__MODULE__{
       message: message,
-      category: opts[:category],
+      category: opts[:category] || "custom",
       timestamp: DateTime.utc_now(),
-      metadata: opts[:metadata]
+      metadata: opts[:metadata] || %{}
     }
   end
 end

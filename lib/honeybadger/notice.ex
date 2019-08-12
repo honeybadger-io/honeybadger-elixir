@@ -2,16 +2,10 @@ defmodule Honeybadger.Notice do
   @doc false
 
   alias Honeybadger.{Backtrace, Utils}
+  alias Honeybadger.Breadcrumbs.{Collector}
 
   @type error :: %{class: atom | iodata, message: iodata, tags: list, backtrace: list}
   @type notifier :: %{name: String.t(), url: String.t(), version: String.t()}
-  @type breadcrumb :: %{
-          category: String.t(),
-          message: String.t(),
-          metadata: map(),
-          timestamp: DateTime.t()
-        }
-  @type breadcrumbs :: %{enabled: boolean(), trail: [breadcrumb()]}
 
   @type server :: %{
           environment_name: atom,
@@ -26,7 +20,7 @@ defmodule Honeybadger.Notice do
           notifier: notifier(),
           server: server(),
           error: error(),
-          breadcrumbs: breadcrumbs(),
+          breadcrumbs: Collector.t(),
           request: map()
         }
 
@@ -64,7 +58,7 @@ defmodule Honeybadger.Notice do
       |> Map.put(:context, Map.get(metadata, :context, %{}))
 
     filter(%__MODULE__{
-      breadcrumbs: %{},
+      breadcrumbs: Collector.output(),
       error: error,
       request: request,
       notifier: @notifier,
