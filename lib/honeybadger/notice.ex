@@ -52,6 +52,11 @@ defmodule Honeybadger.Notice do
       tags: Map.get(metadata, :tags, [])
     }
 
+    Honeybadger.add_breadcrumb(error[:class],
+      metadata: %{exception_message: error[:message]},
+      category: "error"
+    )
+
     request =
       metadata
       |> Map.get(:plug_env, %{})
