@@ -17,6 +17,7 @@ defmodule Honeybadger.JSONTest do
       assert encoded =~ ~s|"server"|
       assert encoded =~ ~s|"error"|
       assert encoded =~ ~s|"request"|
+      assert encoded =~ ~s|"breadcrumbs"|
     end
 
     test "encodes notice when context has structs" do
