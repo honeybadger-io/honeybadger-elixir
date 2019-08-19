@@ -45,21 +45,16 @@ defmodule Honeybadger.NoticeTest do
     end)
   end
 
-  test "with breadcrumbs enabled", _ do
-    with_config([breadcrumbs_enabled: true], fn ->
-      %Notice{breadcrumbs: breadcrumbs} = Notice.new(%RuntimeError{message: "Oops"}, %{}, [])
-      breadcrumb = hd(breadcrumbs[:trail])
+  test "with breadcrumbs", _ do
+    breadcrumbs = %{
+      enabled: true,
+      trail: []
+    }
 
-      assert "RuntimeError" == breadcrumb.message
-      assert "error" == breadcrumb.category
-    end)
-  end
+    %Notice{breadcrumbs: to_breadcrumbs} =
+      Notice.new(%RuntimeError{message: "Oops"}, %{breadcrumbs: breadcrumbs}, [])
 
-  test "with breadcrumbs disabled", %{notice: %Notice{breadcrumbs: breadcrumbs}} do
-    assert breadcrumbs == %{
-             enabled: false,
-             trail: []
-           }
+    assert breadcrumbs == to_breadcrumbs
   end
 
   test "error information", %{notice: %Notice{error: error}} do

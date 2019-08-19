@@ -52,18 +52,13 @@ defmodule Honeybadger.Notice do
       tags: Map.get(metadata, :tags, [])
     }
 
-    Honeybadger.add_breadcrumb(error[:class],
-      metadata: %{exception_message: error[:message]},
-      category: "error"
-    )
-
     request =
       metadata
       |> Map.get(:plug_env, %{})
       |> Map.put(:context, Map.get(metadata, :context, %{}))
 
     filter(%__MODULE__{
-      breadcrumbs: Collector.output(),
+      breadcrumbs: Map.get(metadata, :breadcrumbs, %{}),
       error: error,
       request: request,
       notifier: @notifier,
