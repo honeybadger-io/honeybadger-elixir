@@ -8,6 +8,7 @@ defmodule Honeybadger.NoticeFilter.Default do
       notice
       |> Map.put(:request, filter_request(notice.request, filter))
       |> Map.put(:error, filter_error(notice.error, filter))
+      |> Map.put(:breadcrumbs, filter_breadcrumbs(notice.breadcrumbs, filter))
     else
       notice
     end
@@ -26,6 +27,10 @@ defmodule Honeybadger.NoticeFilter.Default do
 
   defp filter_error(%{message: message} = error, filter) do
     Map.put(error, :message, filter.filter_error_message(message))
+  end
+
+  defp filter_breadcrumbs(breadcrumbs, filter) do
+    Map.update(breadcrumbs, :trail, %{}, &filter.filter_breadcrumbs(&1))
   end
 
   defp apply_filter(request, key, filter_fn) do

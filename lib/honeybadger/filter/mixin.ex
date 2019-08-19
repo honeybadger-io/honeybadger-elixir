@@ -36,6 +36,7 @@ defmodule Honeybadger.Filter.Mixin do
       def filter_cgi_data(cgi_data), do: filter_map(cgi_data)
       def filter_session(session), do: filter_map(session)
       def filter_error_message(message), do: message
+      def filter_breadcrumbs(breadcrumbs), do: breadcrumbs
 
       @doc false
       def filter_map(map) do
@@ -62,7 +63,8 @@ defmodule Honeybadger.Filter.Mixin do
                      filter_params: 1,
                      filter_cgi_data: 1,
                      filter_session: 1,
-                     filter_error_message: 1
+                     filter_error_message: 1,
+                     filter_breadcrumbs: 1
     end
   end
 end

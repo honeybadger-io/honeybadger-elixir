@@ -4,6 +4,7 @@ defmodule Honeybadger.NoticeTest do
   doctest Honeybadger.Notice
 
   alias Honeybadger.Notice
+  alias Honeybadger.Breadcrumbs.Breadcrumb
 
   setup do
     exception = %RuntimeError{message: "Oops"}
@@ -107,6 +108,8 @@ defmodule Honeybadger.NoticeTest do
 
       def filter_error_message(message),
         do: Regex.replace(~r/(Secret data: )(\w+)/, message, "\\1 xxx")
+
+      def filter_breadcrumbs(_breadcrumbs), do: [999]
     end
 
     with_config([filter: TestFilter], fn ->
@@ -119,6 +122,7 @@ defmodule Honeybadger.NoticeTest do
       assert get_in(notice.request, [:params, "credit_card"])
       refute notice.error.message =~ "XYZZY"
       refute get_in(notice.request, [:params, "token"])
+      assert notice.breadcrumbs.trail == [999]
     end)
   end
 
@@ -231,6 +235,12 @@ defmodule Honeybadger.NoticeTest do
 
     metadata = %{
       context: %{password: "123", foo: "foo"},
+      breadcrumbs: %{
+        active: true,
+        trail: [
+          Breadcrumb.new("my message", %{})
+        ]
+      },
       plug_env: %{
         url: "/some/secret/place",
         component: SomeApp.PageController,
