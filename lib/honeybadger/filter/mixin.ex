@@ -43,20 +43,19 @@ defmodule Honeybadger.Filter.Mixin do
       end
 
       def filter_map(map, keys) when is_list(keys) do
-        filter_keys = Enum.map(keys, &canonicalize(&1))
-        drop_keys = Enum.filter(Map.keys(map), &Enum.member?(filter_keys, canonicalize(&1)))
+        filter_keys = Enum.map(keys, &Honeybadger.Utils.canonicalize(&1))
+
+        drop_keys =
+          Enum.filter(
+            Map.keys(map),
+            &Enum.member?(filter_keys, Honeybadger.Utils.canonicalize(&1))
+          )
 
         Map.drop(map, drop_keys)
       end
 
       def filter_map(map, _keys) do
         map
-      end
-
-      defp canonicalize(key) do
-        key
-        |> to_string()
-        |> String.downcase()
       end
 
       defoverridable filter_context: 1,
