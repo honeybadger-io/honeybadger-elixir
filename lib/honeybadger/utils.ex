@@ -59,6 +59,10 @@ defmodule Honeybadger.Utils do
     @depth_token
   end
 
+  defp sanitize_val(%{__struct__: _} = struct, opts) do
+    sanitize_val(Map.from_struct(struct), opts)
+  end
+
   defp sanitize_val(v, %{depth: depth, filter_keys: filter_keys} = opts) when is_map(v) do
     Enum.reduce(v, %{}, fn {key, value}, acc ->
       Map.put(
