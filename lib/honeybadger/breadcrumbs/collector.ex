@@ -1,4 +1,10 @@
 defmodule Honeybadger.Breadcrumbs.Collector do
+  @moduledoc """
+  The Collector provides an interface for accessing and affecting the current
+  set of breadcrumbs. Most operations are delegated to the supplied Buffer
+  implementation. This is mainly for internal use.
+  """
+
   alias Honeybadger.Breadcrumbs.{RingBuffer, Breadcrumb}
   alias Honeybadger.Utils
 

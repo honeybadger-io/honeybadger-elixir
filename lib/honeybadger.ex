@@ -121,6 +121,20 @@ defmodule Honeybadger do
       end
 
   See `Honeybadger.Filter` for details on implementing your own filter.
+
+  ### Adding Breadcrumbs
+
+  Breadcrumbs allow you to record events along a processes execution path. If
+  an error is thrown, the set of breadcrumb events will be sent along with the
+  notice. These breadcrumbs can contain useful hints while debugging.
+
+  Ensure that you enable breadcrumbs in the config (as it is disabled by
+  default):
+
+      config :honeybadger,
+        breadcrumbs_enabled: true
+
+  See `Honeybadger.add_breadcrumb` for more information.
   """
 
   use Application
@@ -220,11 +234,6 @@ defmodule Honeybadger do
     |> Client.send_notice()
   end
 
-  @spec add_breadcrumb(Breadcrumb.t()) :: :ok | nil
-  def add_breadcrumb(%Breadcrumb{} = breadcrumb) do
-    Collector.add(breadcrumb)
-  end
-
   @doc """
   Stores a breadcrumb item.
 
@@ -236,10 +245,17 @@ defmodule Honeybadger do
   will not transfer automatically. Since a typical system might have many
   processes, it is advised that you be conservative when storing breadcrumbs as
   each breadcrumb consumes memory.
+
+  ## Example
+
+      Honeybadger.add_breadcrumb("Email Sent", metadata: %{
+        user: user.id, message: message
+      })
+      => :ok
   """
   @spec add_breadcrumb(String.t(), metadata: map(), category: String.t()) :: :ok | nil
   def add_breadcrumb(message, opts \\ []) do
-    add_breadcrumb(Breadcrumb.new(message, opts))
+    Collector.add(Breadcrumb.new(message, opts))
   end
 
   @doc """
