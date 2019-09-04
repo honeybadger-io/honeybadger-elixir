@@ -37,6 +37,7 @@ if Code.ensure_loaded?(Plug) do
     """
 
     alias Honeybadger.PlugData
+    alias Honeybadger.Breadcrumbs.Breadcrumb
 
     @doc false
     defmacro __using__(opts) do
@@ -60,6 +61,7 @@ if Code.ensure_loaded?(Plug) do
             # 404 errors are not reported
             :ok
           else
+            Honeybadger.add_breadcrumb(Breadcrumb.from_error(reason))
             metadata = @plug_data.metadata(conn, __MODULE__)
             Honeybadger.notify(reason, metadata, stack)
           end

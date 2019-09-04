@@ -125,7 +125,8 @@ defmodule Honeybadger do
 
   use Application
 
-  alias Honeybadger.{Utils, Client, Notice, Breadcrumbs}
+  alias Honeybadger.{Client, Notice}
+  alias Honeybadger.Breadcrumbs.{Collector, Breadcrumb}
 
   defmodule MissingEnvironmentNameError do
     defexception message: """
@@ -203,15 +204,25 @@ defmodule Honeybadger do
   """
   @spec notify(Notice.noticeable(), map(), list()) :: :ok
   def notify(exception, metadata \\ %{}, stacktrace \\ []) do
-    Honeybadger.add_breadcrumb("Honeybadger Notice", category: "notice")
+    # Grab process local breadcrumbs if not passed with call and add notice breadcrumb
+    breadcrumbs =
+      metadata
+      |> Map.get(:breadcrumbs, Collector.breadcrumbs())
+      |> Collector.add(notice_breadcrumb(exception))
 
-    metadata =
-      contextual_metadata(metadata)
-      |> Map.put(:breadcrumbs, Breadcrumbs.Collector.output())
+    metadata_with_breadcrumbs =
+      metadata
+      |> contextual_metadata
+      |> Map.put(:breadcrumbs, Collector.output(breadcrumbs))
 
     exception
-    |> Notice.new(metadata, stacktrace)
+    |> Notice.new(metadata_with_breadcrumbs, stacktrace)
     |> Client.send_notice()
+  end
+
+  @spec add_breadcrumb(Breadcrumb.t()) :: :ok | nil
+  def add_breadcrumb(%Breadcrumb{} = breadcrumb) do
+    Collector.add(breadcrumb)
   end
 
   @doc """
@@ -220,18 +231,15 @@ defmodule Honeybadger do
   In the case of an error, the set of breadcrumbs (trail) will be reported
   along side the notice to help with debugging.
 
-  Breadcrumbs are stored in the process dictionary, referenced by the calling
-  process. If you are sending messages between processes, breadcrumbs will not
-  transfer automatically. Since a typical system might have many processes, it
-  is advised that you be conservative when storing breadcrumbs as each
-  breadcrumb consumes memory during storage.
+  Breadcrumbs are stored along with the logger context, referenced by the
+  calling process. If you are sending messages between processes, breadcrumbs
+  will not transfer automatically. Since a typical system might have many
+  processes, it is advised that you be conservative when storing breadcrumbs as
+  each breadcrumb consumes memory.
   """
   @spec add_breadcrumb(String.t(), metadata: map(), category: String.t()) :: :ok | nil
   def add_breadcrumb(message, opts \\ []) do
-    opts = Keyword.update(opts, :metadata, %{}, &Utils.sanitize(&1, max_depth: 1))
-
-    Breadcrumbs.Breadcrumb.new(message, opts)
-    |> Breadcrumbs.Collector.add()
+    add_breadcrumb(Breadcrumb.new(message, opts))
   end
 
   @doc """
@@ -242,7 +250,7 @@ defmodule Honeybadger do
   """
   @spec context() :: map()
   def context do
-    Logger.metadata() |> Map.new()
+    Logger.metadata() |> Map.new() |> Map.delete(Collector.metadata_key())
   end
 
   @doc """
@@ -316,6 +324,29 @@ defmodule Honeybadger do
   end
 
   # Helpers
+
+  # Allows for Notice breadcrumb to have custom text as message if an error is
+  # not passed to the notice function. We can assume if it was passed an error
+  # then there will be an error breadcrumb right before this one.
+  defp notice_breadcrumb(exception) do
+    reason =
+      case exception do
+        s when is_binary(s) ->
+          s
+
+        s when is_atom(s) ->
+          Exception.normalize(:error, s)
+          |> Map.get(:message, to_string(s))
+
+        _ ->
+          nil
+      end
+
+    ["Honeybadger Notice", reason]
+    |> Enum.reject(&is_nil/1)
+    |> Enum.join(": ")
+    |> Breadcrumb.new(category: "notice")
+  end
 
   defp put_dynamic_env(config) do
     hostname = fn ->

@@ -19,4 +19,16 @@ defmodule Honeybadger.Breadcrumbs.Breadcrumb do
       metadata: opts[:metadata] || %{}
     }
   end
+
+  def from_error(error) do
+    error = Exception.normalize(:error, error, [])
+
+    %{__struct__: error_mod} = error
+
+    new(
+      Honeybadger.Utils.module_to_string(error_mod),
+      metadata: %{message: error_mod.message(error)},
+      category: :error
+    )
+  end
 end

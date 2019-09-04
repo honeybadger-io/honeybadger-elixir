@@ -1,4 +1,6 @@
 defmodule Honeybadger.Logger do
+  alias Honeybadger.Breadcrumbs.{Collector, Breadcrumb}
+
   @moduledoc false
 
   @behaviour :gen_event
@@ -32,10 +34,10 @@ defmodule Honeybadger.Logger do
 
     case Keyword.get(metadata, :crash_reason) do
       {reason, stacktrace} ->
-        Honeybadger.notify(reason, full_context, stacktrace)
+        notify(reason, full_context, stacktrace)
 
       reason when is_atom(reason) and not is_nil(reason) ->
-        Honeybadger.notify(reason, full_context, [])
+        notify(reason, full_context, [])
 
       _ ->
         :ok
@@ -64,6 +66,19 @@ defmodule Honeybadger.Logger do
   end
 
   ## Helpers
+
+  defp notify(reason, metadata, stacktrace) do
+    breadcrumbs =
+      Map.get(metadata, Collector.metadata_key(), Collector.breadcrumbs())
+      |> Collector.add(Breadcrumb.from_error(reason))
+
+    metadata_with_breadcrumbs =
+      metadata
+      |> Map.delete(Collector.metadata_key())
+      |> Map.put(:breadcrumbs, breadcrumbs)
+
+    Honeybadger.notify(reason, metadata_with_breadcrumbs, stacktrace)
+  end
 
   @standard_metadata ~w(ancestors callers crash_reason file function line module pid)a
 

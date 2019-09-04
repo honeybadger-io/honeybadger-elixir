@@ -17,6 +17,23 @@ defmodule Honeybadger.Breadcrumbs.CollectorTest do
     end)
   end
 
+  test "runs metadata through sanitizer" do
+    with_config([breadcrumbs_enabled: true], fn ->
+      bc1 =
+        Breadcrumb.new("test1",
+          metadata: %{
+            key1: %{key2: 12}
+          }
+        )
+
+      Collector.add(bc1)
+
+      assert List.first(Collector.output()[:trail]).metadata == %{
+               key1: "[DEPTH]"
+             }
+    end)
+  end
+
   test "ignores when breadcrumbs are disabled" do
     Collector.add("test1")
     Collector.add("test2")
@@ -33,6 +50,18 @@ defmodule Honeybadger.Breadcrumbs.CollectorTest do
       Collector.clear()
 
       assert Collector.output()[:trail] == []
+    end)
+  end
+
+  test "allows updated with more pure function implementations" do
+    with_config([breadcrumbs_enabled: true], fn ->
+      bc = Breadcrumb.new("test1", [])
+
+      breadcrumbs =
+        Collector.breadcrumbs()
+        |> Collector.add(bc)
+
+      assert Collector.output(breadcrumbs)[:trail] == [bc]
     end)
   end
 end
