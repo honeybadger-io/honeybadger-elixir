@@ -167,6 +167,8 @@ defmodule Honeybadger do
       _ = Logger.add_backend(Honeybadger.Logger)
     end
 
+    Honeybadger.Breadcrumbs.Telemetry.attach()
+
     children = [
       worker(Client, [config])
     ]
