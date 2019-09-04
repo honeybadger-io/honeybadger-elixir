@@ -81,7 +81,7 @@ defmodule Honeybadger.Utils do
     Enum.map(v, &sanitize_val(&1, Map.put(opts, :depth, depth + 1)))
   end
 
-  defp sanitize_val(v, %{max_string_size: max_string_size} = opts) when is_binary(v) do
+  defp sanitize_val(v, %{max_string_size: max_string_size}) when is_binary(v) do
     if String.valid?(v) and String.length(v) > max_string_size do
       String.slice(v, 0, max_string_size) <> @truncated_token
     else
@@ -89,5 +89,5 @@ defmodule Honeybadger.Utils do
     end
   end
 
-  defp sanitize_val(v, opts), do: v
+  defp sanitize_val(v, _), do: v
 end
