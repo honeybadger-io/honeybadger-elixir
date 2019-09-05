@@ -352,7 +352,7 @@ defmodule Honeybadger do
         s when is_binary(s) ->
           s
 
-        s when is_atom(s) ->
+        s when is_atom(s) and not is_nil(s) ->
           Exception.normalize(:error, s)
           |> Map.get(:message, to_string(s))
 
