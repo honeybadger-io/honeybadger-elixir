@@ -256,7 +256,7 @@ defmodule Honeybadger do
       })
       => :ok
   """
-  @spec add_breadcrumb(String.t(), [{:metadata, map()} | {:category, String.t()}]) :: :ok
+  @spec add_breadcrumb(String.t(), Breadcrumb.opts()) :: :ok
   def add_breadcrumb(message, opts \\ []) when is_binary(message) and is_list(opts) do
     Collector.add(Breadcrumb.new(message, opts))
   end

@@ -10,6 +10,7 @@ defmodule Honeybadger.Breadcrumbs.Breadcrumb do
           metadata: map()
         }
 
+  @type opts :: [{:metadata, map()} | {:category, String.t()}]
   @enforce_keys [:message, :category, :timestamp, :metadata]
 
   @default_category "custom"
@@ -17,6 +18,7 @@ defmodule Honeybadger.Breadcrumbs.Breadcrumb do
 
   defstruct [:message, :category, :timestamp, :metadata]
 
+  @spec new(String.t(), opts()) :: t()
   def new(message, opts) do
     %__MODULE__{
       message: message,
@@ -35,7 +37,7 @@ defmodule Honeybadger.Breadcrumbs.Breadcrumb do
     new(
       Honeybadger.Utils.module_to_string(error_mod),
       metadata: %{message: error_mod.message(error)},
-      category: :error
+      category: "error"
     )
   end
 end
