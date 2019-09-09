@@ -53,13 +53,13 @@ defmodule Honeybadger.Breadcrumbs.CollectorTest do
     end)
   end
 
-  test "allows updated with more pure function implementations" do
+  test "allows put operation on supplied breadcrumb buffer" do
     with_config([breadcrumbs_enabled: true], fn ->
       bc = Breadcrumb.new("test1", [])
 
       breadcrumbs =
         Collector.breadcrumbs()
-        |> Collector.add(bc)
+        |> Collector.put(bc)
 
       assert Collector.output(breadcrumbs)[:trail] == [bc]
     end)

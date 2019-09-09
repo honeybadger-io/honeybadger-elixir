@@ -224,12 +224,13 @@ defmodule Honeybadger do
     breadcrumbs =
       metadata
       |> Map.get(:breadcrumbs, Collector.breadcrumbs())
-      |> Collector.add(notice_breadcrumb(exception))
+      |> Collector.put(notice_breadcrumb(exception))
+      |> Collector.output()
 
     metadata_with_breadcrumbs =
       metadata
-      |> contextual_metadata
-      |> Map.put(:breadcrumbs, Collector.output(breadcrumbs))
+      |> contextual_metadata()
+      |> Map.put(:breadcrumbs, breadcrumbs)
 
     exception
     |> Notice.new(metadata_with_breadcrumbs, stacktrace)
@@ -255,8 +256,8 @@ defmodule Honeybadger do
       })
       => :ok
   """
-  @spec add_breadcrumb(String.t(), metadata: map(), category: String.t()) :: :ok | nil
-  def add_breadcrumb(message, opts \\ []) do
+  @spec add_breadcrumb(String.t(), [{:metadata, map()} | {:category, String.t()}]) :: :ok
+  def add_breadcrumb(message, opts \\ []) when is_binary(message) and is_list(opts) do
     Collector.add(Breadcrumb.new(message, opts))
   end
 
@@ -349,12 +350,13 @@ defmodule Honeybadger do
   defp notice_breadcrumb(exception) do
     reason =
       case exception do
-        s when is_binary(s) ->
-          s
+        title when is_binary(title) ->
+          title
 
-        s when is_atom(s) and not is_nil(s) ->
-          Exception.normalize(:error, s)
-          |> Map.get(:message, to_string(s))
+        error when is_atom(error) and not is_nil(error) ->
+          :error
+          |> Exception.normalize(error)
+          |> Map.get(:message, to_string(error))
 
         _ ->
           nil

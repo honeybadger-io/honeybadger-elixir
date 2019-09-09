@@ -44,7 +44,7 @@ defmodule Honeybadger.Filter.Mixin do
       end
 
       def filter_map(map, keys) when is_list(keys) do
-        filter_keys = Enum.map(keys, &Honeybadger.Utils.canonicalize(&1))
+        filter_keys = Enum.map(keys, &Honeybadger.Utils.canonicalize/1)
 
         drop_keys =
           Enum.filter(

@@ -1,5 +1,7 @@
 defmodule Honeybadger.Breadcrumbs.Collector do
-  @moduledoc """
+  @moduledoc false
+
+  @doc """
   The Collector provides an interface for accessing and affecting the current
   set of breadcrumbs. Most operations are delegated to the supplied Buffer
   implementation. This is mainly for internal use.
@@ -25,19 +27,21 @@ defmodule Honeybadger.Breadcrumbs.Collector do
     }
   end
 
-  @spec add(@buffer_impl.t(), Breadcrumb.t()) :: @buffer_impl.t()
-  def add(breadcrumbs, breadcrumb) do
+  @spec put(@buffer_impl.t(), Breadcrumb.t()) :: @buffer_impl.t()
+  def put(breadcrumbs, breadcrumb) do
     @buffer_impl.add(
       breadcrumbs,
       Map.update(breadcrumb, :metadata, %{}, &Utils.sanitize(&1, max_depth: 1))
     )
   end
 
-  @spec add(Breadcrumb.t()) :: :ok | nil
+  @spec add(Breadcrumb.t()) :: :ok
   def add(breadcrumb) do
     if Honeybadger.get_env(:breadcrumbs_enabled) do
-      Logger.metadata([{@metadata_key, add(breadcrumbs(), breadcrumb)}])
+      Logger.metadata([{@metadata_key, put(breadcrumbs(), breadcrumb)}])
     end
+
+    :ok
   end
 
   @spec clear() :: :ok

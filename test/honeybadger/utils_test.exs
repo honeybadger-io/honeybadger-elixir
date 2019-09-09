@@ -7,13 +7,19 @@ defmodule Honeybadger.UtilsTest do
   test "sanitize drops nested hash based on depth" do
     item = %{
       a: %{
-        b: 12
+        b: 12,
+        m: %{
+          j: 3
+        }
       },
       c: "string"
     }
 
-    assert Utils.sanitize(item, max_depth: 1) == %{
-             a: "[DEPTH]",
+    assert Utils.sanitize(item, max_depth: 2) == %{
+             a: %{
+               b: 12,
+               m: "[DEPTH]"
+             },
              c: "string"
            }
   end

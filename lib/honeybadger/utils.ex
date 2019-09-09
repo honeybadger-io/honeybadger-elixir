@@ -20,6 +20,12 @@ defmodule Honeybadger.Utils do
 
   @doc """
   Transform value into a consistently cased string representation
+
+  # Example
+
+      iex> Honeybadger.Utils.canonicalize(:User_SSN)
+      "user_ssn"
+
   """
   def canonicalize(val) do
     val
@@ -34,12 +40,13 @@ defmodule Honeybadger.Utils do
   - constrains large string values (to 64k)
   - filters out any map keys that might contain sensitive information.
   """
-  @default_max_string_size 65526
-  @default_max_depth 20
-
   @depth_token "[DEPTH]"
   @truncated_token "[TRUNCATED]"
   @filtered_token "[FILTERED]"
+
+  # 64k with enough space to concat truncated_token
+  @default_max_string_size 64 * 1024 - 11
+  @default_max_depth 20
 
   def sanitize(value, opts \\ []) do
     base = %{
@@ -64,17 +71,13 @@ defmodule Honeybadger.Utils do
   end
 
   defp sanitize_val(v, %{depth: depth, filter_keys: filter_keys} = opts) when is_map(v) do
-    Enum.reduce(v, %{}, fn {key, value}, acc ->
-      Map.put(
-        acc,
-        key,
-        if MapSet.member?(filter_keys, canonicalize(key)) do
-          @filtered_token
-        else
-          sanitize_val(value, Map.put(opts, :depth, depth + 1))
-        end
-      )
-    end)
+    for {key, val} <- v, into: %{} do
+      if MapSet.member?(filter_keys, canonicalize(key)) do
+        {key, @filtered_token}
+      else
+        {key, sanitize_val(val, Map.put(opts, :depth, depth + 1))}
+      end
+    end
   end
 
   defp sanitize_val(v, %{depth: depth} = opts) when is_list(v) do

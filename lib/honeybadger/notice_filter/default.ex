@@ -30,7 +30,7 @@ defmodule Honeybadger.NoticeFilter.Default do
   end
 
   defp filter_breadcrumbs(breadcrumbs, filter) do
-    Map.update(breadcrumbs, :trail, %{}, &filter.filter_breadcrumbs(&1))
+    Map.update(breadcrumbs, :trail, %{}, &filter.filter_breadcrumbs/1)
   end
 
   defp apply_filter(request, key, filter_fn) do

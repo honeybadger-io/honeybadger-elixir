@@ -1,12 +1,16 @@
 defmodule Honeybadger.Breadcrumbs.RingBuffer do
-  @type t :: %__MODULE__{buffer: [any()], size: integer(), ct: integer()}
+  @moduledoc false
 
-  defstruct [:buffer, :size, :ct]
+  @type t :: %__MODULE__{buffer: [any()], size: pos_integer(), ct: non_neg_integer()}
 
+  defstruct [:size, buffer: [], ct: 0]
+
+  @spec new(pos_integer()) :: t()
   def new(size) do
-    %__MODULE__{buffer: [], size: size, ct: 0}
+    %__MODULE__{size: size}
   end
 
+  @spec add(t(), any()) :: t()
   def add(ring = %{ct: ct, size: ct, buffer: [_head | rest]}, item) do
     %__MODULE__{ring | buffer: rest ++ [item]}
   end
@@ -15,5 +19,6 @@ defmodule Honeybadger.Breadcrumbs.RingBuffer do
     %__MODULE__{ring | buffer: buffer ++ [item], ct: ct + 1}
   end
 
+  @spec to_list(t()) :: [any()]
   def to_list(%{buffer: buffer}), do: buffer
 end

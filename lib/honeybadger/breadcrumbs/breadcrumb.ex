@@ -1,4 +1,6 @@
 defmodule Honeybadger.Breadcrumbs.Breadcrumb do
+  @moduledoc false
+
   @derive Jason.Encoder
 
   @type t :: %__MODULE__{
@@ -9,17 +11,22 @@ defmodule Honeybadger.Breadcrumbs.Breadcrumb do
         }
 
   @enforce_keys [:message, :category, :timestamp, :metadata]
+
+  @default_category "custom"
+  @default_metadata %{}
+
   defstruct [:message, :category, :timestamp, :metadata]
 
   def new(message, opts) do
     %__MODULE__{
       message: message,
-      category: opts[:category] || "custom",
+      category: opts[:category] || @default_category,
       timestamp: DateTime.utc_now(),
-      metadata: opts[:metadata] || %{}
+      metadata: opts[:metadata] || @default_metadata
     }
   end
 
+  @spec from_error(any()) :: t()
   def from_error(error) do
     error = Exception.normalize(:error, error, [])
 
