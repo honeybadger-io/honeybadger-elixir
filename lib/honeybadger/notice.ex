@@ -26,7 +26,7 @@ defmodule Honeybadger.Notice do
 
   @url get_in(Honeybadger.Mixfile.project(), [:package, :links, "GitHub"])
   @version Honeybadger.Mixfile.project()[:version]
-  @notifier %{name: "Honeybadger Elixir Notifier", url: @url, version: @version}
+  @notifier %{name: "honeybadger-elixir", language: "elixir", url: @url, version: @version}
 
   @derive Jason.Encoder
   @enforce_keys [:breadcrumbs, :notifier, :server, :error, :request]

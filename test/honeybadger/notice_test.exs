@@ -26,7 +26,8 @@ defmodule Honeybadger.NoticeTest do
 
   test "notifier information", %{notice: %Notice{notifier: notifier}} do
     assert "https://github.com/honeybadger-io/honeybadger-elixir" == notifier[:url]
-    assert "Honeybadger Elixir Notifier" == notifier[:name]
+    assert "honeybadger-elixir" == notifier[:name]
+    assert "elixir" == notifier[:language]
     assert Honeybadger.Mixfile.project()[:version] == notifier[:version]
   end
 
