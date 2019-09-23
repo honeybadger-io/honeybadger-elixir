@@ -229,6 +229,7 @@ defmodule Honeybadger do
 
     metadata_with_breadcrumbs =
       metadata
+      |> Map.delete(:breadcrumbs)
       |> contextual_metadata()
       |> Map.put(:breadcrumbs, breadcrumbs)
 
