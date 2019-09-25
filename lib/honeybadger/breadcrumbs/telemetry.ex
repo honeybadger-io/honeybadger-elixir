@@ -1,22 +1,26 @@
 defmodule Honeybadger.Breadcrumbs.Telemetry do
   @moduledoc false
 
+  @spec telemetry_events() :: [[atom()]]
   def telemetry_events do
     []
     |> append_phoenix_events()
     |> append_ecto_events()
   end
 
+  @spec attach() :: :ok
   def attach do
-    cond do
-      # Allows for supporting < v0.3.0 telemetry
-      Code.ensure_compiled?(Telemetry) ->
-        Telemetry.attach_many("hb-telemetry", telemetry_events(), __MODULE__, :handle_telemetry, nil)
-      Code.ensure_compiled?(:telemetry) ->
-        :telemetry.attach_many("hb-telemetry", telemetry_events(), &handle_telemetry/4, nil)
-    end
+    :telemetry.attach_many(
+      "hb-telemetry",
+      telemetry_events(),
+      &handle_telemetry/4,
+      nil
+    )
+
+    :ok
   end
 
+  @spec append_phoenix_events([[atom()]]) :: [[atom()]]
   defp append_phoenix_events(events) do
     Enum.concat(
       events,
@@ -24,20 +28,25 @@ defmodule Honeybadger.Breadcrumbs.Telemetry do
     )
   end
 
+  @spec append_ecto_events([[atom()]]) :: [[atom()]]
   defp append_ecto_events(events) do
     case Honeybadger.get_env(:ecto_repos) do
       repos when is_list(repos) ->
         repos
         |> Enum.map(&get_telemetry_prefix/1)
         |> Enum.concat(events)
+
       _ ->
         events
     end
   end
 
+  @spec get_telemetry_prefix(Ecto.Repo.t()) :: [atom()]
   defp get_telemetry_prefix(repo) do
     case Keyword.get(repo.config(), :telemetry_prefix) do
-      nil -> []
+      nil ->
+        []
+
       telemetry_prefix ->
         telemetry_prefix ++ [:query]
     end
@@ -65,7 +74,8 @@ defmodule Honeybadger.Breadcrumbs.Telemetry do
   end
 
   defp handle_sql(meta) do
-    metadata = meta
+    metadata =
+      meta
       |> Map.take([:query, :decode_time, :query_time, :queue_time, :source])
       |> Map.update(:decode_time, nil, &time_format/1)
       |> Map.update(:query_time, nil, &time_format/1)

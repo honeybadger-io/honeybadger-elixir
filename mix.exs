@@ -22,7 +22,7 @@ defmodule Honeybadger.Mixfile do
 
       # Dialyzer
       dialyzer: [
-        plt_add_apps: [:plug, :mix],
+        plt_add_apps: [:plug, :mix, :ecto],
         flags: [:error_handling, :race_conditions, :underspecs]
       ],
 
@@ -67,8 +67,9 @@ defmodule Honeybadger.Mixfile do
       {:hackney, "~> 1.1"},
       {:jason, "~> 1.0"},
       {:plug, ">= 1.0.0 and < 2.0.0", optional: true},
+      {:ecto, ">= 2.0.0", optional: true},
       {:phoenix, ">= 1.0.0 and < 2.0.0", optional: true},
-      {:telemetry, ">= 0.2.0"},
+      {:telemetry, "~> 0.4"},
 
       # Dev dependencies
       {:ex_doc, "~> 0.7", only: :dev, runtime: false},
