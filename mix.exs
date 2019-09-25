@@ -43,6 +43,7 @@ defmodule Honeybadger.Mixfile do
         api_key: {:system, "HONEYBADGER_API_KEY"},
         app: nil,
         breadcrumbs_enabled: false,
+        ecto_repos: nil,
         environment_name: Mix.env(),
         exclude_envs: [:dev, :test],
         origin: "https://api.honeybadger.io",
@@ -67,7 +68,7 @@ defmodule Honeybadger.Mixfile do
       {:jason, "~> 1.0"},
       {:plug, ">= 1.0.0 and < 2.0.0", optional: true},
       {:phoenix, ">= 1.0.0 and < 2.0.0", optional: true},
-      {:telemetry, "~> 0.4"},
+      {:telemetry, ">= 0.2.0"},
 
       # Dev dependencies
       {:ex_doc, "~> 0.7", only: :dev, runtime: false},
