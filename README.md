@@ -150,12 +150,12 @@ config :honeybadger,
 We leverage the `telemetry` library to automatically create breadcrumbs from
 specific events.
 
-#### Phoenix
+__Phoenix__
 
 If you are using `phoenix` (>= v1.4.7) we add a breadcrumb from the router
 start event.
 
-#### Ecto
+__Ecto__
 
 We can create breadcrumbs from Ecto SQL calls if you are using `ecto_sql` (>=
 v3.1.0). You also must specify in the config which ecto adapters you want to
@@ -304,6 +304,8 @@ data to your breadcrumb trace in effort to help debugging. If a notice is
 reported to Honeybadger, all breadcrumbs within the execution path will be
 appended to the notice. You will be able to view the breadcrumb trace in the
 Honeybadger interface to see what events led up to the notice.
+
+#### Examples:
 
 ```elixir
 Honeybadger.add_breadcrumb("Email sent", metadata: %{
