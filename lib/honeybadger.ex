@@ -16,6 +16,8 @@ defmodule Honeybadger do
         environment_name: :prod,
         app: :my_app_name,
         exclude_envs: [:dev, :test],
+        breadcrumbs_enabled: false,
+        ecto_repos: [MyAppName.Ecto.Repo],
         hostname: "myserver.domain.com",
         origin: "https://api.honeybadger.io",
         proxy: "http://proxy.net:PORT",
@@ -122,11 +124,17 @@ defmodule Honeybadger do
 
   See `Honeybadger.Filter` for details on implementing your own filter.
 
-  ### Adding Breadcrumbs
+  ### Breadcrumbs
 
   Breadcrumbs allow you to record events along a processes execution path. If
   an error is thrown, the set of breadcrumb events will be sent along with the
   notice. These breadcrumbs can contain useful hints while debugging.
+
+  Breadcrumbs are stored in the logger context, referenced by the calling
+  process. If you are sending messages between processes, breadcrumbs will not
+  transfer automatically. Since a typical system might have many processes, it
+  is advised that you be conservative when storing breadcrumbs as each
+  breadcrumb consumes memory.
 
   Ensure that you enable breadcrumbs in the config (as it is disabled by
   default):
@@ -134,7 +142,26 @@ defmodule Honeybadger do
       config :honeybadger,
         breadcrumbs_enabled: true
 
-  See `Honeybadger.add_breadcrumb` for more information.
+  See `Honeybadger.add_breadcrumb` for info on how to add custom breadcrumbs.
+
+  ### Automatic Breadcrumbs
+
+  We leverage the `telemetry` library to automatically create breadcrumbs from
+  specific events.
+
+  #### Phoenix
+
+  If you are using `phoenix` (>= v1.4.7) we add a breadcrumb from the router
+  start event.
+
+  #### Ecto
+
+  We can create breadcrumbs from Ecto SQL calls if you are using `ecto_sql` (>=
+  v3.1.0). You also must specify in the config which ecto adapters you want to
+  be instrumented:
+
+      config :honeybadger,
+        ecto_repos: [MyApp.Repo]
   """
 
   use Application
@@ -243,19 +270,24 @@ defmodule Honeybadger do
   @doc """
   Stores a breadcrumb item.
 
-  In the case of an error, the set of breadcrumbs (trail) will be reported
-  along side the notice to help with debugging.
+  Appends a breadcrumb to the notice. Use this when you want to add some custom
+  data to your breadcrumb trace in effort to help debugging. If a notice is
+  reported to Honeybadger, all breadcrumbs within the execution path will be
+  appended to the notice. You will be able to view the breadcrumb trace in the
+  Honeybadger interface to see what events led up to the notice.
 
-  Breadcrumbs are stored along with the logger context, referenced by the
-  calling process. If you are sending messages between processes, breadcrumbs
-  will not transfer automatically. Since a typical system might have many
-  processes, it is advised that you be conservative when storing breadcrumbs as
-  each breadcrumb consumes memory.
+  ## Breadcrumb with metadata
 
-  ## Example
-
-      Honeybadger.add_breadcrumb("Email Sent", metadata: %{
+      honeybadger.add_breadcrumb("email sent", metadata: %{
         user: user.id, message: message
+      })
+      => :ok
+
+  ## Breadcrumb with specified category. This will display a query icon in the interface
+
+      honeybadger.add_breadcrumb("ETS Lookup", category: "query", metadata: %{
+        key: key,
+        value: value
       })
       => :ok
   """
