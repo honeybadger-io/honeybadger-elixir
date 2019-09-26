@@ -278,14 +278,14 @@ defmodule Honeybadger do
 
   ## Breadcrumb with metadata
 
-      honeybadger.add_breadcrumb("email sent", metadata: %{
+      Honeybadger.add_breadcrumb("email sent", metadata: %{
         user: user.id, message: message
       })
       => :ok
 
   ## Breadcrumb with specified category. This will display a query icon in the interface
 
-      honeybadger.add_breadcrumb("ETS Lookup", category: "query", metadata: %{
+      Honeybadger.add_breadcrumb("ETS Lookup", category: "query", metadata: %{
         key: key,
         value: value
       })
