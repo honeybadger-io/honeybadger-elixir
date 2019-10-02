@@ -16,6 +16,8 @@ defmodule Honeybadger do
         environment_name: :prod,
         app: :my_app_name,
         exclude_envs: [:dev, :test],
+        breadcrumbs_enabled: false,
+        ecto_repos: [MyAppName.Ecto.Repo],
         hostname: "myserver.domain.com",
         origin: "https://api.honeybadger.io",
         proxy: "http://proxy.net:PORT",
@@ -121,11 +123,51 @@ defmodule Honeybadger do
       end
 
   See `Honeybadger.Filter` for details on implementing your own filter.
+
+  ### Breadcrumbs
+
+  Breadcrumbs allow you to record events along a processes execution path. If
+  an error is thrown, the set of breadcrumb events will be sent along with the
+  notice. These breadcrumbs can contain useful hints while debugging.
+
+  Breadcrumbs are stored in the logger context, referenced by the calling
+  process. If you are sending messages between processes, breadcrumbs will not
+  transfer automatically. Since a typical system might have many processes, it
+  is advised that you be conservative when storing breadcrumbs as each
+  breadcrumb consumes memory.
+
+  Ensure that you enable breadcrumbs in the config (as it is disabled by
+  default):
+
+      config :honeybadger,
+        breadcrumbs_enabled: true
+
+  See `Honeybadger.add_breadcrumb` for info on how to add custom breadcrumbs.
+
+  ### Automatic Breadcrumbs
+
+  We leverage the `telemetry` library to automatically create breadcrumbs from
+  specific events.
+
+  #### Phoenix
+
+  If you are using `phoenix` (>= v1.4.7) we add a breadcrumb from the router
+  start event.
+
+  #### Ecto
+
+  We can create breadcrumbs from Ecto SQL calls if you are using `ecto_sql` (>=
+  v3.1.0). You also must specify in the config which ecto adapters you want to
+  be instrumented:
+
+      config :honeybadger,
+        ecto_repos: [MyApp.Repo]
   """
 
   use Application
 
   alias Honeybadger.{Client, Notice}
+  alias Honeybadger.Breadcrumbs.{Collector, Breadcrumb}
 
   defmodule MissingEnvironmentNameError do
     defexception message: """
@@ -150,6 +192,10 @@ defmodule Honeybadger do
 
     if config[:use_logger] do
       _ = Logger.add_backend(Honeybadger.Logger)
+    end
+
+    if config[:breadcrumbs_enabled] do
+      Honeybadger.Breadcrumbs.Telemetry.attach()
     end
 
     children = [
@@ -203,9 +249,51 @@ defmodule Honeybadger do
   """
   @spec notify(Notice.noticeable(), map(), list()) :: :ok
   def notify(exception, metadata \\ %{}, stacktrace \\ []) do
+    # Grab process local breadcrumbs if not passed with call and add notice breadcrumb
+    breadcrumbs =
+      metadata
+      |> Map.get(:breadcrumbs, Collector.breadcrumbs())
+      |> Collector.put(notice_breadcrumb(exception))
+      |> Collector.output()
+
+    metadata_with_breadcrumbs =
+      metadata
+      |> Map.delete(:breadcrumbs)
+      |> contextual_metadata()
+      |> Map.put(:breadcrumbs, breadcrumbs)
+
     exception
-    |> Notice.new(contextual_metadata(metadata), stacktrace)
+    |> Notice.new(metadata_with_breadcrumbs, stacktrace)
     |> Client.send_notice()
+  end
+
+  @doc """
+  Stores a breadcrumb item.
+
+  Appends a breadcrumb to the notice. Use this when you want to add some custom
+  data to your breadcrumb trace in effort to help debugging. If a notice is
+  reported to Honeybadger, all breadcrumbs within the execution path will be
+  appended to the notice. You will be able to view the breadcrumb trace in the
+  Honeybadger interface to see what events led up to the notice.
+
+  ## Breadcrumb with metadata
+
+      Honeybadger.add_breadcrumb("email sent", metadata: %{
+        user: user.id, message: message
+      })
+      => :ok
+
+  ## Breadcrumb with specified category. This will display a query icon in the interface
+
+      Honeybadger.add_breadcrumb("ETS Lookup", category: "query", metadata: %{
+        key: key,
+        value: value
+      })
+      => :ok
+  """
+  @spec add_breadcrumb(String.t(), Breadcrumb.opts()) :: :ok
+  def add_breadcrumb(message, opts \\ []) when is_binary(message) and is_list(opts) do
+    Collector.add(Breadcrumb.new(message, opts))
   end
 
   @doc """
@@ -216,7 +304,7 @@ defmodule Honeybadger do
   """
   @spec context() :: map()
   def context do
-    Logger.metadata() |> Map.new()
+    Logger.metadata() |> Map.new() |> Map.delete(Collector.metadata_key())
   end
 
   @doc """
@@ -290,6 +378,30 @@ defmodule Honeybadger do
   end
 
   # Helpers
+
+  # Allows for Notice breadcrumb to have custom text as message if an error is
+  # not passed to the notice function. We can assume if it was passed an error
+  # then there will be an error breadcrumb right before this one.
+  defp notice_breadcrumb(exception) do
+    reason =
+      case exception do
+        title when is_binary(title) ->
+          title
+
+        error when is_atom(error) and not is_nil(error) ->
+          :error
+          |> Exception.normalize(error)
+          |> Map.get(:message, to_string(error))
+
+        _ ->
+          nil
+      end
+
+    ["Honeybadger Notice", reason]
+    |> Enum.reject(&is_nil/1)
+    |> Enum.join(": ")
+    |> Breadcrumb.new(category: "notice")
+  end
 
   defp put_dynamic_env(config) do
     hostname = fn ->

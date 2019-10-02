@@ -119,6 +119,53 @@ rescue
 end
 ```
 
+## Breadcrumbs
+
+Breadcrumbs allow you to record events along a processes execution path. If
+an error is thrown, the set of breadcrumb events will be sent along with the
+notice. These breadcrumbs can contain useful hints while debugging.
+
+Breadcrumbs are stored in the logger context, referenced by the calling
+process. If you are sending messages between processes, breadcrumbs will not
+transfer automatically. Since a typical system might have many processes, it
+is advised that you be conservative when storing breadcrumbs as each
+breadcrumb consumes memory.
+
+### Enabling Breadcrumbs
+
+As of version `0.13.0`, Breadcrumbs are _available_ yet _disabled_. You must
+explicitly enable them if you want breadcrumbs to be reported. We plan on
+enabling this by default in a future release.
+
+Toggle `breadcrumbs_enabled` in the config to start sending Breadcrumbs with
+notices:
+
+```elixir
+config :honeybadger,
+  breadcrumbs_enabled: true
+```
+
+### Automatic Breadcrumbs
+
+We leverage the `telemetry` library to automatically create breadcrumbs from
+specific events.
+
+__Phoenix__
+
+If you are using `phoenix` (>= v1.4.7) we add a breadcrumb from the router
+start event.
+
+__Ecto__
+
+We can create breadcrumbs from Ecto SQL calls if you are using `ecto_sql` (>=
+v3.1.0). You also must specify in the config which ecto adapters you want to
+be instrumented:
+
+```elixir
+config :honeybadger,
+  ecto_repos: [MyApp.Repo]
+```
+
 ## Sample Application
 
 If you'd like to see the module in action before you integrate it with your apps, check out our [sample Phoenix application](https://github.com/honeybadger-io/crywolf-elixir).
@@ -187,6 +234,8 @@ Here are all of the options you can pass in the keyword list:
 | `filter_disable_params`  | If true, will remove the request params                                                       | `false`                                  |
 | `notice_filter`          | Module implementing `Honeybadger.NoticeFilter`. If `nil`, no filtering is done.               | `Honeybadger.NoticeFilter.Default`       |
 | `use_logger`             | Enable the Honeybadger Logger for handling errors outside of web requests                     | `true`                                   |
+| `breadcrumbs_enabled`    | Enable breadcrumb event tracking                                                              | `false`                                  |
+| `ecto_repos`             | Modules with implemented Ecto.Repo behaviour for tracking SQL breadcrumb events               | `[]`                                    |
 
 ## Public Interface
 
@@ -244,6 +293,25 @@ Task.start(fn ->
   # as this runs in a different elixir/erlang process.
   Honeybadger.notify(%RuntimeError{message: "critical error"})
 end)
+```
+
+---
+
+### `Honeybadger.add_breadcrumb/2`: Store breadcrumb within process
+
+Appends a breadcrumb to the notice. Use this when you want to add some custom
+data to your breadcrumb trace in effort to help debugging. If a notice is
+reported to Honeybadger, all breadcrumbs within the execution path will be
+appended to the notice. You will be able to view the breadcrumb trace in the
+Honeybadger interface to see what events led up to the notice.
+
+#### Examples:
+
+```elixir
+Honeybadger.add_breadcrumb("Email sent", metadata: %{
+  user: user.id,
+  message: message
+})
 ```
 
 ---

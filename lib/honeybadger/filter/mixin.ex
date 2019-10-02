@@ -36,6 +36,7 @@ defmodule Honeybadger.Filter.Mixin do
       def filter_cgi_data(cgi_data), do: filter_map(cgi_data)
       def filter_session(session), do: filter_map(session)
       def filter_error_message(message), do: message
+      def filter_breadcrumbs(breadcrumbs), do: breadcrumbs
 
       @doc false
       def filter_map(map) do
@@ -43,8 +44,13 @@ defmodule Honeybadger.Filter.Mixin do
       end
 
       def filter_map(map, keys) when is_list(keys) do
-        filter_keys = Enum.map(keys, &canonicalize(&1))
-        drop_keys = Enum.filter(Map.keys(map), &Enum.member?(filter_keys, canonicalize(&1)))
+        filter_keys = Enum.map(keys, &Honeybadger.Utils.canonicalize/1)
+
+        drop_keys =
+          Enum.filter(
+            Map.keys(map),
+            &Enum.member?(filter_keys, Honeybadger.Utils.canonicalize(&1))
+          )
 
         Map.drop(map, drop_keys)
       end
@@ -53,17 +59,12 @@ defmodule Honeybadger.Filter.Mixin do
         map
       end
 
-      defp canonicalize(key) do
-        key
-        |> to_string()
-        |> String.downcase()
-      end
-
       defoverridable filter_context: 1,
                      filter_params: 1,
                      filter_cgi_data: 1,
                      filter_session: 1,
-                     filter_error_message: 1
+                     filter_error_message: 1,
+                     filter_breadcrumbs: 1
     end
   end
 end

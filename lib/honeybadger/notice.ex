@@ -2,6 +2,7 @@ defmodule Honeybadger.Notice do
   @doc false
 
   alias Honeybadger.{Backtrace, Utils}
+  alias Honeybadger.Breadcrumbs.{Collector}
 
   @type error :: %{class: atom | iodata, message: iodata, tags: list, backtrace: list}
   @type notifier :: %{name: String.t(), url: String.t(), version: String.t()}
@@ -19,16 +20,17 @@ defmodule Honeybadger.Notice do
           notifier: notifier(),
           server: server(),
           error: error(),
+          breadcrumbs: Collector.t(),
           request: map()
         }
 
   @url get_in(Honeybadger.Mixfile.project(), [:package, :links, "GitHub"])
   @version Honeybadger.Mixfile.project()[:version]
-  @notifier %{name: "Honeybadger Elixir Notifier", url: @url, version: @version}
+  @notifier %{name: "honeybadger-elixir", language: "elixir", url: @url, version: @version}
 
   @derive Jason.Encoder
-  @enforce_keys [:notifier, :server, :error, :request]
-  defstruct [:notifier, :server, :error, :request]
+  @enforce_keys [:breadcrumbs, :notifier, :server, :error, :request]
+  defstruct [:breadcrumbs, :notifier, :server, :error, :request]
 
   @spec new(noticeable(), map(), list()) :: t()
   def new(error, metadata, stacktrace)
@@ -55,7 +57,13 @@ defmodule Honeybadger.Notice do
       |> Map.get(:plug_env, %{})
       |> Map.put(:context, Map.get(metadata, :context, %{}))
 
-    filter(%__MODULE__{error: error, request: request, notifier: @notifier, server: server()})
+    filter(%__MODULE__{
+      breadcrumbs: Map.get(metadata, :breadcrumbs, %{}),
+      error: error,
+      request: request,
+      notifier: @notifier,
+      server: server()
+    })
   end
 
   defp filter(notice) do

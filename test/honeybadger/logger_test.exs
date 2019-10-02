@@ -6,7 +6,7 @@ defmodule Honeybadger.LoggerTest do
   setup do
     {:ok, _} = Honeybadger.API.start(self())
 
-    restart_with_config(exclude_envs: [])
+    restart_with_config(exclude_envs: [], breadcrumbs_enabled: true)
 
     on_exit(&Honeybadger.API.stop/0)
   end
@@ -32,7 +32,10 @@ defmodule Honeybadger.LoggerTest do
 
     GenServer.cast(pid, :raise_error)
 
-    assert_receive {:api_request, %{"error" => error, "request" => request}}
+    assert_receive {:api_request,
+                    %{"breadcrumbs" => breadcrumbs, "error" => error, "request" => request}}
+
+    assert List.first(breadcrumbs["trail"])["message"] == "KeyError"
 
     assert error["class"] == "KeyError"
 
@@ -63,7 +66,10 @@ defmodule Honeybadger.LoggerTest do
 
     :gen_event.notify(manager, :raise_error)
 
-    assert_receive {:api_request, %{"error" => error, "request" => request}}
+    assert_receive {:api_request,
+                    %{"breadcrumbs" => breadcrumbs, "error" => error, "request" => request}}
+
+    assert List.first(breadcrumbs["trail"])["message"] == "RuntimeError"
 
     assert error["class"] == "RuntimeError"
 
@@ -75,7 +81,10 @@ defmodule Honeybadger.LoggerTest do
   test "process raising an error" do
     pid = spawn(fn -> raise "Oops" end)
 
-    assert_receive {:api_request, %{"error" => error, "request" => request}}
+    assert_receive {:api_request,
+                    %{"breadcrumbs" => breadcrumbs, "error" => error, "request" => request}}
+
+    assert List.first(breadcrumbs["trail"])["message"] == "RuntimeError"
 
     assert error["class"] == "RuntimeError"
 
@@ -85,7 +94,10 @@ defmodule Honeybadger.LoggerTest do
   test "task with anonymous function raising an error" do
     Task.start(fn -> raise "Oops" end)
 
-    assert_receive {:api_request, %{"error" => error, "request" => request}}
+    assert_receive {:api_request,
+                    %{"breadcrumbs" => breadcrumbs, "error" => error, "request" => request}}
+
+    assert List.first(breadcrumbs["trail"])["message"] == "RuntimeError"
 
     assert error["class"] == "RuntimeError"
     assert error["message"] == "Oops"
@@ -101,7 +113,10 @@ defmodule Honeybadger.LoggerTest do
 
     Task.start(MyModule, :raise_error, ["my message"])
 
-    assert_receive {:api_request, %{"error" => error, "request" => request}}
+    assert_receive {:api_request,
+                    %{"breadcrumbs" => breadcrumbs, "error" => error, "request" => request}}
+
+    assert List.first(breadcrumbs["trail"])["metadata"]["message"] == "my message"
 
     assert request["context"]["function"] =~ "&Honeybadger.LoggerTest.MyModule.raise_error/1"
     assert request["context"]["args"] == ~s(["my message"])
@@ -114,7 +129,9 @@ defmodule Honeybadger.LoggerTest do
       raise "Oops"
     end)
 
-    assert_receive {:api_request, %{"request" => request}}
+    assert_receive {:api_request, %{"breadcrumbs" => breadcrumbs, "request" => request}}
+
+    assert List.first(breadcrumbs["trail"])["metadata"]["message"] == "Oops"
 
     assert request["context"]["age"] == 2
     assert request["context"]["name"] == "Danny"

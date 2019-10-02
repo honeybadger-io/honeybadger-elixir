@@ -15,6 +15,9 @@ defmodule Honeybadger.JSON do
     end
   end
 
+  # Keep from converting DateTime to a map
+  defp to_encodeable(%DateTime{} = datetime), do: datetime
+
   # struct
   defp to_encodeable(%_{} = struct) do
     struct

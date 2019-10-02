@@ -38,7 +38,7 @@ defmodule Honeybadger.PlugTest do
 
       on_exit(&Honeybadger.API.stop/0)
 
-      restart_with_config(exclude_envs: [])
+      restart_with_config(exclude_envs: [], breadcrumbs_enabled: true)
     end
 
     test "errors are reported" do
@@ -47,7 +47,9 @@ defmodule Honeybadger.PlugTest do
       assert %WrapperError{reason: reason} = catch_error(PlugApp.call(conn, []))
       assert %RuntimeError{message: "Oops"} = reason
 
-      assert_receive {:api_request, _}
+      assert_receive {:api_request, %{"breadcrumbs" => breadcrumbs}}
+
+      assert List.first(breadcrumbs["trail"])["metadata"]["message"] == "Oops"
     end
 
     test "not found errors for plug are ignored" do

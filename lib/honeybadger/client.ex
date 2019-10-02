@@ -24,7 +24,14 @@ defmodule Honeybadger.Client do
           url: binary()
         }
 
-  defstruct [:api_key, :enabled, :headers, :proxy, :proxy_auth, :url]
+  defstruct [
+    :api_key,
+    :enabled,
+    :headers,
+    :proxy,
+    :proxy_auth,
+    :url
+  ]
 
   # API
 

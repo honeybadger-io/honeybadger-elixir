@@ -1,4 +1,6 @@
 defmodule Honeybadger.Filter do
+  alias Honeybadger.Breadcrumbs.Breadcrumb
+
   @moduledoc """
   Specification of user overrideable filter functions.
 
@@ -38,4 +40,17 @@ defmodule Honeybadger.Filter do
   recently thrown error.
   """
   @callback filter_error_message(String.t()) :: String.t()
+
+  @doc """
+  Filter breadcrumbs. This filter function recieves a list of Breadcrumb
+  structs. You could use any Enum function to constrain the set. Let's say you
+  want to remove any breadcrumb that have metadata that contain SSN:
+
+  def filter_breadcrumbs(breadcrumbs) do
+    Enum.reject(breadcrumbs, fn breadcrumb -> do
+      Map.has_key?(breadcrumb.metadata, :ssn)
+    end)
+  end
+  """
+  @callback filter_breadcrumbs([Breadcrumb.t()]) :: [Breadcrumb.t()]
 end
