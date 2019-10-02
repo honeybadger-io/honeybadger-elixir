@@ -30,15 +30,9 @@ defmodule Honeybadger.Breadcrumbs.Telemetry do
 
   @spec append_ecto_events([[atom()]]) :: [[atom()]]
   defp append_ecto_events(events) do
-    case Honeybadger.get_env(:ecto_repos) do
-      repos ->
-        repos
-        |> Enum.map(&get_telemetry_prefix/1)
-        |> Enum.concat(events)
-
-      _ ->
-        events
-    end
+    Honeybadger.get_env(:ecto_repos)
+    |> Enum.map(&get_telemetry_prefix/1)
+    |> Enum.concat(events)
   end
 
   @spec get_telemetry_prefix(Ecto.Repo.t()) :: [atom()]
