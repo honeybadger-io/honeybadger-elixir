@@ -8,7 +8,8 @@ adheres to [Semantic Versioning](http://semver.org/).
 
 ## [v0.13.0] - 2019-10-02
 ### Added
-- Introducing Breadcrumbs (#235)! Just call `Honeybadger.add_breadcrumb`
+- Introducing Breadcrumbs (#235)! After enabling in the config with
+  `breadcrumbs_enabled: true`, just call `Honeybadger.add_breadcrumb/2`
   anywhere in your code and if an error is reported in that process, the
   breadcrumb event will be passed along with the Notice.
 
