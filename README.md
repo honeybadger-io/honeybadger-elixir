@@ -21,7 +21,7 @@ application's `mix.exs` file and run `mix do deps.get, deps.compile`
 
 ```elixir
 defp deps do
-  [{:honeybadger, "~> 0.7"}]
+  [{:honeybadger, "~> 0.12"}]
 end
 ```
 
