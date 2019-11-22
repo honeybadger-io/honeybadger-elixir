@@ -25,14 +25,6 @@ defp deps do
 end
 ```
 
-For Elixir versions _before_ 1.6, also add `:honeybadger` to `:applications`:
-
-```elixir
-defp application do
- [applications: [:honeybadger, :logger]]
-end
-```
-
 ### 2. Set your API key and environment name
 
 By default the environment variable `HONEYBADGER_API_KEY` will be used to find
