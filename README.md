@@ -16,16 +16,12 @@ Elixir Plug, Logger and client for the :zap: [Honeybadger error notifier](https:
 
 Prerequisites: minimum of Elixir 1.0 and Erlang 18.0
 
-Add the Honeybadger package to `deps/0` and `application/0` in your
+Add the Honeybadger package to `deps/0` in your
 application's `mix.exs` file and run `mix do deps.get, deps.compile`
 
 ```elixir
-defp application do
- [applications: [:honeybadger, :logger]]
-end
-
 defp deps do
-  [{:honeybadger, "~> 0.7"}]
+  [{:honeybadger, "~> 0.12"}]
 end
 ```
 
