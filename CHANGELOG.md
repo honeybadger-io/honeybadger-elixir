@@ -5,6 +5,8 @@ CHANGELOG](http://keepachangelog.com/) for how to update this file. This project
 adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Fixed
+- Safely sanitize invalid binaries when encoding JSON for notices.
 
 ## [v0.13.0] - 2019-10-02
 ### Added

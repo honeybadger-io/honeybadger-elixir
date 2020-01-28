@@ -3,7 +3,7 @@ defmodule Honeybadger.JSONTest do
 
   alias Honeybadger.{Notice, JSON}
 
-  defmodule Req do
+  defmodule Request do
     defstruct [:ip]
   end
 
@@ -21,35 +21,26 @@ defmodule Honeybadger.JSONTest do
     end
 
     test "encodes notice when context has structs" do
-      {:ok, json_encoded} =
-        Notice.new(
-          %RuntimeError{message: "oops"},
-          %{
-            context: %{
-              req: %Req{ip: "one"},
-              reqs: [%Req{ip: "two"}],
-              tups: {%Req{ip: "three"}, %Req{ip: "four"}}
-            }
-          },
-          []
-        )
+      error = %RuntimeError{message: "oops"}
+      struct = %Request{ip: "0.0.0.0"}
+      map = Map.from_struct(struct)
+
+      {:ok, custom_encoded} =
+        error
+        |> Notice.new(%{context: %{a: struct, b: [struct], c: {struct, struct}}}, [])
         |> JSON.encode()
 
       {:ok, jason_encoded} =
-        Notice.new(
-          %RuntimeError{message: "oops"},
-          %{
-            context: %{
-              req: %{ip: "one"},
-              reqs: [%{ip: "two"}],
-              tups: [%{ip: "three"}, %{ip: "four"}]
-            }
-          },
-          []
-        )
+        error
+        |> Notice.new(%{context: %{a: map, b: [map], c: [map, map]}}, [])
         |> Jason.encode()
 
-      assert json_encoded == jason_encoded
+      assert custom_encoded == jason_encoded
+    end
+
+    test "safely handling binaries with invalid bytes" do
+      {:ok, ~s("honeybadger")} = JSON.encode(<<"honeybadger", 241>>)
+      {:ok, ~s("honeybadger")} = JSON.encode(<<"honeybadger", 241, "yo">>)
     end
   end
 end

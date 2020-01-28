@@ -2,15 +2,14 @@ defmodule Honeybadger.JSON do
   @moduledoc false
 
   @spec encode(term) :: {:ok, String.t()} | {:error, Jason.EncodeError.t()}
-  def encode(notice) do
-    # try to encode without going the rabbit hole
-    case safe_encode(notice) do
+  def encode(term) do
+    case safe_encode(term) do
       {:ok, output} ->
         {:ok, output}
 
-      {:error, %Protocol.UndefinedError{}} ->
-        notice
-        |> to_encodeable
+      {:error, _error} ->
+        term
+        |> to_encodeable()
         |> Jason.encode()
     end
   end
@@ -26,7 +25,7 @@ defmodule Honeybadger.JSON do
   end
 
   # map
-  defp to_encodeable(%{} = map) do
+  defp to_encodeable(map) when is_map(map) do
     for {key, val} <- map, into: %{} do
       {key, to_encodeable(val)}
     end
@@ -48,16 +47,22 @@ defmodule Honeybadger.JSON do
     inspect(input)
   end
 
+  defp to_encodeable(input) when is_binary(input) do
+    case :unicode.characters_to_binary(input) do
+      {:error, binary, _rest} -> binary
+      {:incomplete, binary, _rest} -> binary
+      _ -> input
+    end
+  end
+
   defp to_encodeable(input) do
     input
   end
 
   def safe_encode(input) do
-    try do
-      Jason.encode(input)
-    rescue
-      e in Protocol.UndefinedError ->
-        {:error, e}
-    end
+    Jason.encode(input)
+  rescue
+    error in Protocol.UndefinedError ->
+      {:error, error}
   end
 end
