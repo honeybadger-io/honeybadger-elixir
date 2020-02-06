@@ -40,7 +40,7 @@ defmodule Honeybadger.JSONTest do
 
     test "handles values requring inspection" do
       {:ok, ~s("&Honeybadger.JSON.encode/1")} = JSON.encode(&Honeybadger.JSON.encode/1)
-      {:ok, ~s("#PID<0.250.0>")} = JSON.encode(:c.pid(0,250,0))
+      {:ok, ~s("#PID<0.250.0>")} = JSON.encode(:c.pid(0, 250, 0))
 
       ref = make_ref()
       {:ok, encoded_ref} = JSON.encode(ref)
