@@ -38,6 +38,19 @@ defmodule Honeybadger.JSONTest do
       assert custom_encoded == jason_encoded
     end
 
+    test "handles values requring inspection" do
+      {:ok, ~s("&Honeybadger.JSON.encode/1")} = JSON.encode(&Honeybadger.JSON.encode/1)
+      {:ok, ~s("#PID<0.250.0>")} = JSON.encode(:c.pid(0, 250, 0))
+
+      ref = make_ref()
+      {:ok, encoded_ref} = JSON.encode(ref)
+      assert "\"#{inspect(ref)}\"" == encoded_ref
+
+      port = Port.open({:spawn, "false"}, [:binary])
+      {:ok, encoded_port} = JSON.encode(port)
+      assert "\"#{inspect(port)}\"" == encoded_port
+    end
+
     test "safely handling binaries with invalid bytes" do
       {:ok, ~s("honeybadger")} = JSON.encode(<<"honeybadger", 241>>)
       {:ok, ~s("honeybadger")} = JSON.encode(<<"honeybadger", 241, "yo">>)

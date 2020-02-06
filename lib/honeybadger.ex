@@ -318,7 +318,7 @@ defmodule Honeybadger do
   @spec context(map() | keyword()) :: map()
   def context(map) when is_map(map), do: context(Keyword.new(map))
 
-  def context(keyword) do
+  def context(keyword) when is_list(keyword) do
     Logger.metadata(keyword)
 
     context()
