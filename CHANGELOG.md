@@ -7,6 +7,7 @@ adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 ### Fixed
 - Safely sanitize invalid binaries when encoding JSON for notices.
+- Fixes for Elixir 1.10 release (#259)
 
 ## [v0.13.0] - 2019-10-02
 ### Added
