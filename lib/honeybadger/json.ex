@@ -43,7 +43,8 @@ defmodule Honeybadger.JSON do
     |> to_encodeable
   end
 
-  defp to_encodeable(input) when is_pid(input) or is_port(input) or is_reference(input) do
+  defp to_encodeable(input)
+       when is_pid(input) or is_port(input) or is_reference(input) or is_function(input) do
     inspect(input)
   end
 
