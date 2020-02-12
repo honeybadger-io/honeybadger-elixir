@@ -1,7 +1,10 @@
 defmodule Honeybadger.JSON do
   @moduledoc false
 
-  @spec encode(term) :: {:ok, String.t()} | {:error, Jason.EncodeError.t()}
+  @spec encode(term) ::
+          {:ok, String.t()}
+          | {:error, Jason.EncodeError.t()}
+          | {:error, Exception.t()}
   def encode(term) do
     case safe_encode(term) do
       {:ok, output} ->
