@@ -130,6 +130,9 @@ defmodule Honeybadger.Client do
 
       {:error, %Jason.EncodeError{message: message}} ->
         Logger.warn(fn -> "[Honeybadger] Notice encoding failed: #{message}" end)
+
+      {:error, %Protocol.UndefinedError{description: message}} ->
+        Logger.warn(fn -> "[Honeybadger] Notice encoding failed: #{message}" end)
     end
 
     {:noreply, state}
