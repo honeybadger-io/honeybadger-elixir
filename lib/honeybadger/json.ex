@@ -44,12 +44,13 @@ defmodule Honeybadger.JSON do
     |> to_encodeable
   end
 
-  defp to_encodeable(input) when is_pid(input) or is_port(input) or is_reference(input) do
-    inspect(input)
+  defp to_encodeable(input)
+       when is_number(input) or is_boolean(input) or is_binary(input) or is_atom(input) do
+    input
   end
 
   defp to_encodeable(input) do
-    input
+    inspect(input)
   end
 
   def safe_encode(input) do

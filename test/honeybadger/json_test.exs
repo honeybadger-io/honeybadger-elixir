@@ -51,5 +51,61 @@ defmodule Honeybadger.JSONTest do
 
       assert json_encoded == jason_encoded
     end
+
+    test "encodes functions" do
+      {:ok, json_encoded} =
+        Notice.new(
+          %RuntimeError{message: "oops"},
+          %{
+            context: %{
+              log_format: &:gen_server.format_log/1
+            }
+          },
+          []
+        )
+        |> JSON.encode()
+
+      {:ok, jason_encoded} =
+        Notice.new(
+          %RuntimeError{message: "oops"},
+          %{
+            context: %{
+              log_format: "&:gen_server.format_log/1"
+            }
+          },
+          []
+        )
+        |> Jason.encode()
+
+      assert json_encoded == jason_encoded
+    end
+
+    test "encodes atoms as strings" do
+      {:ok, json_encoded} =
+        Notice.new(
+          %RuntimeError{message: "oops"},
+          %{
+            context: %{
+              status: :error
+            }
+          },
+          []
+        )
+        |> JSON.encode()
+
+      {:ok, jason_encoded} =
+        Notice.new(
+          %RuntimeError{message: "oops"},
+          %{
+            context: %{
+              status: "error"
+            }
+          },
+          []
+        )
+        |> Jason.encode()
+
+      assert json_encoded == jason_encoded
+    end
   end
 end
