@@ -66,6 +66,13 @@ defmodule Honeybadger.Client do
     end
   end
 
+  def send_notice(_) do
+    # Allow the caller to have certain messages dropped
+    # by returning nil (or a non-map) from a notice filter.
+    Logger.warn("not sending")
+    :not_sent
+  end
+
   @doc """
   Check whether reporting is enabled for the current environment.
 
