@@ -66,10 +66,10 @@ defmodule Honeybadger.Client do
     end
   end
 
-  def send_notice(_) do
+  def send_notice(:drop_notice) do
     # Allow the caller to have certain messages dropped
-    # by returning nil (or a non-map) from a notice filter.
-    Logger.warn("not sending")
+    # by returning :drop_notice from a notice filter.
+    Logger.warn("HB not sending")
     :not_sent
   end
 
