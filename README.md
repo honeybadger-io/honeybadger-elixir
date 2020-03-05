@@ -127,20 +127,6 @@ transfer automatically. Since a typical system might have many processes, it
 is advised that you be conservative when storing breadcrumbs as each
 breadcrumb consumes memory.
 
-### Enabling Breadcrumbs
-
-As of version `0.13.0`, Breadcrumbs are _available_ yet _disabled_. You must
-explicitly enable them if you want breadcrumbs to be reported. We plan on
-enabling this by default in a future release.
-
-Toggle `breadcrumbs_enabled` in the config to start sending Breadcrumbs with
-notices:
-
-```elixir
-config :honeybadger,
-  breadcrumbs_enabled: true
-```
-
 ### Automatic Breadcrumbs
 
 We leverage the `telemetry` library to automatically create breadcrumbs from
