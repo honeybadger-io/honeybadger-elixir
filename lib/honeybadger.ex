@@ -16,7 +16,7 @@ defmodule Honeybadger do
         environment_name: :prod,
         app: :my_app_name,
         exclude_envs: [:dev, :test],
-        breadcrumbs_enabled: false,
+        breadcrumbs_enabled: true,
         ecto_repos: [MyAppName.Ecto.Repo],
         hostname: "myserver.domain.com",
         origin: "https://api.honeybadger.io",
@@ -135,12 +135,6 @@ defmodule Honeybadger do
   transfer automatically. Since a typical system might have many processes, it
   is advised that you be conservative when storing breadcrumbs as each
   breadcrumb consumes memory.
-
-  Ensure that you enable breadcrumbs in the config (as it is disabled by
-  default):
-
-      config :honeybadger,
-        breadcrumbs_enabled: true
 
   See `Honeybadger.add_breadcrumb` for info on how to add custom breadcrumbs.
 

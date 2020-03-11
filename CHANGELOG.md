@@ -5,6 +5,8 @@ CHANGELOG](http://keepachangelog.com/) for how to update this file. This project
 adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Changed
+- Breadcrumbs on by default
 
 ## [v0.13.1] - 2020-02-06
 ### Fixed
