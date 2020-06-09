@@ -21,7 +21,8 @@ defmodule Honeybadger.Breadcrumbs.RingBufferTest do
 
   test "implements Jason.Encoder" do
     json =
-      RingBuffer.new(2)
+      2
+      |> RingBuffer.new()
       |> RingBuffer.add(123)
       |> Jason.encode!()
 
