@@ -5,6 +5,12 @@ defmodule Honeybadger.Breadcrumbs.RingBuffer do
 
   defstruct [:size, buffer: [], ct: 0]
 
+  defimpl Jason.Encoder do
+    def encode(buffer, opts) do
+      Jason.Encode.list(Honeybadger.Breadcrumbs.RingBuffer.to_list(buffer), opts)
+    end
+  end
+
   @spec new(pos_integer()) :: t()
   def new(size) do
     %__MODULE__{size: size}

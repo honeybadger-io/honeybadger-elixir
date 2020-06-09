@@ -18,4 +18,14 @@ defmodule Honeybadger.Breadcrumbs.RingBufferTest do
 
     assert buffer == [:b, :c]
   end
+
+  test "implements Jason.Encoder" do
+    json =
+      2
+      |> RingBuffer.new()
+      |> RingBuffer.add(123)
+      |> Jason.encode!()
+
+    assert json == "[123]"
+  end
 end
