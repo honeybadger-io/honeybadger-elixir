@@ -349,7 +349,7 @@ will be accepted.
 
 1. Update the version property in `mix.exs`
 2. Create a git commit with all the changes so that your working directory is clean
-3. Run `mix release` from your terminal, which will do the following:
+3. Run `mix shipit BRANCH VERSION` from your terminal, which will do the following:
     1. Upload the new version of honeybadger to hex.pm
     2. Create a git tag with the version number and push it to GitHub
 
