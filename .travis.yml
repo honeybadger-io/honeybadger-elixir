@@ -6,7 +6,8 @@ elixir:
   - '1.10'
 otp_release:
   - 21.2
-  - 22.0
+  - 22.3
+  - 23.0
 env:
   - MIX_ENV=test
 script:
@@ -18,6 +19,11 @@ cache:
     - deps
     - _build
 jobs:
+  exclude:
+    - elixir: 1.8
+      otp_release: 23.0
+    - elixir: 1.9
+      otp_release: 23.0
   include:
     - stage: format
       env:
