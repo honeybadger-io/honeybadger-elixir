@@ -1,6 +1,6 @@
 # Honeybadger for Elixir
 
-[![Build Status](https://travis-ci.org/honeybadger-io/honeybadger-elixir.svg?branch=master)](https://travis-ci.org/honeybadger-io/honeybadger-elixir)
+![Elixir CI](https://github.com/honeybadger-io/honeybadger-elixir/workflows/Elixir%20CI/badge.svg?branch=master)
 
 Elixir Plug, Logger and client for the :zap: [Honeybadger error notifier](https://www.honeybadger.io/).
 
