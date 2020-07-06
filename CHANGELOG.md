@@ -5,6 +5,8 @@ CHANGELOG](http://keepachangelog.com/) for how to update this file. This project
 adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+
+## [v0.14.1] - 2020-07-06
 ### Fixed
 - Implement Jason.Encoder for RingBuffer (#294)
 
