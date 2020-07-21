@@ -42,7 +42,7 @@ defmodule Honeybadger.Filter do
   @callback filter_error_message(String.t()) :: String.t()
 
   @doc """
-  Filter breadcrumbs. This filter function recieves a list of Breadcrumb
+  Filter breadcrumbs. This filter function receives a list of Breadcrumb
   structs. You could use any Enum function to constrain the set. Let's say you
   want to remove any breadcrumb that have metadata that contain SSN:
 
