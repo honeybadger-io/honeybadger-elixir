@@ -160,6 +160,8 @@ defmodule Honeybadger do
 
   use Application
 
+  require Logger
+
   alias Honeybadger.{Client, Notice}
   alias Honeybadger.Breadcrumbs.{Collector, Breadcrumb}
 
@@ -241,8 +243,20 @@ defmodule Honeybadger do
       iex> Honeybadger.notify(%RuntimeError{}, %{culprit_id: 123})
       :ok
   """
-  @spec notify(Notice.noticeable(), map(), list()) :: :ok
-  def notify(exception, metadata \\ %{}, stacktrace \\ []) do
+  # @spec notify(Notice.noticeable(), map(), list()) :: :ok
+  def notify(exception, metadata \\ %{}, stacktrace \\ []) when is_map(metadata) do
+    Logger.warn(
+      "Honeybadger.notify/1, Honeybadger.notify/2 and Honeybadger.notify/3 are deprecated, please use Honeybadger.notify!/2 instead"
+    )
+
+    notify!(exception, metadata: metadata, stacktrace: stacktrace)
+  end
+
+  def notify!(exception, options \\ []) do
+    metadata = options[:metadata] || %{}
+    stacktrace = options[:stacktrace] || []
+    fingerprint = options[:fingerprint] || ""
+
     # Grab process local breadcrumbs if not passed with call and add notice breadcrumb
     breadcrumbs =
       metadata
@@ -257,7 +271,7 @@ defmodule Honeybadger do
       |> Map.put(:breadcrumbs, breadcrumbs)
 
     exception
-    |> Notice.new(metadata_with_breadcrumbs, stacktrace)
+    |> Notice.new(metadata_with_breadcrumbs, stacktrace, fingerprint)
     |> Client.send_notice()
   end
 
