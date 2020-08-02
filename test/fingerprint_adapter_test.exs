@@ -27,7 +27,7 @@ defmodule Honeybadger.FingerprintAdapterTest do
     end
 
     test "sending a notice without fingerprint adapter" do
-      restart_with_config(exclude_envs: [])
+      restart_with_config(exclude_envs: [], fingerprint_adapter: nil)
 
       Honeybadger.notify!("Custom error")
 
