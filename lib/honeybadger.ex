@@ -284,7 +284,24 @@ defmodule Honeybadger do
 
     exception
     |> Notice.new(metadata_with_breadcrumbs, stacktrace, fingerprint)
+    |> put_notice_fingerprint()
     |> Client.send_notice()
+  end
+
+  defp put_notice_fingerprint(notice) do
+    fingerprint_adapter = Application.get_env(:honeybadger, :fingerprint_adapter)
+
+    case [fingerprint_adapter, notice.error.fingerprint] do
+      [nil, _] ->
+        notice
+
+      [_, ""] ->
+        fingerprint = fingerprint_adapter.parse(notice)
+        %{notice | error: Map.put(notice.error, :fingerprint, fingerprint)}
+
+      _ ->
+        notice
+    end
   end
 
   @doc """

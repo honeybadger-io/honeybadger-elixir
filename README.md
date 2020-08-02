@@ -214,14 +214,15 @@ Here are all of the options you can pass in the keyword list:
 | `filter_disable_url`     | If true, will remove the request url                                                          | `false`                                  |
 | `filter_disable_session` | If true, will remove the request session                                                      | `false`                                  |
 | `filter_disable_params`  | If true, will remove the request params                                                       | `false`                                  |
+| `fingerprint_adapter`    | Implementation of FingerprintAdapter behaviour                                                |                                          |
 | `notice_filter`          | Module implementing `Honeybadger.NoticeFilter`. If `nil`, no filtering is done.               | `Honeybadger.NoticeFilter.Default`       |
 | `use_logger`             | Enable the Honeybadger Logger for handling errors outside of web requests                     | `true`                                   |
 | `breadcrumbs_enabled`    | Enable breadcrumb event tracking                                                              | `false`                                  |
-| `ecto_repos`             | Modules with implemented Ecto.Repo behaviour for tracking SQL breadcrumb events               | `[]`                                    |
+| `ecto_repos`             | Modules with implemented Ecto.Repo behaviour for tracking SQL breadcrumb events               | `[]`                                     |
 
 ## Public Interface
 
-### `Honeybadger.notify`: Send an exception to Honeybadger.
+### `Honeybadger.notify!`: Send an exception to Honeybadger.
 
 Use the `Honeybadger.notify!/2` function to send exception information to the
 collector API.  The first parameter is the exception and the second parameter

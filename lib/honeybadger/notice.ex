@@ -33,14 +33,14 @@ defmodule Honeybadger.Notice do
   defstruct [:breadcrumbs, :notifier, :server, :error, :request]
 
   @spec new(noticeable(), map(), list(), String.t()) :: t()
-  def new(error, metadata, stacktrace, fingerprint)
+  def new(error, metadata, stacktrace, fingerprint \\ "")
 
   def new(message, metadata, stacktrace, fingerprint)
       when is_binary(message) and is_map(metadata) and is_list(stacktrace) do
     new(%RuntimeError{message: message}, metadata, stacktrace, fingerprint)
   end
 
-  def new(exception, metadata, stacktrace, fingerprint \\ "")
+  def new(exception, metadata, stacktrace, fingerprint)
       when is_map(metadata) and is_list(stacktrace) do
     {exception, stacktrace} = Exception.blame(:error, exception, stacktrace)
 
