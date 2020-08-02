@@ -32,7 +32,7 @@ defmodule Honeybadger do
   ### Notifying
 
   If you use `Honeybadger.Plug` and `Honeybadger.Logger` included in this
-  library you won't need to use `Honeybadger.notify/3` for manual reporting
+  library you won't need to use `Honeybadger.notify!/2` for manual reporting
   very often. However, if you need to send custom notifications you can do so:
 
       try do
@@ -41,10 +41,10 @@ defmodule Honeybadger do
         exception ->
           context = %{user_id: 1, account: "A Very Important Customer"}
 
-          Honeybadger.notify(exception, context, __STACKTRACE__)
+          Honeybadger.notify!(exception, metadata: context, stacktrace: __STACKTRACE__, fingerprint: "user-1")
       end
 
-  Note that `notify` may be used outside of `try`, but it will use a different
+  Note that `notify!` may be used outside of `try`, but it will use a different
   mechanism for getting the current stacktrace. The resulting stacktrace may be
   noisier and less accurate.
 
@@ -219,31 +219,36 @@ defmodule Honeybadger do
         do_something_risky()
       rescue
         exception ->
-          Honeybadger.notify(exception, %{}, __STACKTRACE__)
+          Honeybadger.notify!(exception, metadata: %{}, stacktrace: __STACKTRACE__)
       end
 
   Send a notification directly from a string, which will be sent as a
   `RuntimeError`:
 
-      iex> Honeybadger.notify("custom error message")
+      iex> Honeybadger.notify!("custom error message")
       :ok
 
   Send a notification as a `class` and `message`:
 
-      iex> Honeybadger.notify(%{class: "SpecialError", message: "custom message"})
+      iex> Honeybadger.notify!(%{class: "SpecialError", message: "custom message"})
       :ok
 
   Send a notification as a `badarg` atom:
 
-      iex> Honeybadger.notify(:badarg)
+      iex> Honeybadger.notify!(:badarg)
       :ok
 
   If desired additional metadata can be provided as well:
 
-      iex> Honeybadger.notify(%RuntimeError{}, %{culprit_id: 123})
+      iex> Honeybadger.notify!(%RuntimeError{}, metadata: %{culprit_id: 123})
+      :ok
+
+  If desired fingerprint can be provided as well:
+
+      iex> Honeybadger.notify!(%RuntimeError{}, fingerprint: "culprit_id-123")
       :ok
   """
-  # @spec notify(Notice.noticeable(), map(), list()) :: :ok
+  @spec notify(Notice.noticeable(), map(), list()) :: :ok
   def notify(exception, metadata \\ %{}, stacktrace \\ []) when is_map(metadata) do
     Logger.warn(
       "Honeybadger.notify/1, Honeybadger.notify/2 and Honeybadger.notify/3 are deprecated, please use Honeybadger.notify!/2 instead"
@@ -252,6 +257,13 @@ defmodule Honeybadger do
     notify!(exception, metadata: metadata, stacktrace: stacktrace)
   end
 
+  @type notify_options :: %{
+          metadata: map(),
+          stacktrace: list(),
+          fingerprint: String.t()
+        }
+
+  @spec notify!(Notice.noticeable(), notify_options) :: :ok
   def notify!(exception, options \\ []) do
     metadata = options[:metadata] || %{}
     stacktrace = options[:stacktrace] || []
