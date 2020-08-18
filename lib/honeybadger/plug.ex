@@ -63,7 +63,7 @@ if Code.ensure_loaded?(Plug) do
           else
             Collector.add(Breadcrumb.from_error(reason))
             metadata = @plug_data.metadata(conn, __MODULE__)
-            Honeybadger.notify!(reason, metadata: metadata, stacktrace: stack)
+            Honeybadger.notify(reason, metadata: metadata, stacktrace: stack)
           end
         end
 

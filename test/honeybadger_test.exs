@@ -10,61 +10,20 @@ defmodule HoneybadgerTest do
   end
 
   describe "deprecated Honeybadger.notify works" do
-    test "sending a notice on an active environment" do
-      restart_with_config(exclude_envs: [])
-
-      logged =
-        capture_log(fn ->
-          :ok = Honeybadger.notify(%RuntimeError{})
-          assert_receive {:api_request, _}
-        end)
-
-      assert logged =~ ~s|[Honeybadger] API success: "{}"|
-
-      assert logged =~
-               ~s|Honeybadger.notify/1, Honeybadger.notify/2 and Honeybadger.notify/3 are deprecated, please use Honeybadger.notify!/2 instead|
-    end
-
-    test "sending a notice on an inactive environment doesn't make an HTTP request" do
-      restart_with_config(exclude_envs: [:dev, :test])
-
-      logged =
-        capture_log(fn ->
-          :ok = Honeybadger.notify(%RuntimeError{})
-        end)
-
-      refute logged =~ "[Honeybadger] API"
-
-      assert logged =~
-               ~s|Honeybadger.notify/1, Honeybadger.notify/2 and Honeybadger.notify/3 are deprecated, please use Honeybadger.notify!/2 instead|
-
-      refute_receive {:api_request, _}
-    end
-
-    test "sending a notice in an active environment without an API key doesn't make an HTTP request" do
-      restart_with_config(exclude_envs: [], api_key: nil)
-
-      logged =
-        capture_log(fn ->
-          :ok = Honeybadger.notify(%RuntimeError{})
-          refute_receive {:api_request, _}
-        end)
-
-      refute logged =~ "[Honeybadger] API"
-
-      assert logged =~
-               ~s|Honeybadger.notify/1, Honeybadger.notify/2 and Honeybadger.notify/3 are deprecated, please use Honeybadger.notify!/2 instead|
-    end
-
     test "sending a notice with exception stacktrace" do
       restart_with_config(exclude_envs: [])
 
-      try do
-        raise RuntimeError
-      rescue
-        exception ->
-          :ok = Honeybadger.notify(exception, %{}, __STACKTRACE__)
-      end
+      logged =
+        capture_log(fn ->
+          try do
+            raise RuntimeError
+          rescue
+            exception ->
+              :ok = Honeybadger.notify(exception, %{}, __STACKTRACE__)
+          end
+        end)
+
+      assert logged =~ ~s|Reporting with notify/3 is deprecated, use notify/2 instead|
 
       assert_receive {:api_request, %{"error" => %{"backtrace" => backtrace}}}
 
@@ -82,12 +41,17 @@ defmodule HoneybadgerTest do
       restart_with_config(exclude_envs: [])
       fun = fn :hi -> nil end
 
-      try do
-        fun.(:boom)
-      rescue
-        exception ->
-          :ok = Honeybadger.notify(exception, %{}, __STACKTRACE__)
-      end
+      logged =
+        capture_log(fn ->
+          try do
+            fun.(:boom)
+          rescue
+            exception ->
+              :ok = Honeybadger.notify(exception, %{}, __STACKTRACE__)
+          end
+        end)
+
+      assert logged =~ ~s|Reporting with notify/3 is deprecated, use notify/2 instead|
 
       assert_receive {:api_request, %{"error" => error}}
       assert error["class"] == "FunctionClauseError"
@@ -95,13 +59,13 @@ defmodule HoneybadgerTest do
     end
   end
 
-  describe "Honeybadger.notify!" do
+  describe "Honeybadger.notify" do
     test "sending a notice on an active environment" do
       restart_with_config(exclude_envs: [])
 
       logged =
         capture_log(fn ->
-          :ok = Honeybadger.notify!(%RuntimeError{})
+          :ok = Honeybadger.notify(%RuntimeError{})
           assert_receive {:api_request, _}
         end)
 
@@ -113,7 +77,7 @@ defmodule HoneybadgerTest do
 
       logged =
         capture_log(fn ->
-          :ok = Honeybadger.notify!(%RuntimeError{})
+          :ok = Honeybadger.notify(%RuntimeError{})
         end)
 
       refute logged =~ "[Honeybadger] API"
@@ -126,7 +90,7 @@ defmodule HoneybadgerTest do
 
       logged =
         capture_log(fn ->
-          :ok = Honeybadger.notify!(%RuntimeError{})
+          :ok = Honeybadger.notify(%RuntimeError{})
           refute_receive {:api_request, _}
         end)
 
@@ -140,7 +104,7 @@ defmodule HoneybadgerTest do
         raise RuntimeError
       rescue
         exception ->
-          :ok = Honeybadger.notify!(exception, metadata: %{}, stacktrace: __STACKTRACE__)
+          :ok = Honeybadger.notify(exception, stacktrace: __STACKTRACE__)
       end
 
       assert_receive {:api_request, %{"error" => %{"backtrace" => backtrace}}}
@@ -152,7 +116,7 @@ defmodule HoneybadgerTest do
       refute {"lib/honeybadger.ex", "notify/3"} in traced
 
       assert {"test/honeybadger_test.exs",
-              "test Honeybadger.notify! sending a notice with exception stacktrace/1"} in traced
+              "test Honeybadger.notify sending a notice with exception stacktrace/1"} in traced
     end
 
     test "sending a notice includes extra information" do
@@ -163,7 +127,7 @@ defmodule HoneybadgerTest do
         fun.(:boom)
       rescue
         exception ->
-          :ok = Honeybadger.notify!(exception, metadata: %{}, stacktrace: __STACKTRACE__)
+          :ok = Honeybadger.notify(exception, stacktrace: __STACKTRACE__)
       end
 
       assert_receive {:api_request, %{"error" => error}}
@@ -174,7 +138,7 @@ defmodule HoneybadgerTest do
     test "sending a notice includes fingerprint" do
       restart_with_config(exclude_envs: [])
 
-      Honeybadger.notify!("Custom error", fingerprint: "fingerprint-xpto")
+      Honeybadger.notify("Custom error", fingerprint: "fingerprint-xpto")
 
       assert_receive {:api_request, %{"error" => error}}
       assert error["fingerprint"] == "fingerprint-xpto"

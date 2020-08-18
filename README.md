@@ -104,14 +104,14 @@ you!
 
 #### Manual reporting
 
-You can manually report rescued exceptions with the  `Honeybadger.notify!` function.
+You can manually report rescued exceptions with the  `Honeybadger.notify` function.
 
 ```elixir
 try do
   File.read! "this_file_really_should_exist_dang_it.txt"
 rescue
   exception ->
-    Honeybadger.notify!(exception, metadata: %{}, stacktrace: __STACKTRACE__, fingerprint: "")
+    Honeybadger.notify(exception, metadata: %{}, stacktrace: __STACKTRACE__, fingerprint: "")
 end
 ```
 
@@ -222,11 +222,11 @@ Here are all of the options you can pass in the keyword list:
 
 ## Public Interface
 
-### `Honeybadger.notify!`: Send an exception to Honeybadger.
+### `Honeybadger.notify`: Send an exception to Honeybadger.
 
-Use the `Honeybadger.notify!/2` function to send exception information to the
+Use the `Honeybadger.notify/2` function to send exception information to the
 collector API.  The first parameter is the exception and the second parameter
-is the context/metadata/fingerprint. There is also a `Honeybadger.notify!/1` which doesn't require the second parameter.
+is the context/metadata/fingerprint. There is also a `Honeybadger.notify/1` which doesn't require the second parameter.
 
 #### Examples:
 
@@ -236,7 +236,7 @@ try do
 rescue
   exception ->
     context = %{user_id: 5, account_name: "Foo"}
-    Honeybadger.notify!(exception, metadata: context, stacktrace: __STACKTRACE__)
+    Honeybadger.notify(exception, metadata: context, stacktrace: __STACKTRACE__)
 end
 ```
 
@@ -267,14 +267,14 @@ end
 
 `Honeybadger.context/1` stores the context data in the process dictionary, so
 it will be sent with errors/notifications on the same process. The following
-`Honeybadger.notify!/1` call will not see the context data set in the previous line.
+`Honeybadger.notify/1` call will not see the context data set in the previous line.
 
 ```elixir
 Honeybadger.context(user_id: 5)
 Task.start(fn ->
   # this notify does not see the context set earlier
   # as this runs in a different elixir/erlang process.
-  Honeybadger.notify!(%RuntimeError{message: "critical error"})
+  Honeybadger.notify(%RuntimeError{message: "critical error"})
 end)
 ```
 

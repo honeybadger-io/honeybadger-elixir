@@ -22,7 +22,7 @@ defmodule Mix.Tasks.Honeybadger.Test do
     {:ok, _started} = Application.ensure_all_started(:honeybadger)
 
     # send the notification
-    Honeybadger.notify!(%HoneybadgerTestingException{})
+    Honeybadger.notify(%HoneybadgerTestingException{})
 
     # this will block the mix task from stopping before
     # the genserver sends the notification to honeybadger
