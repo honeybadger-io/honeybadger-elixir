@@ -248,6 +248,15 @@ defmodule Honeybadger do
       iex> Honeybadger.notify(%RuntimeError{}, fingerprint: "culprit_id-123")
       :ok
   """
+
+  @type notify_options :: %{
+          metadata: map(),
+          stacktrace: list(),
+          fingerprint: String.t()
+        }
+
+  @spec notify(Notice.noticeable()) :: :ok
+  @spec notify(Notice.noticeable(), notify_options) :: :ok
   def notify(exception) do
     notify(exception, [])
   end
@@ -261,18 +270,6 @@ defmodule Honeybadger do
     notify(exception, metadata: metadata)
   end
 
-  def notify(exception, metadata, stacktrace) when is_map(metadata) and is_list(stacktrace) do
-    Logger.warn("Reporting with notify/3 is deprecated, use notify/2 instead")
-    notify(exception, metadata: metadata, stacktrace: stacktrace)
-  end
-
-  @type notify_options :: %{
-          metadata: map(),
-          stacktrace: list(),
-          fingerprint: String.t()
-        }
-
-  @spec notify(Notice.noticeable(), notify_options) :: :ok
   def notify(exception, options) do
     metadata = options[:metadata] || %{}
     stacktrace = options[:stacktrace] || []
@@ -295,6 +292,11 @@ defmodule Honeybadger do
     |> Notice.new(metadata_with_breadcrumbs, stacktrace, fingerprint)
     |> put_notice_fingerprint()
     |> Client.send_notice()
+  end
+
+  def notify(exception, metadata, stacktrace) when is_map(metadata) and is_list(stacktrace) do
+    Logger.warn("Reporting with notify/3 is deprecated, use notify/2 instead")
+    notify(exception, metadata: metadata, stacktrace: stacktrace)
   end
 
   defp put_notice_fingerprint(notice) do
