@@ -21,7 +21,7 @@ defmodule HoneybadgerTest do
             exception ->
               :ok = Honeybadger.notify(exception, %{}, __STACKTRACE__)
           end
-        end)
+        end, :stderr)
 
       assert logged =~ ~s|Reporting with notify/3 is deprecated, use notify/2 instead|
 
@@ -49,7 +49,7 @@ defmodule HoneybadgerTest do
             exception ->
               :ok = Honeybadger.notify(exception, %{}, __STACKTRACE__)
           end
-        end)
+        end, :stderr)
 
       assert logged =~ ~s|Reporting with notify/3 is deprecated, use notify/2 instead|
 

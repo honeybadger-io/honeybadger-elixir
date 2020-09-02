@@ -256,13 +256,13 @@ defmodule Honeybadger do
         }
 
   @spec notify(Notice.noticeable()) :: :ok
-  @spec notify(Notice.noticeable(), notify_options) :: :ok
   def notify(exception) do
     notify(exception, [])
   end
 
+  @spec notify(Notice.noticeable(), notify_options) :: :ok
   def notify(exception, metadata) when is_map(metadata) do
-    Logger.warn(
+    IO.warn(
       "Passing a metadata map is deprecated, " <>
         "use Honeybadger.notify(exception, metadata: metadata) instead"
     )
@@ -294,8 +294,10 @@ defmodule Honeybadger do
     |> Client.send_notice()
   end
 
+  @doc deprecated: "Use Honeybadger.notify/2 instead"
+  @spec notify(Notice.noticeable(), map(), list()) :: :ok
   def notify(exception, metadata, stacktrace) when is_map(metadata) and is_list(stacktrace) do
-    Logger.warn("Reporting with notify/3 is deprecated, use notify/2 instead")
+    IO.warn("Reporting with notify/3 is deprecated, use notify/2 instead")
     notify(exception, metadata: metadata, stacktrace: stacktrace)
   end
 

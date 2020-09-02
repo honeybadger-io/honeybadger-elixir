@@ -14,7 +14,7 @@ defmodule Honeybadger.FingerprintAdapterTest do
       Honeybadger.notify("Custom error")
 
       assert_receive {:api_request, %{"error" => error}}
-      assert error["fingerprint"] == "elixir - honeybadger-elixir"
+      assert error["fingerprint"] == "elixir-honeybadger-elixir"
     end
 
     test "notifying with fingerprint overrides the fingerprint adapter" do
@@ -41,6 +41,6 @@ defmodule Honeybadger.CustomFingerprint do
   @behaviour Honeybadger.FingerprintAdapter
 
   def parse(notice) do
-    "#{notice.notifier.language} - #{notice.notifier.name}"
+    notice.notifier.language <> "-" <> notice.notifier.name
   end
 end
