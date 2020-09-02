@@ -251,7 +251,7 @@ defmodule Honeybadger do
 
   @type notify_options :: %{
           metadata: map(),
-          stacktrace: list(),
+          stacktrace: Exception.stacktrace_entry(),
           fingerprint: String.t()
         }
 
