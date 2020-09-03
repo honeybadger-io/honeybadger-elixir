@@ -32,15 +32,16 @@ defmodule Honeybadger.Notice do
   @enforce_keys [:breadcrumbs, :notifier, :server, :error, :request]
   defstruct [:breadcrumbs, :notifier, :server, :error, :request]
 
-  @spec new(noticeable(), map(), list()) :: t()
-  def new(error, metadata, stacktrace)
+  @spec new(noticeable(), map(), list(), String.t()) :: t()
+  def new(error, metadata, stacktrace, fingerprint \\ "")
 
-  def new(message, metadata, stacktrace)
+  def new(message, metadata, stacktrace, fingerprint)
       when is_binary(message) and is_map(metadata) and is_list(stacktrace) do
-    new(%RuntimeError{message: message}, metadata, stacktrace)
+    new(%RuntimeError{message: message}, metadata, stacktrace, fingerprint)
   end
 
-  def new(exception, metadata, stacktrace) when is_map(metadata) and is_list(stacktrace) do
+  def new(exception, metadata, stacktrace, fingerprint)
+      when is_map(metadata) and is_list(stacktrace) do
     {exception, stacktrace} = Exception.blame(:error, exception, stacktrace)
 
     %{__struct__: exception_mod} = exception
@@ -49,7 +50,8 @@ defmodule Honeybadger.Notice do
       class: Utils.module_to_string(exception_mod),
       message: exception_mod.message(exception),
       backtrace: Backtrace.from_stacktrace(stacktrace),
-      tags: Map.get(metadata, :tags, [])
+      tags: Map.get(metadata, :tags, []),
+      fingerprint: fingerprint
     }
 
     request =

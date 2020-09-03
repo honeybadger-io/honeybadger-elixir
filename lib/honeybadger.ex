@@ -32,7 +32,7 @@ defmodule Honeybadger do
   ### Notifying
 
   If you use `Honeybadger.Plug` and `Honeybadger.Logger` included in this
-  library you won't need to use `Honeybadger.notify/3` for manual reporting
+  library you won't need to use `Honeybadger.notify/2` for manual reporting
   very often. However, if you need to send custom notifications you can do so:
 
       try do
@@ -41,7 +41,12 @@ defmodule Honeybadger do
         exception ->
           context = %{user_id: 1, account: "A Very Important Customer"}
 
-          Honeybadger.notify(exception, context, __STACKTRACE__)
+          Honeybadger.notify(
+            exception,
+            metadata: context,
+            stacktrace: __STACKTRACE__,
+            fingerprint: "user-1"
+          )
       end
 
   Note that `notify` may be used outside of `try`, but it will use a different
@@ -160,6 +165,8 @@ defmodule Honeybadger do
 
   use Application
 
+  require Logger
+
   alias Honeybadger.{Client, Notice}
   alias Honeybadger.Breadcrumbs.{Collector, Breadcrumb}
 
@@ -217,7 +224,7 @@ defmodule Honeybadger do
         do_something_risky()
       rescue
         exception ->
-          Honeybadger.notify(exception, %{}, __STACKTRACE__)
+          Honeybadger.notify(exception, metadata: %{}, stacktrace: __STACKTRACE__)
       end
 
   Send a notification directly from a string, which will be sent as a
@@ -238,11 +245,41 @@ defmodule Honeybadger do
 
   If desired additional metadata can be provided as well:
 
-      iex> Honeybadger.notify(%RuntimeError{}, %{culprit_id: 123})
+      iex> Honeybadger.notify(%RuntimeError{}, metadata: %{culprit_id: 123})
+      :ok
+
+  If desired fingerprint can be provided as well:
+
+      iex> Honeybadger.notify(%RuntimeError{}, fingerprint: "culprit_id-123")
       :ok
   """
-  @spec notify(Notice.noticeable(), map(), list()) :: :ok
-  def notify(exception, metadata \\ %{}, stacktrace \\ []) do
+
+  @type notify_options :: %{
+          metadata: map(),
+          stacktrace: Exception.stacktrace_entry(),
+          fingerprint: String.t()
+        }
+
+  @spec notify(Notice.noticeable()) :: :ok
+  def notify(exception) do
+    notify(exception, [])
+  end
+
+  @spec notify(Notice.noticeable(), notify_options) :: :ok
+  def notify(exception, metadata) when is_map(metadata) do
+    IO.warn(
+      "Passing a metadata map is deprecated, " <>
+        "use Honeybadger.notify(exception, metadata: metadata) instead"
+    )
+
+    notify(exception, metadata: metadata)
+  end
+
+  def notify(exception, options) do
+    metadata = options[:metadata] || %{}
+    stacktrace = options[:stacktrace] || []
+    fingerprint = options[:fingerprint] || ""
+
     # Grab process local breadcrumbs if not passed with call and add notice breadcrumb
     breadcrumbs =
       metadata
@@ -257,8 +294,32 @@ defmodule Honeybadger do
       |> Map.put(:breadcrumbs, breadcrumbs)
 
     exception
-    |> Notice.new(metadata_with_breadcrumbs, stacktrace)
+    |> Notice.new(metadata_with_breadcrumbs, stacktrace, fingerprint)
+    |> put_notice_fingerprint()
     |> Client.send_notice()
+  end
+
+  @doc deprecated: "Use Honeybadger.notify/2 instead"
+  @spec notify(Notice.noticeable(), map(), list()) :: :ok
+  def notify(exception, metadata, stacktrace) when is_map(metadata) and is_list(stacktrace) do
+    IO.warn("Reporting with notify/3 is deprecated, use notify/2 instead")
+    notify(exception, metadata: metadata, stacktrace: stacktrace)
+  end
+
+  defp put_notice_fingerprint(notice) do
+    fingerprint_adapter = Application.get_env(:honeybadger, :fingerprint_adapter)
+
+    case [fingerprint_adapter, notice.error.fingerprint] do
+      [nil, _] ->
+        notice
+
+      [_, ""] ->
+        fingerprint = fingerprint_adapter.parse(notice)
+        %{notice | error: Map.put(notice.error, :fingerprint, fingerprint)}
+
+      _ ->
+        notice
+    end
   end
 
   @doc """

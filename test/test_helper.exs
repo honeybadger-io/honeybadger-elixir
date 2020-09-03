@@ -36,14 +36,14 @@ defmodule Honeybadger.Case do
     :ok = Application.ensure_started(:honeybadger)
   end
 
-  def capture_log(fun) do
+  def capture_log(fun, device \\ :user) do
     Logger.add_backend(:console, flush: true)
 
     on_exit(fn ->
       Logger.remove_backend(:console)
     end)
 
-    ExUnit.CaptureIO.capture_io(:user, fn ->
+    ExUnit.CaptureIO.capture_io(device, fn ->
       fun.()
       :timer.sleep(100)
       Logger.flush()

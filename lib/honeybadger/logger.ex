@@ -77,7 +77,7 @@ defmodule Honeybadger.Logger do
       |> Map.delete(Collector.metadata_key())
       |> Map.put(:breadcrumbs, breadcrumbs)
 
-    Honeybadger.notify(reason, metadata_with_breadcrumbs, stacktrace)
+    Honeybadger.notify(reason, metadata: metadata_with_breadcrumbs, stacktrace: stacktrace)
   end
 
   @standard_metadata ~w(ancestors callers crash_reason file function line module pid)a

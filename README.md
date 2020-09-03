@@ -111,7 +111,7 @@ try do
   File.read! "this_file_really_should_exist_dang_it.txt"
 rescue
   exception ->
-    Honeybadger.notify(exception, %{}, __STACKTRACE__)
+    Honeybadger.notify(exception, metadata: %{}, stacktrace: __STACKTRACE__, fingerprint: "")
 end
 ```
 
@@ -214,10 +214,11 @@ Here are all of the options you can pass in the keyword list:
 | `filter_disable_url`     | If true, will remove the request url                                                          | `false`                                  |
 | `filter_disable_session` | If true, will remove the request session                                                      | `false`                                  |
 | `filter_disable_params`  | If true, will remove the request params                                                       | `false`                                  |
+| `fingerprint_adapter`    | Implementation of FingerprintAdapter behaviour                                                |                                          |
 | `notice_filter`          | Module implementing `Honeybadger.NoticeFilter`. If `nil`, no filtering is done.               | `Honeybadger.NoticeFilter.Default`       |
 | `use_logger`             | Enable the Honeybadger Logger for handling errors outside of web requests                     | `true`                                   |
 | `breadcrumbs_enabled`    | Enable breadcrumb event tracking                                                              | `false`                                  |
-| `ecto_repos`             | Modules with implemented Ecto.Repo behaviour for tracking SQL breadcrumb events               | `[]`                                    |
+| `ecto_repos`             | Modules with implemented Ecto.Repo behaviour for tracking SQL breadcrumb events               | `[]`                                     |
 
 ## Public Interface
 
@@ -225,7 +226,7 @@ Here are all of the options you can pass in the keyword list:
 
 Use the `Honeybadger.notify/2` function to send exception information to the
 collector API.  The first parameter is the exception and the second parameter
-is the context/metadata. There is also a `Honeybadger.notify/1` which doesn't require the second parameter.
+is the context/metadata/fingerprint. There is also a `Honeybadger.notify/1` which doesn't require the second parameter.
 
 #### Examples:
 
@@ -235,7 +236,7 @@ try do
 rescue
   exception ->
     context = %{user_id: 5, account_name: "Foo"}
-    Honeybadger.notify(exception, context, __STACKTRACE__)
+    Honeybadger.notify(exception, metadata: context, stacktrace: __STACKTRACE__)
 end
 ```
 
