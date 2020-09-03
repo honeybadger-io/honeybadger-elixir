@@ -41,7 +41,12 @@ defmodule Honeybadger do
         exception ->
           context = %{user_id: 1, account: "A Very Important Customer"}
 
-          Honeybadger.notify(exception, metadata: context, stacktrace: __STACKTRACE__, fingerprint: "user-1")
+          Honeybadger.notify(
+            exception,
+            metadata: context,
+            stacktrace: __STACKTRACE__,
+            fingerprint: "user-1"
+          )
       end
 
   Note that `notify` may be used outside of `try`, but it will use a different
