@@ -5,6 +5,8 @@ CHANGELOG](http://keepachangelog.com/) for how to update this file. This project
 adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Added
+- New fingerprint option and config for `Honeybadger.notify/2`. Thanks @brunozrk! (#305)
 
 ## [v0.14.1] - 2020-07-06
 ### Fixed
