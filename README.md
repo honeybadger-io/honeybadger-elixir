@@ -348,6 +348,14 @@ will be accepted.
 
 ### Publishing a release on hex.pm
 
+Make sure you have the following dependencies, and tests pass locally and in CI:
+
+```sh
+mix deps.get
+mix archive.install hex shipit
+mix test
+```
+
 1. Update the version property in `mix.exs`
 2. Create a git commit with all the changes so that your working directory is clean
 3. Run `mix shipit BRANCH VERSION` from your terminal, which will do the following:
