@@ -5,6 +5,8 @@ CHANGELOG](http://keepachangelog.com/) for how to update this file. This project
 adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Changed
+- Send notifications on error-level logs
 
 ## [v0.15.0] - 2020-09-24
 ### Added
