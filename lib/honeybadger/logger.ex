@@ -40,7 +40,7 @@ defmodule Honeybadger.Logger do
         notify(reason, full_context, [])
 
       _ ->
-        :ok
+        notify(%RuntimeError{message: message}, full_context, [])
     end
 
     {:ok, state}

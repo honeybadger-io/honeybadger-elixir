@@ -145,4 +145,11 @@ defmodule Honeybadger.LoggerTest do
 
     refute_receive {:api_request, _}
   end
+
+  test "handles error-level log" do
+    Logger.error("Error-level log")
+
+    assert_receive {:api_request, %{"breadcrumbs" => breadcrumbs}}
+    assert List.first(breadcrumbs["trail"])["metadata"]["message"] == "Error-level log"
+  end
 end
