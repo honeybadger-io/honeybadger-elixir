@@ -170,6 +170,11 @@ defmodule Honeybadger do
   alias Honeybadger.{Client, Notice}
   alias Honeybadger.Breadcrumbs.{Collector, Breadcrumb}
 
+  @type notify_options ::
+          {:metadata, map()}
+          | {:stacktrace, Exception.stacktrace()}
+          | {:fingerprint, String.t()}
+
   defmodule MissingEnvironmentNameError do
     defexception message: """
                  The environment_name setting is required so that we can report the correct
@@ -183,8 +188,6 @@ defmodule Honeybadger do
 
   @doc false
   def start(_type, _opts) do
-    import Supervisor.Spec
-
     config =
       get_all_env()
       |> put_dynamic_env()
@@ -192,18 +195,14 @@ defmodule Honeybadger do
       |> persist_all_env()
 
     if config[:use_logger] do
-      _ = Logger.add_backend(Honeybadger.Logger)
+      Logger.add_backend(Honeybadger.Logger)
     end
 
     if config[:breadcrumbs_enabled] do
       Honeybadger.Breadcrumbs.Telemetry.attach()
     end
 
-    children = [
-      worker(Client, [config])
-    ]
-
-    Supervisor.start_link(children, strategy: :one_for_one)
+    Supervisor.start_link([{Client, [config]}], strategy: :one_for_one)
   end
 
   @doc """
@@ -254,18 +253,12 @@ defmodule Honeybadger do
       :ok
   """
 
-  @type notify_options :: %{
-          metadata: map(),
-          stacktrace: Exception.stacktrace_entry(),
-          fingerprint: String.t()
-        }
-
   @spec notify(Notice.noticeable()) :: :ok
   def notify(exception) do
     notify(exception, [])
   end
 
-  @spec notify(Notice.noticeable(), notify_options) :: :ok
+  @spec notify(Notice.noticeable(), [notify_options()] | map()) :: :ok
   def notify(exception, metadata) when is_map(metadata) do
     IO.warn(
       "Passing a metadata map is deprecated, " <>
@@ -300,9 +293,10 @@ defmodule Honeybadger do
   end
 
   @doc deprecated: "Use Honeybadger.notify/2 instead"
-  @spec notify(Notice.noticeable(), map(), list()) :: :ok
+  @spec notify(Notice.noticeable(), map(), Exception.stacktrace()) :: :ok
   def notify(exception, metadata, stacktrace) when is_map(metadata) and is_list(stacktrace) do
     IO.warn("Reporting with notify/3 is deprecated, use notify/2 instead")
+
     notify(exception, metadata: metadata, stacktrace: stacktrace)
   end
 
@@ -315,6 +309,7 @@ defmodule Honeybadger do
 
       [_, ""] ->
         fingerprint = fingerprint_adapter.parse(notice)
+
         %{notice | error: Map.put(notice.error, :fingerprint, fingerprint)}
 
       _ ->

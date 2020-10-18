@@ -16,13 +16,13 @@ defmodule Honeybadger.LoggerTest do
       use GenServer
 
       def start_link(_opts) do
-        GenServer.start(__MODULE__, [meta: :data], name: Elixir.MyGenServer)
+        GenServer.start(__MODULE__, %{}, name: Elixir.MyGenServer)
       end
 
       def init(opts), do: {:ok, opts}
 
       def handle_cast(:raise_error, state) do
-        Map.fetch!(%{}, :bad_key)
+        _ = Map.fetch!(state, :bad_key)
 
         {:noreply, state}
       end
@@ -41,7 +41,7 @@ defmodule Honeybadger.LoggerTest do
 
     assert request["context"]["registered_name"] == "Elixir.MyGenServer"
     assert request["context"]["last_message"] =~ "$gen_cast"
-    assert request["context"]["state"] == "[meta: :data]"
+    assert request["context"]["state"] == "%{}"
   end
 
   test "GenEvent terminating with an error" do
@@ -114,7 +114,7 @@ defmodule Honeybadger.LoggerTest do
     Task.start(MyModule, :raise_error, ["my message"])
 
     assert_receive {:api_request,
-                    %{"breadcrumbs" => breadcrumbs, "error" => error, "request" => request}}
+                    %{"breadcrumbs" => breadcrumbs, "error" => _, "request" => request}}
 
     assert List.first(breadcrumbs["trail"])["metadata"]["message"] == "my message"
 

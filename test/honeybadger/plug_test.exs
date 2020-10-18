@@ -9,6 +9,7 @@ defmodule Honeybadger.PlugTest do
   end
 
   defimpl Plug.Exception, for: CustomNotFound do
+    def actions(_), do: []
     def status(_), do: 404
   end
 

@@ -4,7 +4,14 @@ defmodule Honeybadger.Notice do
   alias Honeybadger.{Backtrace, Utils}
   alias Honeybadger.Breadcrumbs.{Collector}
 
-  @type error :: %{class: atom | iodata, message: iodata, tags: list, backtrace: list}
+  @type error :: %{
+          backtrace: list,
+          class: atom | iodata,
+          fingerprint: String.t(),
+          message: iodata,
+          tags: list
+        }
+
   @type notifier :: %{name: String.t(), url: String.t(), version: String.t()}
 
   @type server :: %{

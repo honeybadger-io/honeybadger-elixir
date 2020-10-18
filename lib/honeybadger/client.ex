@@ -55,7 +55,7 @@ defmodule Honeybadger.Client do
   end
 
   @doc false
-  @spec send_notice(map()) :: :ok | {:error, term()}
+  @spec send_notice(map()) :: :ok
   def send_notice(notice) when is_map(notice) do
     if pid = Process.whereis(__MODULE__) do
       GenServer.cast(pid, {:notice, notice})
