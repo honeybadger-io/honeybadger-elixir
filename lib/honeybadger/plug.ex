@@ -21,7 +21,7 @@ if Code.ensure_loaded?(Plug) do
 
     ## Customizing
 
-    Data reporting may be customized by passing an alterate `:plug_data`
+    Data reporting may be customized by passing an alternate `:plug_data`
     module. This is useful when working with alternate frameworks, such as
     Absinthe for GraphQL APIs.
 

@@ -5,10 +5,10 @@ defmodule Honeybadger do
 
   ### Configuring
 
-  By default the HONEYBADGER_API_KEY environment variable is used to find
+  By default the `HONEYBADGER_API_KEY` environment variable is used to find
   your API key for Honeybadger. You can also manually set your API key by
-  configuring the :honeybadger application. You can see the default
-  configuration in the default_config/0 private function at the bottom of
+  configuring the `:honeybadger` application. You can see the default
+  configuration in the `default_config/0` private function at the bottom of
   this file.
 
       config :honeybadger,
@@ -95,8 +95,8 @@ defmodule Honeybadger do
   ### Using the Error Logger
 
   By default the logger is enabled. The logger will automatically receive any
-  error reports for SASL compliant processes such as GenServers, GenEvents,
-  Agents, Tasks and any process spawned using `proc_lib`. You can disable the
+  error reports for SASL compliant processes such as `GenServers`, `GenEvents`,
+  `Agents`, `Tasks` and any process spawned using `proc_lib`. You can disable the
   logger by setting `use_logger` to false in your Honeybadger config.
 
   ### Using a Notification Filter
@@ -213,7 +213,7 @@ defmodule Honeybadger do
 
   ## Stacktrace
 
-  Accessing the stacktrace outside of a rescue/catch is deprecated. Notifiations should happen
+  Accessing the stacktrace outside of a rescue/catch is deprecated. Notifications should happen
   inside of a rescue/catch block so that the stacktrace can be provided with `__STACKTRACE__`.
   Stacktraces _must_ be provided and won't be automatically extracted from the current process.
 
