@@ -12,9 +12,15 @@ Elixir Plug, Logger and client for the :zap: [Honeybadger error notifier](https:
 
 [Watch our screencast](https://josh-rubyist.wistia.com/medias/pggpan0f9j) by Josh Adams of [ElixirSips](http://elixirsips.com/)!
 
-### 1. Install the package
+## Version requirements
 
-Prerequisites: minimum of Elixir 1.0 and Erlang 18.0
+- Erlang >= 18.0
+- Elixir >= 1.3
+- Plug >= 1.0
+- Phoenix >= 1.0 (This is an optional dependency and the version requirement applies only if you are using Phoenix)
+
+
+### 1. Install the package
 
 Add the Honeybadger package to `deps/0` in your
 application's `mix.exs` file and run `mix do deps.get, deps.compile`
@@ -318,12 +324,6 @@ config :honeybadger,
   exclude_envs: [:test]
 ```
 3. Run the `mix honeybadger.test` mix task task to simulate an error
-
-## Version requirements
-- Erlang >= 18.0
-- Elixir >= 1.3
-- Plug >= 1.0
-- Phoenix >= 1.0 (This is an optional dependency and the version requirement applies only if you are using Phoenix)
 
 ## Changelog
 

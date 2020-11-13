@@ -1,10 +1,13 @@
 defmodule Honeybadger.Mixfile do
   use Mix.Project
 
+  @source_url "https://github.com/honeybadger-io/honeybadger-elixir"
+  @version "0.15.0"
+
   def project do
     [
       app: :honeybadger,
-      version: "0.15.0",
+      version: @version,
       elixir: "~> 1.7",
       consolidate_protocols: Mix.env() != :test,
       build_embedded: Mix.env() == :prod,
@@ -16,9 +19,10 @@ defmodule Honeybadger.Mixfile do
       package: package(),
       name: "Honeybadger",
       homepage_url: "https://honeybadger.io",
-      source_url: "https://github.com/honeybadger-io/honeybadger-elixir",
-      description:
-        "Elixir client, Plug and error_logger for integrating with the Honeybadger.io exception tracker",
+      description: """
+      Elixir client, Plug and error_logger for integrating with the
+      Honeybadger.io exception tracker"
+      """,
 
       # Dialyzer
       dialyzer: [
@@ -27,12 +31,18 @@ defmodule Honeybadger.Mixfile do
       ],
 
       # Docs
-      docs: [extras: ["README.md", "CHANGELOG.md"], main: "readme"]
+      docs: [
+        main: "readme",
+        source_ref: "v#{@version}",
+        source_url: @source_url,
+        extras: ["README.md", "CHANGELOG.md"]
+      ]
     ]
   end
 
-  # we use a non standard location for mix tasks as we don't want them to leak
-  # into the host apps mix tasks. This way our release task is shown only in our mix tasks
+  # We use a non standard location for mix tasks as we don't want them to leak
+  # into the host apps mix tasks. This way our release task is shown only in
+  # our mix tasks
   defp elixirc_paths(:dev), do: ["lib", "mix"]
   defp elixirc_paths(_), do: ["lib"]
 
@@ -72,7 +82,7 @@ defmodule Honeybadger.Mixfile do
       {:telemetry, "~> 0.4"},
 
       # Dev dependencies
-      {:ex_doc, "~> 0.7", only: :dev, runtime: false},
+      {:ex_doc, ">= 0.0.0", only: :dev, runtime: false},
       {:dialyxir, "~> 1.0", only: :dev, runtime: false},
 
       # Test dependencies
@@ -84,7 +94,10 @@ defmodule Honeybadger.Mixfile do
     [
       licenses: ["MIT"],
       maintainers: ["Joshua Wood"],
-      links: %{"GitHub" => "https://github.com/honeybadger-io/honeybadger-elixir"}
+      links: %{
+        "Changelog" => "#{@source_url}/blob/master/CHANGELOG.md",
+        "GitHub" => @source_url
+      }
     ]
   end
 end
