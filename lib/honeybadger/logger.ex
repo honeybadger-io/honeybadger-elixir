@@ -11,9 +11,7 @@ defmodule Honeybadger.Logger do
   end
 
   def init({__MODULE__, opts}) when is_list(opts) do
-    level = Keyword.get(opts, :level)
-
-    {:ok, %{level: level}}
+    {:ok, %{ level: Keyword.get(opts, :level) }}
   end
 
   @impl true
@@ -27,20 +25,21 @@ defmodule Honeybadger.Logger do
   end
 
   def handle_event({:error, _gl, {Logger, message, _ts, metadata}}, state) do
-    details = extract_details(message)
-    context = extract_context(metadata)
+    unless domain_ignored?(metadata[:domain], Honeybadger.get_env(:ignored_domains)) do
+      details = extract_details(message)
+      context = extract_context(metadata)
+      full_context = Map.merge(details, context)
 
-    full_context = Map.merge(details, context)
+      case Keyword.get(metadata, :crash_reason) do
+        {reason, stacktrace} ->
+          notify(reason, full_context, stacktrace)
 
-    case Keyword.get(metadata, :crash_reason) do
-      {reason, stacktrace} ->
-        notify(reason, full_context, stacktrace)
+        reason when is_atom(reason) and not is_nil(reason) ->
+          notify(reason, full_context, [])
 
-      reason when is_atom(reason) and not is_nil(reason) ->
-        notify(reason, full_context, [])
-
-      _ ->
-        notify(%RuntimeError{message: message}, full_context, [])
+        _ ->
+          notify(%RuntimeError{message: message}, full_context, [])
+      end
     end
 
     {:ok, state}
@@ -80,6 +79,12 @@ defmodule Honeybadger.Logger do
 
     Honeybadger.notify(reason, metadata: metadata_with_breadcrumbs, stacktrace: stacktrace)
   end
+
+  def domain_ignored?(domain, ignored) when is_list(domain) and is_list(ignored) do
+    Enum.any?(ignored, fn ignore -> Enum.member?(domain, ignore) end)
+  end
+
+  def domain_ignored?(_domain ,_ignored), do: false
 
   @standard_metadata ~w(ancestors callers crash_reason file function line module pid)a
 

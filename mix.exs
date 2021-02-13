@@ -60,6 +60,7 @@ defmodule Honeybadger.Mixfile do
         proxy: nil,
         proxy_auth: {nil, nil},
         use_logger: true,
+        ignored_domains: [:cowboy],
         notice_filter: Honeybadger.NoticeFilter.Default,
         filter: Honeybadger.Filter.Default,
         filter_keys: [:password, :credit_card],
