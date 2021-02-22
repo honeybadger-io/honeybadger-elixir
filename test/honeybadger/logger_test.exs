@@ -152,4 +152,14 @@ defmodule Honeybadger.LoggerTest do
     assert_receive {:api_request, %{"breadcrumbs" => breadcrumbs}}
     assert List.first(breadcrumbs["trail"])["metadata"]["message"] == "Error-level log"
   end
+
+  test "ignores specific logger domains" do
+    with_config([ignored_domains: [:neat]], fn ->
+      Task.start(fn ->
+        Logger.error("what", domain: [:neat])
+      end)
+
+      refute_receive {:api_request, _}
+    end)
+  end
 end
