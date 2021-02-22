@@ -11,7 +11,7 @@ defmodule Honeybadger.Logger do
   end
 
   def init({__MODULE__, opts}) when is_list(opts) do
-    {:ok, %{ level: Keyword.get(opts, :level) }}
+    {:ok, %{ level: opts[:level] }}
   end
 
   @impl true
