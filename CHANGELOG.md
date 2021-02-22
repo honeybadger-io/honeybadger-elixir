@@ -5,6 +5,8 @@ CHANGELOG](http://keepachangelog.com/) for how to update this file. This project
 adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+
+## [v0.16.0] - 2021-02-22
 ### Changed
 - Send notifications on error-level logs
 - Added `ignored_domain` config with `[:cowboy]` as default
