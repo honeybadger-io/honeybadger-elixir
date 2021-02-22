@@ -7,6 +7,7 @@ adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 ### Changed
 - Send notifications on error-level logs
+- Added `ignored_domain` config with `[:cowboy]` as default
 
 ## [v0.15.0] - 2020-09-24
 ### Added
