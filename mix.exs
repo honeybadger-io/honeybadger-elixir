@@ -67,7 +67,8 @@ defmodule Honeybadger.Mixfile do
         filter_args: true,
         filter_disable_url: false,
         filter_disable_params: false,
-        filter_disable_session: false
+        filter_disable_session: false,
+        exclude_errors: Honeybadger.ExcludeErrors.Default
       ],
       mod: {Honeybadger, []}
     ]

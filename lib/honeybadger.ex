@@ -27,7 +27,8 @@ defmodule Honeybadger do
         use_logger: true,
         notice_filter: Honeybadger.NoticeFilter.Default,
         filter: Honeybadger.Filter.Default,
-        filter_keys: [:password, :credit_card]
+        filter_keys: [:password, :credit_card],
+        exclude_errors: Honeybadger.ExcludeErrors.Default
 
   ### Notifying
 
@@ -286,10 +287,14 @@ defmodule Honeybadger do
       |> contextual_metadata()
       |> Map.put(:breadcrumbs, breadcrumbs)
 
-    exception
-    |> Notice.new(metadata_with_breadcrumbs, stacktrace, fingerprint)
-    |> put_notice_fingerprint()
-    |> Client.send_notice()
+    notice =
+      exception
+      |> Notice.new(metadata_with_breadcrumbs, stacktrace, fingerprint)
+      |> put_notice_fingerprint()
+
+    exclude_error_module = Application.get_env(:honeybadger, :exclude_errors)
+
+    if not exclude_error_module.exclude_error?(notice), do: Client.send_notice(notice)
   end
 
   @doc deprecated: "Use Honeybadger.notify/2 instead"
