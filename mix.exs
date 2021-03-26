@@ -30,6 +30,9 @@ defmodule Honeybadger.Mixfile do
         flags: [:error_handling, :race_conditions, :underspecs]
       ],
 
+      # Xref
+      xref: [exclude: [Plug.Conn]],
+
       # Docs
       docs: [
         main: "readme",

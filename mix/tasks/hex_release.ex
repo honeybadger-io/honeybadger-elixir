@@ -1,4 +1,4 @@
-defmodule Mix.Tasks.Release do
+defmodule Mix.Tasks.HexRelease do
   use Mix.Task
 
   @shortdoc "Publish package to hex.pm, create a git tag and push it to GitHub"

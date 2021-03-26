@@ -14,14 +14,17 @@ defmodule HoneybadgerTest do
       restart_with_config(exclude_envs: [])
 
       logged =
-        capture_log(fn ->
-          try do
-            raise RuntimeError
-          rescue
-            exception ->
-              :ok = Honeybadger.notify(exception, %{}, __STACKTRACE__)
-          end
-        end, :stderr)
+        capture_log(
+          fn ->
+            try do
+              raise RuntimeError
+            rescue
+              exception ->
+                :ok = Honeybadger.notify(exception, %{}, __STACKTRACE__)
+            end
+          end,
+          :stderr
+        )
 
       assert logged =~ ~s|Reporting with notify/3 is deprecated, use notify/2 instead|
 
@@ -42,14 +45,17 @@ defmodule HoneybadgerTest do
       fun = fn :hi -> nil end
 
       logged =
-        capture_log(fn ->
-          try do
-            fun.(:boom)
-          rescue
-            exception ->
-              :ok = Honeybadger.notify(exception, %{}, __STACKTRACE__)
-          end
-        end, :stderr)
+        capture_log(
+          fn ->
+            try do
+              fun.(:boom)
+            rescue
+              exception ->
+                :ok = Honeybadger.notify(exception, %{}, __STACKTRACE__)
+            end
+          end,
+          :stderr
+        )
 
       assert logged =~ ~s|Reporting with notify/3 is deprecated, use notify/2 instead|
 
