@@ -84,7 +84,7 @@ defmodule Honeybadger.Logger do
     Enum.any?(ignored, fn ignore -> Enum.member?(domain, ignore) end)
   end
 
-  def domain_ignored?(_domain ,_ignored), do: false
+  def domain_ignored?(_domain, _ignored), do: false
 
   @standard_metadata ~w(ancestors callers crash_reason file function line module pid)a
 
