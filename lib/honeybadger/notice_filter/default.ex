@@ -18,7 +18,7 @@ defmodule Honeybadger.NoticeFilter.Default do
     request
     |> apply_filter(:context, &filter.filter_context/1)
     |> apply_filter(:params, &filter.filter_params/1)
-    |> apply_filter(:cgi_data, &filter_cgi_data/1)
+    |> apply_filter(:cgi_data, &filter.filter_cgi_data/1)
     |> apply_filter(:session, &filter.filter_session/1)
     |> disable(:filter_disable_url, :url)
     |> disable(:filter_disable_session, :session)
