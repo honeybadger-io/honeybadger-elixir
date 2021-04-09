@@ -18,8 +18,7 @@ defmodule Honeybadger.NoticeFilter.Default do
     request
     |> apply_filter(:context, &filter.filter_context/1)
     |> apply_filter(:params, &filter.filter_params/1)
-    |> apply_filter(:cgi_data, &filter_cgi_data/1)
-    |> apply_filter(:cgi_data, &filter.filter_cgi_data/1)
+    |> apply_filter(:cgi_data, &filter_cgi_data(filter, &1))
     |> apply_filter(:session, &filter.filter_session/1)
     |> disable(:filter_disable_url, :url)
     |> disable(:filter_disable_session, :session)
@@ -41,10 +40,12 @@ defmodule Honeybadger.NoticeFilter.Default do
     end
   end
 
-  defp filter_cgi_data(map) do
-    filter = Honeybadger.get_env(:filter)
+  defp filter_cgi_data(filter, map) do
+    keys = cgi_filter_keys()
 
-    filter.filter_map(map, cgi_filter_keys())
+    map
+    |> filter.filter_cgi_data()
+    |> filter.filter_map(keys)
   end
 
   defp cgi_filter_keys do
