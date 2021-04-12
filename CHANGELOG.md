@@ -5,6 +5,8 @@ CHANGELOG](http://keepachangelog.com/) for how to update this file. This project
 adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Fixed
+- Call custom `filter_cgi_data/1` in `NoticeFilter` (#353)
 
 ## [v0.16.0] - 2021-02-22
 ### Changed
