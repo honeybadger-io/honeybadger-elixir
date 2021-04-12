@@ -47,10 +47,9 @@ defmodule Honeybadger.Filter.Mixin do
         filter_keys = Enum.map(keys, &Honeybadger.Utils.canonicalize/1)
 
         drop_keys =
-          Enum.filter(
-            Map.keys(map),
-            &Enum.member?(filter_keys, Honeybadger.Utils.canonicalize(&1))
-          )
+          map
+          |> Map.keys()
+          |> Enum.filter(&Enum.member?(filter_keys, Honeybadger.Utils.canonicalize(&1)))
 
         Map.drop(map, drop_keys)
       end
@@ -59,12 +58,7 @@ defmodule Honeybadger.Filter.Mixin do
         map
       end
 
-      defoverridable filter_context: 1,
-                     filter_params: 1,
-                     filter_cgi_data: 1,
-                     filter_session: 1,
-                     filter_error_message: 1,
-                     filter_breadcrumbs: 1
+      defoverridable Honeybadger.Filter
     end
   end
 end
