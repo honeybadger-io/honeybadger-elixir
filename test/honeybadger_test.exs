@@ -149,6 +149,16 @@ defmodule HoneybadgerTest do
       assert_receive {:api_request, %{"error" => error}}
       assert error["fingerprint"] == "fingerprint-xpto"
     end
+
+    test "sending a notice with custom class and message" do
+      restart_with_config(exclude_envs: [])
+
+      Honeybadger.notify(%{class: "CustomError", message: "a message"})
+
+      assert_receive {:api_request, %{"error" => error}}
+      assert "CustomError" = error["class"]
+      assert "a message" = error["message"]
+    end
   end
 
   test "warn if incomplete env" do
