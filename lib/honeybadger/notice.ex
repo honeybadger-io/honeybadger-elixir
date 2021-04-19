@@ -47,7 +47,8 @@ defmodule Honeybadger.Notice do
     new(%RuntimeError{message: message}, metadata, stacktrace, fingerprint)
   end
 
-  def new(%{class: exception_name, message: message}, metadata, stacktrace, fingerprint) do
+  def new(%{class: exception_name, message: message}, metadata, stacktrace, fingerprint)
+      when is_map(metadata) and is_list(stacktrace) do
     do_new(exception_name, message, metadata, stacktrace, fingerprint)
   end
 
