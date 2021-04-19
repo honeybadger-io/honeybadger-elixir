@@ -47,15 +47,28 @@ defmodule Honeybadger.Notice do
     new(%RuntimeError{message: message}, metadata, stacktrace, fingerprint)
   end
 
+  def new(%{class: exception_name, message: message}, metadata, stacktrace, fingerprint)
+      when is_map(metadata) and is_list(stacktrace) do
+    new(exception_name, message, metadata, stacktrace, fingerprint)
+  end
+
   def new(exception, metadata, stacktrace, fingerprint)
       when is_map(metadata) and is_list(stacktrace) do
     {exception, stacktrace} = Exception.blame(:error, exception, stacktrace)
 
     %{__struct__: exception_mod} = exception
 
+    class = Utils.module_to_string(exception_mod)
+    message = exception_mod.message(exception)
+
+    new(class, message, metadata, stacktrace, fingerprint)
+  end
+
+  # bundles exception (or pseudo exception) information in to notice
+  defp new(class, message, metadata, stacktrace, fingerprint) do
     error = %{
-      class: Utils.module_to_string(exception_mod),
-      message: exception_mod.message(exception),
+      class: class,
+      message: message,
       backtrace: Backtrace.from_stacktrace(stacktrace),
       tags: Map.get(metadata, :tags, []),
       fingerprint: fingerprint
