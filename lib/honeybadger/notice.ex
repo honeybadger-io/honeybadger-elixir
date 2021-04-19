@@ -49,7 +49,7 @@ defmodule Honeybadger.Notice do
 
   def new(%{class: exception_name, message: message}, metadata, stacktrace, fingerprint)
       when is_map(metadata) and is_list(stacktrace) do
-    do_new(exception_name, message, metadata, stacktrace, fingerprint)
+    new(exception_name, message, metadata, stacktrace, fingerprint)
   end
 
   def new(exception, metadata, stacktrace, fingerprint)
@@ -61,11 +61,11 @@ defmodule Honeybadger.Notice do
     class = Utils.module_to_string(exception_mod)
     message = exception_mod.message(exception)
 
-    do_new(class, message, metadata, stacktrace, fingerprint)
+    new(class, message, metadata, stacktrace, fingerprint)
   end
 
   # bundles exception (or pseudo exception) information in to notice
-  defp do_new(class, message, metadata, stacktrace, fingerprint) do
+  defp new(class, message, metadata, stacktrace, fingerprint) do
     error = %{
       class: class,
       message: message,
