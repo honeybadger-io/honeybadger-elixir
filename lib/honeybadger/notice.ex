@@ -68,7 +68,7 @@ defmodule Honeybadger.Notice do
   defp new(class, message, metadata, stacktrace, fingerprint) do
     error = %{
       class: class,
-      message: message,
+      message: IO.iodata_to_binary(message),
       backtrace: Backtrace.from_stacktrace(stacktrace),
       tags: Map.get(metadata, :tags, []),
       fingerprint: fingerprint
