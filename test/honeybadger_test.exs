@@ -159,6 +159,17 @@ defmodule HoneybadgerTest do
       assert "CustomError" = error["class"]
       assert "a message" = error["message"]
     end
+
+    test "sending a notice when the message is an improper list of iodata" do
+      restart_with_config(exclude_envs: [])
+
+      message = ["RealError", 32, 40, "#PID<0.1.0>" | " ** Error"]
+
+      Honeybadger.notify(%RuntimeError{message: message})
+
+      assert_receive {:api_request, %{"error" => error}}
+      assert error["message"] == "RealError (#PID<0.1.0> ** Error"
+    end
   end
 
   test "warn if incomplete env" do
