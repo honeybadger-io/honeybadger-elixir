@@ -5,6 +5,8 @@ CHANGELOG](http://keepachangelog.com/) for how to update this file. This project
 adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Fixed
+- Encode notice message iodata before json serialize (#361)
 
 ## [v0.16.1] - 2021-04-12
 ### Fixed
