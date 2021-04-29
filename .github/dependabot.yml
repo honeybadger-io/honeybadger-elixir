@@ -1,0 +1,21 @@
+version: 2
+updates:
+- package-ecosystem: mix
+  directory: "/"
+  schedule:
+    interval: daily
+    time: "09:00"
+    timezone: America/Los_Angeles
+  open-pull-requests-limit: 99
+  ignore:
+  - dependency-name: hackney
+    versions:
+    - 1.17.1
+    - 1.17.2
+    - 1.17.3
+  - dependency-name: ex_doc
+    versions:
+    - 0.24.0
+  - dependency-name: ecto
+    versions:
+    - 3.5.6
