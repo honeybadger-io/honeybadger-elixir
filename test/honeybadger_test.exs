@@ -170,6 +170,15 @@ defmodule HoneybadgerTest do
       assert_receive {:api_request, %{"error" => error}}
       assert error["message"] == "RealError (#PID<0.1.0> ** Error"
     end
+
+    test "sending a notice when the message is nil" do
+      restart_with_config(exclude_envs: [])
+
+      Honeybadger.notify(%RuntimeError{message: nil})
+
+      assert_receive {:api_request, %{"error" => error}}
+      assert error["message"] == nil
+    end
   end
 
   test "warn if incomplete env" do

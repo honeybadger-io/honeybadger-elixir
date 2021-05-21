@@ -66,9 +66,11 @@ defmodule Honeybadger.Notice do
 
   # bundles exception (or pseudo exception) information in to notice
   defp new(class, message, metadata, stacktrace, fingerprint) do
+    message = if message, do: IO.iodata_to_binary(message), else: nil
+
     error = %{
       class: class,
-      message: IO.iodata_to_binary(message),
+      message: message,
       backtrace: Backtrace.from_stacktrace(stacktrace),
       tags: Map.get(metadata, :tags, []),
       fingerprint: fingerprint
