@@ -9,7 +9,7 @@ defmodule Honeybadger.BacktraceTest do
       {Honeybadger, :notify, [%RuntimeError{message: "error"}, %{a: 1}, [:a, :b]],
        [file: 'lib/honeybadger.ex', line: 38]},
       {Honeybadger.Backtrace, :from_stacktrace, 1,
-       [file: 'lib/honeybadger/backtrace.ex', line: 4]}
+       [file: 'lib/honeybadger/backtrace.ex', line: 4, error_info: %{module: :erl_erts_errors}]}
     ]
 
     with_config([filter_args: false], fn ->

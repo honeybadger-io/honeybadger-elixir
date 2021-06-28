@@ -24,13 +24,11 @@ defmodule Honeybadger.Backtrace do
     Enum.map(stacktrace, &format_line/1)
   end
 
-  defp format_line({mod, fun, args, []}) do
-    format_line({mod, fun, args, [file: nil, line: nil]})
-  end
-
-  defp format_line({mod, fun, args, [file: file, line: line]}) do
+  defp format_line({mod, fun, args, extra_info}) do
     app = Honeybadger.get_env(:app)
     filter_args = Honeybadger.get_env(:filter_args)
+    file = Keyword.get(extra_info, :file)
+    line = Keyword.get(extra_info, :line)
 
     %{
       file: format_file(file),
