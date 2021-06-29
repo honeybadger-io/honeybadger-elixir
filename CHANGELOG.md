@@ -5,6 +5,8 @@ CHANGELOG](http://keepachangelog.com/) for how to update this file. This project
 adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Fixed
+- Handle `extra_info` with `error_info` in `Honeybadger.Backtrace.format_line` (#369, @abstractcoder)
 
 ## [v0.16.2] - 2021-04-27
 ### Fixed
