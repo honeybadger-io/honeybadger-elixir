@@ -163,10 +163,10 @@ defmodule Honeybadger.Client do
 
       {:ok, code, _headers, ref} when code in 400..599 ->
         body = body_from_ref(ref)
-        Logger.error(fn -> "[Honeybadger] API failure: #{inspect(body)}" end)
+        Logger.warn(fn -> "[Honeybadger] API failure: #{inspect(body)}" end)
 
       {:error, reason} ->
-        Logger.error(fn -> "[Honeybadger] connection error: #{inspect(reason)}" end)
+        Logger.warn(fn -> "[Honeybadger] connection error: #{inspect(reason)}" end)
     end
   end
 
