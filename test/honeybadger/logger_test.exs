@@ -162,4 +162,12 @@ defmodule Honeybadger.LoggerTest do
       refute_receive {:api_request, _}
     end)
   end
+
+  test "ignores internal error" do
+    Logger.error("ignores internal error")
+    assert_receive {:api_request, _}
+
+    Logger.error("ignores internal error", application: :honeybadger)
+    refute_receive {:api_request, _}
+  end
 end
