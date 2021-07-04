@@ -12,6 +12,7 @@ defmodule Honeybadger.Client do
   ]
   @max_connections 20
   @notices_endpoint "/v1/notices"
+  @post_logger_metadata [domain: [:honeybadger]]
 
   # State
 
@@ -155,18 +156,33 @@ defmodule Honeybadger.Client do
     case :hackney.post(url, headers, payload, opts) do
       {:ok, code, _headers, ref} when code in 200..399 ->
         body = body_from_ref(ref)
-        Logger.debug(fn -> "[Honeybadger] API success: #{inspect(body)}" end)
+
+        Logger.debug(
+          fn -> "[Honeybadger] API success: #{inspect(body)}" end,
+          @post_logger_metadata
+        )
 
       {:ok, code, _headers, ref} when code == 429 ->
         body = body_from_ref(ref)
-        Logger.warn(fn -> "[Honeybadger] API failure: #{inspect(body)}" end)
+
+        Logger.warn(
+          fn -> "[Honeybadger] API failure: #{inspect(body)}" end,
+          @post_logger_metadata
+        )
 
       {:ok, code, _headers, ref} when code in 400..599 ->
         body = body_from_ref(ref)
-        Logger.error(fn -> "[Honeybadger] API failure: #{inspect(body)}" end)
+
+        Logger.error(
+          fn -> "[Honeybadger] API failure: #{inspect(body)}" end,
+          @post_logger_metadata
+        )
 
       {:error, reason} ->
-        Logger.error(fn -> "[Honeybadger] connection error: #{inspect(reason)}" end)
+        Logger.error(
+          fn -> "[Honeybadger] connection error: #{inspect(reason)}" end,
+          @post_logger_metadata
+        )
     end
   end
 
