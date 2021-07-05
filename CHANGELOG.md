@@ -7,7 +7,6 @@ adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 ### Fixed
 - Handle `extra_info` with `error_info` in `Honeybadger.Backtrace.format_line` (#369, @abstractcoder)
-
 - Prevent internal error from causing infinite loop (#370)
 
 ## [v0.16.2] - 2021-04-27
