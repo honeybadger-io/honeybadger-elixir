@@ -5,9 +5,11 @@ CHANGELOG](http://keepachangelog.com/) for how to update this file. This project
 adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+
+## [v0.16.3] - 2021-07-05
 ### Fixed
 - Handle `extra_info` with `error_info` in `Honeybadger.Backtrace.format_line` (#369, @abstractcoder)
-- Prevent internal error from causing infinite loop (#370)
+- Prevent infinite loop with `use_logger: true` when logging internal errors (#370)
 
 ## [v0.16.2] - 2021-04-27
 ### Fixed
