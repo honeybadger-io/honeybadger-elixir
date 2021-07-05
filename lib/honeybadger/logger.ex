@@ -25,7 +25,8 @@ defmodule Honeybadger.Logger do
   end
 
   def handle_event({:error, _gl, {Logger, message, _ts, metadata}}, state) do
-    unless domain_ignored?(metadata[:domain], Honeybadger.get_env(:ignored_domains)) do
+    unless domain_ignored?(metadata[:domain], Honeybadger.get_env(:ignored_domains)) ||
+             internal_error?(metadata[:application]) do
       details = extract_details(message)
       context = extract_context(metadata)
       full_context = Map.merge(details, context)
@@ -85,6 +86,12 @@ defmodule Honeybadger.Logger do
   end
 
   def domain_ignored?(_domain, _ignored), do: false
+
+  def internal_error?(nil), do: false
+
+  def internal_error?(application) do
+    application == :honeybadger
+  end
 
   @standard_metadata ~w(ancestors callers crash_reason file function line module pid)a
 
