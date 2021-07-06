@@ -87,11 +87,8 @@ defmodule Honeybadger.Logger do
 
   def domain_ignored?(_domain, _ignored), do: false
 
-  def internal_error?(nil), do: false
-
-  def internal_error?(application) do
-    application == :honeybadger
-  end
+  def internal_error?(:honeybadger), do: true
+  def internal_error?(_), do: false
 
   @standard_metadata ~w(ancestors callers crash_reason file function line module pid)a
 
