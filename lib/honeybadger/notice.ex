@@ -54,7 +54,7 @@ defmodule Honeybadger.Notice do
 
   def new(exception, metadata, stacktrace, fingerprint)
       when is_map(metadata) and is_list(stacktrace) do
-    {exception, stacktrace} = Exception.blame(:error, exception, stacktrace)
+    {exception, _stacktrace} = Exception.blame(:error, exception, stacktrace)
 
     %{__struct__: exception_mod} = exception
 
