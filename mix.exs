@@ -2,7 +2,7 @@ defmodule Honeybadger.Mixfile do
   use Mix.Project
 
   @source_url "https://github.com/honeybadger-io/honeybadger-elixir"
-  @version "0.16.0"
+  @version "0.16.3"
 
   def project do
     [
@@ -29,6 +29,9 @@ defmodule Honeybadger.Mixfile do
         plt_add_apps: [:plug, :mix, :ecto],
         flags: [:error_handling, :race_conditions, :underspecs]
       ],
+
+      # Xref
+      xref: [exclude: [Plug.Conn]],
 
       # Docs
       docs: [

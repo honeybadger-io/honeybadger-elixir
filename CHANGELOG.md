@@ -6,6 +6,19 @@ adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [v0.16.3] - 2021-07-05
+### Fixed
+- Handle `extra_info` with `error_info` in `Honeybadger.Backtrace.format_line` (#369, @abstractcoder)
+- Prevent infinite loop with `use_logger: true` when logging internal errors (#370)
+
+## [v0.16.2] - 2021-04-27
+### Fixed
+- Encode notice message iodata before json serialize (#361)
+
+## [v0.16.1] - 2021-04-12
+### Fixed
+- Call custom `filter_cgi_data/1` in `NoticeFilter` (#353)
+
 ## [v0.16.0] - 2021-02-22
 ### Changed
 - Send notifications on error-level logs

@@ -88,7 +88,7 @@ defmodule Honeybadger.Client do
     env_name = get_env(opts, :environment_name)
     excluded = get_env(opts, :exclude_envs)
 
-    not (maybe_to_atom(env_name) in excluded)
+    maybe_to_atom(env_name) not in excluded
   end
 
   # Callbacks
@@ -157,12 +157,16 @@ defmodule Honeybadger.Client do
         body = body_from_ref(ref)
         Logger.debug(fn -> "[Honeybadger] API success: #{inspect(body)}" end)
 
+      {:ok, code, _headers, ref} when code == 429 ->
+        body = body_from_ref(ref)
+        Logger.warn(fn -> "[Honeybadger] API failure: #{inspect(body)}" end)
+
       {:ok, code, _headers, ref} when code in 400..599 ->
         body = body_from_ref(ref)
-        Logger.error(fn -> "[Honeybadger] API failure: #{inspect(body)}" end)
+        Logger.warn(fn -> "[Honeybadger] API failure: #{inspect(body)}" end)
 
       {:error, reason} ->
-        Logger.error(fn -> "[Honeybadger] connection error: #{inspect(reason)}" end)
+        Logger.warn(fn -> "[Honeybadger] connection error: #{inspect(reason)}" end)
     end
   end
 

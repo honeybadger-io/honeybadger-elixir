@@ -14,14 +14,17 @@ defmodule HoneybadgerTest do
       restart_with_config(exclude_envs: [])
 
       logged =
-        capture_log(fn ->
-          try do
-            raise RuntimeError
-          rescue
-            exception ->
-              :ok = Honeybadger.notify(exception, %{}, __STACKTRACE__)
-          end
-        end, :stderr)
+        capture_log(
+          fn ->
+            try do
+              raise RuntimeError
+            rescue
+              exception ->
+                :ok = Honeybadger.notify(exception, %{}, __STACKTRACE__)
+            end
+          end,
+          :stderr
+        )
 
       assert logged =~ ~s|Reporting with notify/3 is deprecated, use notify/2 instead|
 
@@ -42,14 +45,17 @@ defmodule HoneybadgerTest do
       fun = fn :hi -> nil end
 
       logged =
-        capture_log(fn ->
-          try do
-            fun.(:boom)
-          rescue
-            exception ->
-              :ok = Honeybadger.notify(exception, %{}, __STACKTRACE__)
-          end
-        end, :stderr)
+        capture_log(
+          fn ->
+            try do
+              fun.(:boom)
+            rescue
+              exception ->
+                :ok = Honeybadger.notify(exception, %{}, __STACKTRACE__)
+            end
+          end,
+          :stderr
+        )
 
       assert logged =~ ~s|Reporting with notify/3 is deprecated, use notify/2 instead|
 
@@ -142,6 +148,36 @@ defmodule HoneybadgerTest do
 
       assert_receive {:api_request, %{"error" => error}}
       assert error["fingerprint"] == "fingerprint-xpto"
+    end
+
+    test "sending a notice with custom class and message" do
+      restart_with_config(exclude_envs: [])
+
+      Honeybadger.notify(%{class: "CustomError", message: "a message"})
+
+      assert_receive {:api_request, %{"error" => error}}
+      assert "CustomError" = error["class"]
+      assert "a message" = error["message"]
+    end
+
+    test "sending a notice when the message is an improper list of iodata" do
+      restart_with_config(exclude_envs: [])
+
+      message = ["RealError", 32, 40, "#PID<0.1.0>" | " ** Error"]
+
+      Honeybadger.notify(%RuntimeError{message: message})
+
+      assert_receive {:api_request, %{"error" => error}}
+      assert error["message"] == "RealError (#PID<0.1.0> ** Error"
+    end
+
+    test "sending a notice when the message is nil" do
+      restart_with_config(exclude_envs: [])
+
+      Honeybadger.notify(%RuntimeError{message: nil})
+
+      assert_receive {:api_request, %{"error" => error}}
+      assert error["message"] == nil
     end
   end
 
