@@ -6,7 +6,7 @@ adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 ### Fixed
-- Show arguments in stacktrace for `FunctionClauseError` when `filter_args = true` (#123, #373)
+- Show arguments in stacktrace for `FunctionClauseError` when `filter_args = false` (#123, #373)
 
 ## [v0.16.3] - 2021-07-05
 ### Fixed
