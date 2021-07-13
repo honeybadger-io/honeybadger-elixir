@@ -12,7 +12,7 @@ Elixir Plug, Logger and client for the :zap: [Honeybadger error notifier](https:
 
 [Watch our screencast](https://josh-rubyist.wistia.com/medias/pggpan0f9j) by Josh Adams of [ElixirSips](http://elixirsips.com/)!
 
-## Version requirements
+### Version Requirements
 
 - Erlang >= 18.0
 - Elixir >= 1.3
@@ -181,7 +181,7 @@ This will remove any entries in the `context`, `session`, `cgi_data` and `params
 
 If `Honeybadger.Filter.Default` does not suit your needs, you can implement your own filter. See the `Honeybadger.Filter.Mixin` module doc for details on implementing your own filter.
 
-## Filtering arguments
+## Filtering Arguments
 
 Honeybadger can show arguments in the stacktrace for `FunctionClauseError` exceptions. To enable argument reporting, set `filter_args` to `false`:
 
