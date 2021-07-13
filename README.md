@@ -186,10 +186,7 @@ If `Honeybadger.Filter.Default` does not suit your needs, you can implement your
 Honeybadger supports showing arguments in the stacktrace. This is made possible by setting `filter_args` to `false`
 
 ```elixir
-config :honeybadger,
-filter_args: false
-```
-NB:The cases where arguments are available in the stacktrace are limited.This currently works for `FunctionClauseError`
+config :honeybadger, filter_args: false
 
 
 ## Advanced Configuration
