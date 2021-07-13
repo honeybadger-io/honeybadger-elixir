@@ -5,6 +5,8 @@ CHANGELOG](http://keepachangelog.com/) for how to update this file. This project
 adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+
+## [v0.16.4] - 2021-07-13
 ### Fixed
 - Show arguments in stacktrace for `FunctionClauseError` when `filter_args = false` (#123, #373)
 
