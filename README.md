@@ -181,6 +181,13 @@ This will remove any entries in the `context`, `session`, `cgi_data` and `params
 
 If `Honeybadger.Filter.Default` does not suit your needs, you can implement your own filter. See the `Honeybadger.Filter.Mixin` module doc for details on implementing your own filter.
 
+## Filtering arguments
+
+Honeybadger supports showing arguments in the stacktrace. This is made possible by setting `filter_args` to `false`
+
+```elixir
+config :honeybadger, filter_args: false
+
 
 ## Advanced Configuration
 
