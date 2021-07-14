@@ -6,7 +6,7 @@ adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 ### Changed
--Default `filter_args` to `false` (#375)
+- Default `filter_args` to `false` (#375)
 
 ## [v0.16.4] - 2021-07-13
 ### Fixed
