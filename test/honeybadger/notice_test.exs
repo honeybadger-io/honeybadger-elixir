@@ -68,7 +68,7 @@ defmodule Honeybadger.NoticeTest do
              %{
                file: "lib/elixir/lib/kernel.ex",
                method: "+/1",
-               args: [],
+               args: ["1"],
                number: 321,
                context: "all"
              }
