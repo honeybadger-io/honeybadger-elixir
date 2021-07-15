@@ -289,7 +289,6 @@ defmodule Honeybadger do
     exception
     |> Notice.new(metadata_with_breadcrumbs, stacktrace, fingerprint)
     |> put_notice_fingerprint()
-    |> IO.inspect(label: "fffffffffffffffff")
     |> Client.send_notice()
   end
 
