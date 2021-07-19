@@ -189,6 +189,32 @@ Honeybadger can show arguments in the stacktrace for `FunctionClauseError` excep
 config :honeybadger, filter_args: false
 ```
 
+## Customizing Error Grouping
+
+See the [Error Monitoring Guide](https://docs.honeybadger.io/guides/errors/#error-grouping) for more information about how honeybadger groups similar exception together. You can customize the grouping for each exception in Elixir by sending a custom *fingerprint* when the exception is reported.
+
+To customize the fingerprint for all exceptions that are reported from your app, use the `fingerprint_adapter` configuration option in `config.ex`:
+
+```elixir
+config :honeybadger, fingerprint_adapter: MyApp.CustomFingerprint
+```
+
+```elixir
+ defmodule MyApp.CustomFingerprint do
+  @behaviour Honeybadger.FingerprintAdapter
+
+  def parse(notice) do
+    notice.notifier.language <> "-" <> notice.notifier.name
+  end
+end
+```
+
+You can also customize the fingerprint for individual exceptions when calling `Honeybadger.notify`:
+
+```elixir
+Honeybadger.notify(%RuntimeError{}, fingerprint: "culprit_id-123")
+```
+
 ## Advanced Configuration
 
 You can set configuration options in `config.exs`. It looks like this:
