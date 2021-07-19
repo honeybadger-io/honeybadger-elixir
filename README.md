@@ -189,21 +189,17 @@ Honeybadger can show arguments in the stacktrace for `FunctionClauseError` excep
 config :honeybadger, filter_args: false
 ```
 
-## Customizing Error grouping
+## Customizing Error Grouping
 
-Check the [API docs](https://docs.honeybadger.io/lib/ruby/getting-started/customizing-error-grouping/#customizing-the-grouping-for-code-honeybadger-notify-code-) for more information about how honeybadger groups similar exception together.
+See the [Error Monitoring Guide](https://docs.honeybadger.io/guides/errors/#error-grouping) for more information about how honeybadger groups similar exception together. You can customize the grouping for each exception in Elixir by sending a custom *fingerprint* when the exception is reported.
 
-You can customize your grouping by customizing fingerprint passed to Honeybadger when the exception is reported.
+To customize the fingerprint for all exceptions that are reported from your app, use the `fingerprint_adapter` configuration option in `config.ex`:
 
-This can be done globally(for all exceptions that are reported from your app):
-Set `fingerprint_adapter` configuration option in `config.ex` 
-
- ```elixir
+```elixir
 config :honeybadger, fingerprint_adapter: MyApp.CustomFingerprint
+```
 
- ```
-
- ```elixir
+```elixir
  defmodule MyApp.CustomFingerprint do
   @behaviour Honeybadger.FingerprintAdapter
 
@@ -211,17 +207,13 @@ config :honeybadger, fingerprint_adapter: MyApp.CustomFingerprint
     notice.notifier.language <> "-" <> notice.notifier.name
   end
 end
+```
 
- ```
-Customization can also be done locally by calling `Honeybadger.notify`
+You can also customize the fingerprint for individual exceptions when calling `Honeybadger.notify`:
 
 ```elixir
 Honeybadger.notify(%RuntimeError{}, fingerprint: "culprit_id-123")
-
 ```
-
- 
-
 
 ## Advanced Configuration
 
