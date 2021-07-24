@@ -146,11 +146,22 @@ defmodule Honeybadger.LoggerTest do
     refute_receive {:api_request, _}
   end
 
-  test "handles error-level log" do
-    Logger.error("Error-level log")
+  test "handles error-level log when enabled" do
+    with_config([notify_for_error_logs: true], fn ->
+      Logger.error("Error-level log")
 
-    assert_receive {:api_request, %{"breadcrumbs" => breadcrumbs}}
-    assert List.first(breadcrumbs["trail"])["metadata"]["message"] == "Error-level log"
+      assert_receive {:api_request, %{"breadcrumbs" => breadcrumbs}}
+      assert List.first(breadcrumbs["trail"])["metadata"]["message"] == "Error-level log"
+    end)
+  end
+
+  test "ignores error-level log when disabled" do
+    with_config([notify_for_error_logs: true], fn ->
+      Logger.error("Error-level log")
+
+      assert_receive {:api_request, %{"breadcrumbs" => breadcrumbs}}
+      assert List.first(breadcrumbs["trail"])["metadata"]["message"] == "Error-level log"
+    end)
   end
 
   test "ignores specific logger domains" do
@@ -164,10 +175,12 @@ defmodule Honeybadger.LoggerTest do
   end
 
   test "ignores internal error" do
-    Logger.error("ignores internal error")
-    assert_receive {:api_request, _}
+    with_config([notify_for_error_logs: true], fn ->
+      Logger.error("ignores internal error")
+      assert_receive {:api_request, _}
 
-    Logger.error("ignores internal error", application: :honeybadger)
-    refute_receive {:api_request, _}
+      Logger.error("ignores internal error", application: :honeybadger)
+      refute_receive {:api_request, _}
+    end)
   end
 end

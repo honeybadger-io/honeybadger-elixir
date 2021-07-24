@@ -255,6 +255,7 @@ Here are all of the options you can pass in the keyword list:
 | `filter_disable_params`  | If true, will remove the request params                                                       | `false`                                  |
 | `fingerprint_adapter`    | Implementation of FingerprintAdapter behaviour                                                |                                          |
 | `notice_filter`          | Module implementing `Honeybadger.NoticeFilter`. If `nil`, no filtering is done.               | `Honeybadger.NoticeFilter.Default`       |
+| `notify_for_error_logs`  | Enable sending notifications for Logger.error calls                                           | `false`
 | `use_logger`             | Enable the Honeybadger Logger for handling errors outside of web requests                     | `true`                                   |
 | `ignored_domains`        | Add domains to ignore Error events in `Honeybadger.Logger`.                                   | `[:cowboy]`                              |
 | `breadcrumbs_enabled`    | Enable breadcrumb event tracking                                                              | `false`                                  |
