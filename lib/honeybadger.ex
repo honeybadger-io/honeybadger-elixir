@@ -20,7 +20,7 @@ defmodule Honeybadger do
         ecto_repos: [MyAppName.Ecto.Repo],
         hostname: "myserver.domain.com",
         origin: "https://api.honeybadger.io",
-        notify_for_error_logs: true,
+        sasl_logging_only: false,
         proxy: "http://proxy.net:PORT",
         proxy_auth: {"Username", "Password"},
         project_root: "/home/skynet",

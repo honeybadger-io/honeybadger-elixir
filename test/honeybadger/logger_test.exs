@@ -147,7 +147,7 @@ defmodule Honeybadger.LoggerTest do
   end
 
   test "handles error-level log when enabled" do
-    with_config([notify_for_error_logs: true], fn ->
+    with_config([sasl_logging_only: false], fn ->
       Logger.error("Error-level log")
 
       assert_receive {:api_request, %{"breadcrumbs" => breadcrumbs}}
@@ -156,7 +156,7 @@ defmodule Honeybadger.LoggerTest do
   end
 
   test "ignores error-level log when disabled" do
-    with_config([notify_for_error_logs: false], fn ->
+    with_config([sasl_logging_only: true], fn ->
       Logger.error("Error-level log")
 
       refute_receive {:api_request, _}
@@ -174,7 +174,7 @@ defmodule Honeybadger.LoggerTest do
   end
 
   test "ignores internal error" do
-    with_config([notify_for_error_logs: true], fn ->
+    with_config([sasl_logging_only: false], fn ->
       Logger.error("ignores internal error")
       assert_receive {:api_request, _}
 
