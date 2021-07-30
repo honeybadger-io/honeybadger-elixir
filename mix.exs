@@ -59,6 +59,7 @@ defmodule Honeybadger.Mixfile do
         ecto_repos: [],
         environment_name: Mix.env(),
         exclude_envs: [:dev, :test],
+        sasl_logging_only: true,
         origin: "https://api.honeybadger.io",
         proxy: nil,
         proxy_auth: {nil, nil},

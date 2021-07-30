@@ -39,7 +39,9 @@ defmodule Honeybadger.Logger do
           notify(reason, full_context, [])
 
         _ ->
-          notify(%RuntimeError{message: message}, full_context, [])
+          unless get_config(:sasl_logging_only) do
+            notify(%RuntimeError{message: message}, full_context, [])
+          end
       end
     end
 
@@ -116,5 +118,9 @@ defmodule Honeybadger.Logger do
 
   defp extract_details(_message) do
     %{}
+  end
+
+  defp get_config(key) do
+    Application.get_env(:honeybadger, key)
   end
 end
