@@ -6,7 +6,7 @@ adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 ### Fixed
-- fix callback spec arg type mismatch (#384)
+- fix callback spec arg type mismatch for handle_errors/2 from plugs (#384)
 
 ### Changed
 - Default `filter_args` to `false` (#375)
