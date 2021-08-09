@@ -5,6 +5,9 @@ CHANGELOG](http://keepachangelog.com/) for how to update this file. This project
 adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Fixed
+- fix callback spec arg type mismatch for handle_errors/2 from plugs (#384)
+
 ### Changed
 - Default `filter_args` to `false` (#375)
 
