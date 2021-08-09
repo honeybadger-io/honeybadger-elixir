@@ -11,6 +11,9 @@ adheres to [Semantic Versioning](http://semver.org/).
 ### Changed
 - Default `filter_args` to `false` (#375)
 
+### Added
+- Make notification for `Logger.error` configurable (#380, @yukster)
+
 ## [v0.16.4] - 2021-07-13
 ### Fixed
 - Show arguments in stacktrace for `FunctionClauseError` when `filter_args = false` (#123, #373)
