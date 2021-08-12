@@ -53,7 +53,7 @@ config :honeybadger,
 
 If `environment_name` is not set we will fall back to the value of `Mix.env()`.
 `Mix.env()` uses the atomized value of the `MIX_ENV` environment variable and
-defaults to `:dev` when the environment variable is not set. This should be good
+defaults to `:prod` when the environment variable is not set. This should be good
 for most setups. If you want to have an `environment_name` which is different than
 the `Mix.env()`, you should set `environment_name` in your `config.exs` files for each
 environment. This ensures that we can give you accurate environment information
@@ -241,7 +241,7 @@ Here are all of the options you can pass in the keyword list:
 | ------------------------ | --------------------------------------------------------------------------------------------- | ---------------------------------------- |
 | `app`                    | Name of your app's OTP Application as an atom                                                 | `Mix.Project.config[:app]`               |
 | `api_key`                | Your application's Honeybadger API key                                                        | `System.get_env("HONEYBADGER_API_KEY"))` |
-| `environment_name`       | (required) The name of the environment your app is running in.                                | `nil`                                    |
+| `environment_name`       | (required) The name of the environment your app is running in.                                | `:prod`                                    |
 | `exclude_envs`           | Environments that you want to disable Honeybadger notifications                               | `[:dev, :test]`                          |
 | `hostname`               | Hostname of the system your application is running on                                         | `:inet.gethostname`                      |
 | `origin`                 | URL for the Honeybadger API                                                                   | `"https://api.honeybadger.io"`           |
