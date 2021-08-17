@@ -295,7 +295,7 @@ defmodule Honeybadger do
 
     exclude_error_module = Application.get_env(:honeybadger, :exclude_errors)
 
-    if not exclude_error_module.exclude_error?(notice), do: Client.send_notice(notice)
+    unless exclude_error_module.exclude_error?(notice), do: Client.send_notice(notice)
   end
 
   @doc deprecated: "Use Honeybadger.notify/2 instead"
