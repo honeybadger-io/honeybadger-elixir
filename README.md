@@ -12,7 +12,7 @@ Elixir Plug, Logger and client for the :zap: [Honeybadger error notifier](https:
 
 [Watch our screencast](https://josh-rubyist.wistia.com/medias/pggpan0f9j) by Josh Adams of [ElixirSips](http://elixirsips.com/)!
 
-## Version requirements
+### Version Requirements
 
 - Erlang >= 18.0
 - Elixir >= 1.3
@@ -53,7 +53,7 @@ config :honeybadger,
 
 If `environment_name` is not set we will fall back to the value of `Mix.env()`.
 `Mix.env()` uses the atomized value of the `MIX_ENV` environment variable and
-defaults to `:dev` when the environment variable is not set. This should be good
+defaults to `:prod` when the environment variable is not set. This should be good
 for most setups. If you want to have an `environment_name` which is different than
 the `Mix.env()`, you should set `environment_name` in your `config.exs` files for each
 environment. This ensures that we can give you accurate environment information
@@ -181,6 +181,39 @@ This will remove any entries in the `context`, `session`, `cgi_data` and `params
 
 If `Honeybadger.Filter.Default` does not suit your needs, you can implement your own filter. See the `Honeybadger.Filter.Mixin` module doc for details on implementing your own filter.
 
+## Filtering Arguments
+
+Honeybadger can show arguments in the stacktrace for `FunctionClauseError` exceptions. To enable argument reporting, set `filter_args` to `false`:
+
+```elixir
+config :honeybadger, filter_args: false
+```
+
+## Customizing Error Grouping
+
+See the [Error Monitoring Guide](https://docs.honeybadger.io/guides/errors/#error-grouping) for more information about how honeybadger groups similar exception together. You can customize the grouping for each exception in Elixir by sending a custom *fingerprint* when the exception is reported.
+
+To customize the fingerprint for all exceptions that are reported from your app, use the `fingerprint_adapter` configuration option in `config.ex`:
+
+```elixir
+config :honeybadger, fingerprint_adapter: MyApp.CustomFingerprint
+```
+
+```elixir
+ defmodule MyApp.CustomFingerprint do
+  @behaviour Honeybadger.FingerprintAdapter
+
+  def parse(notice) do
+    notice.notifier.language <> "-" <> notice.notifier.name
+  end
+end
+```
+
+You can also customize the fingerprint for individual exceptions when calling `Honeybadger.notify`:
+
+```elixir
+Honeybadger.notify(%RuntimeError{}, fingerprint: "culprit_id-123")
+```
 
 ## Advanced Configuration
 
@@ -208,7 +241,7 @@ Here are all of the options you can pass in the keyword list:
 | ------------------------ | --------------------------------------------------------------------------------------------- | ---------------------------------------- |
 | `app`                    | Name of your app's OTP Application as an atom                                                 | `Mix.Project.config[:app]`               |
 | `api_key`                | Your application's Honeybadger API key                                                        | `System.get_env("HONEYBADGER_API_KEY"))` |
-| `environment_name`       | (required) The name of the environment your app is running in.                                | `nil`                                    |
+| `environment_name`       | (required) The name of the environment your app is running in.                                | `:prod`                                    |
 | `exclude_envs`           | Environments that you want to disable Honeybadger notifications                               | `[:dev, :test]`                          |
 | `hostname`               | Hostname of the system your application is running on                                         | `:inet.gethostname`                      |
 | `origin`                 | URL for the Honeybadger API                                                                   | `"https://api.honeybadger.io"`           |
@@ -222,6 +255,7 @@ Here are all of the options you can pass in the keyword list:
 | `filter_disable_params`  | If true, will remove the request params                                                       | `false`                                  |
 | `fingerprint_adapter`    | Implementation of FingerprintAdapter behaviour                                                |                                          |
 | `notice_filter`          | Module implementing `Honeybadger.NoticeFilter`. If `nil`, no filtering is done.               | `Honeybadger.NoticeFilter.Default`       |
+| `sasl_logging_only`      | If true, will notifiy for SASL errors but not Logger calls                                    | `true`                                   |
 | `use_logger`             | Enable the Honeybadger Logger for handling errors outside of web requests                     | `true`                                   |
 | `ignored_domains`        | Add domains to ignore Error events in `Honeybadger.Logger`.                                   | `[:cowboy]`                              |
 | `breadcrumbs_enabled`    | Enable breadcrumb event tracking                                                              | `false`                                  |

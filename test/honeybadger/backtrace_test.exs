@@ -49,4 +49,18 @@ defmodule Honeybadger.BacktraceTest do
       assert match?(%{method: "something/3", args: []}, entry_1)
     end)
   end
+
+  test "args are included by default" do
+    stacktrace = [{Honeybadger, :something, [1, 2, 3], []}]
+
+    [
+      %{
+        args: ["1", "2", "3"],
+        context: "all",
+        file: nil,
+        method: "something/3",
+        number: nil
+      }
+    ] = Backtrace.from_stacktrace(stacktrace)
+  end
 end

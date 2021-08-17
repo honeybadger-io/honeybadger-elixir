@@ -2,7 +2,7 @@ defmodule Honeybadger.Mixfile do
   use Mix.Project
 
   @source_url "https://github.com/honeybadger-io/honeybadger-elixir"
-  @version "0.16.3"
+  @version "0.17.0"
 
   def project do
     [
@@ -59,6 +59,7 @@ defmodule Honeybadger.Mixfile do
         ecto_repos: [],
         environment_name: Mix.env(),
         exclude_envs: [:dev, :test],
+        sasl_logging_only: true,
         origin: "https://api.honeybadger.io",
         proxy: nil,
         proxy_auth: {nil, nil},
@@ -67,7 +68,7 @@ defmodule Honeybadger.Mixfile do
         notice_filter: Honeybadger.NoticeFilter.Default,
         filter: Honeybadger.Filter.Default,
         filter_keys: [:password, :credit_card],
-        filter_args: true,
+        filter_args: false,
         filter_disable_url: false,
         filter_disable_params: false,
         filter_disable_session: false,

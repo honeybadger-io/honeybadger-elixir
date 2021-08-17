@@ -6,6 +6,20 @@ adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [v0.17.0] - 2021-08-16
+### Fixed
+- fix callback spec arg type mismatch for handle_errors/2 from plugs (#384)
+
+### Changed
+- Default `filter_args` to `false` (#375)
+
+### Added
+- Make notification for `Logger.error` configurable (#380, @yukster)
+
+## [v0.16.4] - 2021-07-13
+### Fixed
+- Show arguments in stacktrace for `FunctionClauseError` when `filter_args = false` (#123, #373)
+
 ## [v0.16.3] - 2021-07-05
 ### Fixed
 - Handle `extra_info` with `error_info` in `Honeybadger.Backtrace.format_line` (#369, @abstractcoder)
