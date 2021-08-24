@@ -83,8 +83,7 @@ defmodule Honeybadger.Mixfile do
       {:jason, "~> 1.0"},
       {:plug, ">= 1.0.0 and < 2.0.0", optional: true},
       {:ecto, ">= 2.0.0", optional: true},
-      {:phoenix, "~> 1.5.11", optional: true},
-      # {:phoenix, ">= 1.0.0 and < 2.0.0", optional: true},
+      {:phoenix, ">= 1.0.0 and < 2.0.0", optional: true},
       {:telemetry, "~> 0.4"},
 
       # Dev dependencies
