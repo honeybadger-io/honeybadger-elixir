@@ -5,6 +5,8 @@ CHANGELOG](http://keepachangelog.com/) for how to update this file. This project
 adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Changed
+- Update Elixir version in CI (#390)
 
 ## [v0.17.0] - 2021-08-16
 ### Fixed
