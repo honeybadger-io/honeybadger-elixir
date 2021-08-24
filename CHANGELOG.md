@@ -5,8 +5,16 @@ CHANGELOG](http://keepachangelog.com/) for how to update this file. This project
 adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+
+## [v0.17.0] - 2021-08-16
+### Fixed
+- fix callback spec arg type mismatch for handle_errors/2 from plugs (#384)
+
 ### Changed
 - Default `filter_args` to `false` (#375)
+
+### Added
+- Make notification for `Logger.error` configurable (#380, @yukster)
 
 ## [v0.16.4] - 2021-07-13
 ### Fixed
