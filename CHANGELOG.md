@@ -6,7 +6,7 @@ adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 ### Changed
-- Update Elixir version in CI (#390). Updating of phoenix dependancy from v1.5.10 to v1.5.11 resulted to a compilation error due to the tier dependancy(:mime) which requires Elixir 1.10+ but CI runs on Elixir v1.8.0 hence the need for an update to Elixir 1.10+.
+- Update the minimum Elixir version to 1.10 (#390). Phoenix v1.5.11 causes a compilation error due to the new `mime` dependency, which requires Elixir 1.10+.
 
 ##### NB: Due to the upgrade of phoenix from v1.5.10 to v1.5.11 you must be on Elixir 1.10+
 
