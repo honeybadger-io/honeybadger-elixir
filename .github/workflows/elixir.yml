@@ -2,9 +2,9 @@ name: Elixir CI
 
 on:
   push:
-    branches: [ master ]
+    branches: [ update-elixir-version ] 
   pull_request:
-    branches: [ master ]
+    branches: [ update-elixir-version ]
 
 jobs:
   build:
@@ -17,11 +17,11 @@ jobs:
       matrix:
         include:
           - pair:
-              elixir: '1.12'
-              otp: '22.0'
+              elixir: '1.10'
+              otp: '21.3'
           - pair:
-              elixir: '1.11'
-              otp: '23.2'
+              elixir: '1.12'
+              otp: '24.0'
             lint: lint
 
     runs-on: ubuntu-latest
