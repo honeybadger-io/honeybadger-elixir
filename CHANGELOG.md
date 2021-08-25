@@ -8,7 +8,7 @@ adheres to [Semantic Versioning](http://semver.org/).
 ### Changed
 - Update Elixir version in CI (#390). Updating of phoenix dependancy from v1.5.10 to v1.5.11 resulted to a compilation error due to the tier dependancy(:mime) which requires Elixir 1.10+ but CI runs on Elixir v1.8.0 hence the need for an update to Elixir 1.10+.
 
-##### NB: upgrade of phoenix from v1.5.10 to v1.5.11 requires you to be on Elixir 1.10+
+##### NB: Due to the upgrade of phoenix from v1.5.10 to v1.5.11 you must be on Elixir 1.10+
 
 ## [v0.17.0] - 2021-08-16
 ### Fixed
