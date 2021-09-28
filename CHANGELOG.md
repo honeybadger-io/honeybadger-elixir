@@ -8,6 +8,9 @@ adheres to [Semantic Versioning](http://semver.org/).
 ### Changed
 - Update the minimum Elixir version to 1.10 (#390). Phoenix v1.5.11 causes a compilation error due to the new `mime` dependency, which requires Elixir 1.10+.
 
+### Fixed
+- Support latest telemetry dependency. (#397)
+
 ##### NB: Due to the upgrade of phoenix from v1.5.10 to v1.5.11 you must be on Elixir 1.10+
 
 ## [v0.17.0] - 2021-08-16
