@@ -1,6 +1,8 @@
 defmodule Honeybadger.Breadcrumbs.Telemetry do
   @moduledoc false
 
+  alias __MODULE__
+
   @spec telemetry_events() :: [[atom()]]
   def telemetry_events do
     []
@@ -13,7 +15,7 @@ defmodule Honeybadger.Breadcrumbs.Telemetry do
     :telemetry.attach_many(
       "hb-telemetry",
       telemetry_events(),
-      &handle_telemetry/4,
+      &Telemetry.handle_telemetry/4,
       nil
     )
 
