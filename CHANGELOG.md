@@ -6,6 +6,10 @@ adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [v0.18.1] - 2021-11-16
+### Fixed
+- Avoid local function captures in Telemetry.attrach_many/4 (#400)
+
 ## [v0.18.0] - 2021-09-28
 ### Changed
 - Update the minimum Elixir version to 1.10 (#390). Phoenix v1.5.11 causes a compilation error due to the new `mime` dependency, which requires Elixir 1.10+.
