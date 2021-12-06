@@ -15,7 +15,7 @@ Elixir Plug, Logger and client for the :zap: [Honeybadger error notifier](https:
 ### Version Requirements
 
 - Erlang >= 18.0
-- Elixir >= 1.3
+- Elixir >= 1.10
 - Plug >= 1.0
 - Phoenix >= 1.0 (This is an optional dependency and the version requirement applies only if you are using Phoenix)
 
