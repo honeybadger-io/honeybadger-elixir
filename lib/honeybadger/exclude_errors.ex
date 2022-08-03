@@ -6,7 +6,7 @@ defmodule Honeybadger.ExcludeErrors do
   alias Honeybadger.Notice
 
   @doc """
-  Filter the context Map.  The context is a map of application supplied data.
+  Takes in a notice struct and supposed to return true or false depending with the user Specification
   """
   @callback exclude_error?(Notice.t()) :: boolean
 end

@@ -78,6 +78,37 @@ defmodule HoneybadgerTest do
       assert_receive {:api_request, %{"error" => error}}
       assert error["class"] == "FunctionClauseError"
     end
+
+    test "errors are sent to server when error is missing in list of errors passed" do
+      restart_with_config(exclude_envs: [], exclude_errors: ["RuntimeError"])
+
+      fun = fn :num -> nil end
+
+      try do
+        fun.(:boom)
+      rescue
+        exception ->
+          :ok = Honeybadger.notify(exception, stacktrace: __STACKTRACE__)
+      end
+
+      assert_receive {:api_request, %{"error" => error}}
+      assert error["class"] == "FunctionClauseError"
+    end
+
+    test "excludes errors sent to server when a list of errors is passed" do
+      restart_with_config(exclude_envs: [], exclude_errors: ["FunctionClauseError"])
+
+      fun = fn :num -> nil end
+
+      try do
+        fun.(:boom)
+      rescue
+        exception ->
+          nil = Honeybadger.notify(exception, stacktrace: __STACKTRACE__)
+      end
+
+      refute_receive {:api_request, _}
+    end
   end
 
   describe "deprecated Honeybadger.notify works" do

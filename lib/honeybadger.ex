@@ -293,9 +293,17 @@ defmodule Honeybadger do
       |> Notice.new(metadata_with_breadcrumbs, stacktrace, fingerprint)
       |> put_notice_fingerprint()
 
-    exclude_error_module = Application.get_env(:honeybadger, :exclude_errors)
+    exclude_error_value = Application.get_env(:honeybadger, :exclude_errors)
 
-    unless exclude_error_module.exclude_error?(notice), do: Client.send_notice(notice)
+    unless exclude_error?(exclude_error_value, notice), do: Client.send_notice(notice)
+  end
+
+  defp exclude_error?(value, notice) when is_list(value) do
+    notice.error.class in value
+  end
+
+  defp exclude_error?(value, notice) do
+    value.exclude_error?(notice)
   end
 
   @doc deprecated: "Use Honeybadger.notify/2 instead"
