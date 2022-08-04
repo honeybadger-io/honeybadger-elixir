@@ -29,7 +29,7 @@ defmodule Honeybadger do
         notice_filter: Honeybadger.NoticeFilter.Default,
         filter: Honeybadger.Filter.Default,
         filter_keys: [:password, :credit_card],
-        exclude_errors: Honeybadger.ExcludeErrors.Default
+        exclude_errors: []
 
   ### Notifying
 
