@@ -299,6 +299,7 @@ defmodule Honeybadger do
   end
 
   defp exclude_error?(value, notice) when is_list(value) do
+    value = Enum.map(value, &(&1 |> to_string() |> String.trim_leading("Elixir.")))
     notice.error.class in value
   end
 

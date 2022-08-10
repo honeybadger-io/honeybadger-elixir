@@ -95,8 +95,23 @@ defmodule HoneybadgerTest do
       assert error["class"] == "FunctionClauseError"
     end
 
-    test "excludes errors sent to server when a list of errors is passed" do
+    test "excludes errors sent to server when a list of error strings are passed" do
       restart_with_config(exclude_envs: [], exclude_errors: ["FunctionClauseError"])
+
+      fun = fn :num -> nil end
+
+      try do
+        fun.(:boom)
+      rescue
+        exception ->
+          nil = Honeybadger.notify(exception, stacktrace: __STACKTRACE__)
+      end
+
+      refute_receive {:api_request, _}
+    end
+
+    test "excludes errors sent to server when a list of errors classes are passed" do
+      restart_with_config(exclude_envs: [], exclude_errors: [FunctionClauseError])
 
       fun = fn :num -> nil end
 
