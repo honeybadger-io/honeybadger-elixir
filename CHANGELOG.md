@@ -6,6 +6,10 @@ adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [v0.19.0] - 2022-08-10
+### Added
+- Add config option `exclude_errors` that excludes errors from being sent to the Honeybadger servers.(#443)
+
 ## [v0.18.1] - 2021-11-16
 ### Fixed
 - Avoid local function captures in Telemetry.attrach_many/4 (#400)
