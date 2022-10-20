@@ -5,8 +5,6 @@ CHANGELOG](http://keepachangelog.com/) for how to update this file. This project
 adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
-
-## [v0.19.0] - 2022-08-10
 ### Added
 - Add config option `exclude_errors` that excludes errors from being sent to the Honeybadger servers.(#443)
 
