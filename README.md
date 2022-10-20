@@ -189,6 +189,47 @@ Honeybadger can show arguments in the stacktrace for `FunctionClauseError` excep
 config :honeybadger, filter_args: false
 ```
 
+## Excluding Errors
+
+By default Honeybadger will get notified when error occurs . To override this configuration in order not to send out errors to Honeybadger, set `exclude_errors` option in `config/config.exs`.
+
+This can be done by passing a list of errors to be excluded:
+
+```elixir
+config :honeybadger,
+  exclude_errors: ["RuntimeError"]
+```
+
+or
+
+```elixir
+config :honeybadger,
+  exclude_errors: [RuntimeError]
+```
+Also you can implement the `Honeybadger.ExcludeErrors` behaviour function `exclude_error?/1`, which receives the full `Honeybadger.Notice` and returns a boolean signalling the error exclusion or not.
+
+```elixir
+
+  defmodule ExcludeFunClauseErrors do
+    alias Honeybadger.ExcludeErrors
+
+    @behaviour ExcludeErrors
+
+    @impl ExcludeErrors
+
+    def exclude_error?(notice) do
+      notice.error.class == "FunctionClauseError"
+    end
+  end
+
+```
+
+```elixir
+config :honeybadger,
+  exclude_errors: ExcludeFunClauseErrors
+```
+
+
 ## Customizing Error Grouping
 
 See the [Error Monitoring Guide](https://docs.honeybadger.io/guides/errors/#error-grouping) for more information about how honeybadger groups similar exception together. You can customize the grouping for each exception in Elixir by sending a custom *fingerprint* when the exception is reported.
@@ -242,6 +283,7 @@ Here are all of the options you can pass in the keyword list:
 | `app`                    | Name of your app's OTP Application as an atom                                                 | `Mix.Project.config[:app]`               |
 | `api_key`                | Your application's Honeybadger API key                                                        | `System.get_env("HONEYBADGER_API_KEY"))` |
 | `environment_name`       | (required) The name of the environment your app is running in.                                | `:prod`                                    |
+|`exclude_errors`          |Filters out errors from being sent to Honeybadger        | `[]`|
 | `exclude_envs`           | Environments that you want to disable Honeybadger notifications                               | `[:dev, :test]`                          |
 | `hostname`               | Hostname of the system your application is running on                                         | `:inet.gethostname`                      |
 | `origin`                 | URL for the Honeybadger API                                                                   | `"https://api.honeybadger.io"`           |
