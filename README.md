@@ -191,7 +191,7 @@ config :honeybadger, filter_args: false
 
 ## Excluding Errors
 
-By default Honeybadger will get notified when error occurs . To override this configuration in order not to send out errors to Honeybadger, set `exclude_errors` option in `config/config.exs`.
+By default Honeybadger will be notified when an error occurs. To override this configuration in order not to send out errors to Honeybadger, set `exclude_errors` option in `config/config.exs`.
 
 This can be done by passing a list of errors to be excluded:
 
