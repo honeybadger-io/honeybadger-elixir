@@ -9,6 +9,123 @@ defmodule HoneybadgerTest do
     on_exit(&Honeybadger.API.stop/0)
   end
 
+  describe "exclude_error option" do
+    test "by default, server gets notified of errors" do
+      restart_with_config(exclude_envs: [])
+
+      fun = fn :num -> nil end
+
+      try do
+        fun.(:boom)
+      rescue
+        exception ->
+          :ok = Honeybadger.notify(exception, stacktrace: __STACKTRACE__)
+      end
+
+      assert_receive {:api_request, %{"error" => error}}
+      assert error["class"] == "FunctionClauseError"
+    end
+
+    test "excludes errors sent to server when exclude_error?/1 returns true" do
+      defmodule ExcludeFunClauseErrors do
+        alias Honeybadger.ExcludeErrors
+
+        @behaviour ExcludeErrors
+
+        @impl ExcludeErrors
+        def exclude_error?(notice) do
+          notice.error.class == "FunctionClauseError"
+        end
+      end
+
+      restart_with_config(exclude_envs: [], exclude_errors: ExcludeFunClauseErrors)
+
+      fun = fn :num -> nil end
+
+      try do
+        fun.(:boom)
+      rescue
+        exception ->
+          nil = Honeybadger.notify(exception, stacktrace: __STACKTRACE__)
+      end
+
+      refute_receive {:api_request, _}
+    end
+
+    test "errors are sent to server when exclude_error?/1 returns false" do
+      defmodule ExcludeErrors do
+        alias Honeybadger.ExcludeErrors
+
+        @behaviour ExcludeErrors
+
+        @impl ExcludeErrors
+        def exclude_error?(notice) do
+          notice.error.class == "RuntimeError"
+        end
+      end
+
+      restart_with_config(exclude_envs: [], exclude_errors: ExcludeErrors)
+
+      fun = fn :num -> nil end
+
+      try do
+        fun.(:boom)
+      rescue
+        exception ->
+          :ok = Honeybadger.notify(exception, stacktrace: __STACKTRACE__)
+      end
+
+      assert_receive {:api_request, %{"error" => error}}
+      assert error["class"] == "FunctionClauseError"
+    end
+
+    test "errors are sent to server when error is missing in list of errors passed" do
+      restart_with_config(exclude_envs: [], exclude_errors: ["RuntimeError"])
+
+      fun = fn :num -> nil end
+
+      try do
+        fun.(:boom)
+      rescue
+        exception ->
+          :ok = Honeybadger.notify(exception, stacktrace: __STACKTRACE__)
+      end
+
+      assert_receive {:api_request, %{"error" => error}}
+      assert error["class"] == "FunctionClauseError"
+    end
+
+    test "excludes errors sent to server when a list of error strings are passed" do
+      restart_with_config(exclude_envs: [], exclude_errors: ["FunctionClauseError"])
+
+      fun = fn :num -> nil end
+
+      try do
+        fun.(:boom)
+      rescue
+        exception ->
+          nil = Honeybadger.notify(exception, stacktrace: __STACKTRACE__)
+      end
+
+      refute_receive {:api_request, _}
+    end
+
+    test "excludes errors sent to server when a list of errors classes are passed" do
+      restart_with_config(exclude_envs: [], exclude_errors: [FunctionClauseError])
+
+      fun = fn :num -> nil end
+
+      try do
+        fun.(:boom)
+      rescue
+        exception ->
+          nil = Honeybadger.notify(exception, stacktrace: __STACKTRACE__)
+      end
+
+      refute_receive {:api_request, _}
+    end
+  end
+
   describe "deprecated Honeybadger.notify works" do
     test "sending a notice with exception stacktrace" do
       restart_with_config(exclude_envs: [])
