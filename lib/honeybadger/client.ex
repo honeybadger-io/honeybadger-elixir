@@ -52,7 +52,6 @@ defmodule Honeybadger.Client do
       proxy_auth: get_env(opts, :proxy_auth),
       url: get_env(opts, :origin) <> @notices_endpoint
     }
-    |> IO.inspect()
   end
 
   @doc false
