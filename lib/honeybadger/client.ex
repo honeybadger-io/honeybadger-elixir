@@ -5,6 +5,11 @@ defmodule Honeybadger.Client do
 
   require Logger
 
+  @headers [
+    {"Accept", "application/json"},
+    {"Content-Type", "application/json"},
+    {"User-Agent", "Honeybadger Elixir #{Honeybadger.Mixfile.project()[:version]}"}
+  ]
   @max_connections 20
   @notices_endpoint "/v1/notices"
 
@@ -47,6 +52,7 @@ defmodule Honeybadger.Client do
       proxy_auth: get_env(opts, :proxy_auth),
       url: get_env(opts, :origin) <> @notices_endpoint
     }
+    |> IO.inspect()
   end
 
   @doc false
@@ -143,12 +149,7 @@ defmodule Honeybadger.Client do
   # API Integration
 
   defp build_headers(opts) do
-    [
-      {"X-API-Key", get_env(opts, :api_key)},
-      {"Accept", "application/json"},
-      {"Content-Type", "application/json"},
-      {"User-Agent", "Honeybadger Elixir #{version()}"}
-    ]
+    [{"X-API-Key", get_env(opts, :api_key)}] ++ @headers
   end
 
   defp post_notice(url, headers, payload, opts) do
@@ -206,9 +207,4 @@ defmodule Honeybadger.Client do
   end
 
   defp warn_in_dev_mode(_state), do: :ok
-
-  defp version do
-    {:ok, version} = :application.get_key(:honeybadger, :vsn)
-    version
-  end
 end
