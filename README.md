@@ -39,7 +39,7 @@ any other configuration options a different way, you can do so in `config.exs`:
 
 ```elixir
 config :honeybadger,
-  api_key: "sup3rs3cr3tk3y"
+  api_key: "{{PROJECT_API_KEY}}"
 ```
 
 We also need to set the name of the environment for each environment. This
@@ -262,7 +262,7 @@ You can set configuration options in `config.exs`. It looks like this:
 
 ```elixir
 config :honeybadger,
-  api_key: "sup3rs3cr3tk3y",
+  api_key: "{{PROJECT_API_KEY}}",
   environment_name: :prod
 ```
 
