@@ -21,7 +21,8 @@ defmodule Honeybadger.Client do
           headers: [{binary(), term()}],
           proxy: binary(),
           proxy_auth: {binary(), binary()},
-          url: binary()
+          url: binary(),
+          hackney_opts: keyword()
         }
 
   defstruct [
@@ -30,7 +31,8 @@ defmodule Honeybadger.Client do
     :headers,
     :proxy,
     :proxy_auth,
-    :url
+    :url,
+    :hackney_opts
   ]
 
   # API
@@ -50,7 +52,8 @@ defmodule Honeybadger.Client do
       headers: build_headers(opts),
       proxy: get_env(opts, :proxy),
       proxy_auth: get_env(opts, :proxy_auth),
-      url: get_env(opts, :origin) <> @notices_endpoint
+      url: get_env(opts, :origin) <> @notices_endpoint,
+      hackney_opts: get_env(opts, :hackney_opts)
     }
   end
 
@@ -126,7 +129,12 @@ defmodule Honeybadger.Client do
           |> Enum.into(Keyword.new())
           |> Keyword.put(:pool, __MODULE__)
 
-        post_notice(url, headers, payload, opts)
+        hackney_opts =
+          state
+          |> Map.get(:hackney_opts)
+          |> Keyword.merge(opts)
+
+        post_notice(url, headers, payload, hackney_opts)
 
       {:error, %Jason.EncodeError{message: message}} ->
         Logger.warn(fn -> "[Honeybadger] Notice encoding failed: #{message}" end)
@@ -151,8 +159,8 @@ defmodule Honeybadger.Client do
     [{"X-API-Key", get_env(opts, :api_key)}] ++ @headers
   end
 
-  defp post_notice(url, headers, payload, opts) do
-    case :hackney.post(url, headers, payload, opts) do
+  defp post_notice(url, headers, payload, hackney_opts) do
+    case :hackney.post(url, headers, payload, hackney_opts) do
       {:ok, code, _headers, ref} when code in 200..399 ->
         body = body_from_ref(ref)
         Logger.debug(fn -> "[Honeybadger] API success: #{inspect(body)}" end)

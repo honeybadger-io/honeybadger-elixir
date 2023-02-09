@@ -63,6 +63,7 @@ defmodule Honeybadger.Mixfile do
         origin: "https://api.honeybadger.io",
         proxy: nil,
         proxy_auth: {nil, nil},
+        hackney_opts: [],
         use_logger: true,
         ignored_domains: [:cowboy],
         notice_filter: Honeybadger.NoticeFilter.Default,
