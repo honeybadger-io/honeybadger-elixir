@@ -384,7 +384,7 @@ Honeybadger.add_breadcrumb("Email sent", metadata: %{
 
 ## Proxy configuration
 
-If your server needs a proxy to access honeybadger, add the following to your config
+If your server needs a proxy to access Honeybadger, add the following to your config
 
 ```elixir
 config :honeybadger,
@@ -392,7 +392,9 @@ config :honeybadger,
   proxy_auth: {"username", "password"}
 ```
 
-## Testing your Honeybadger setup in dev
+## Excluded environments
+
+Honeybadger won't report errors from `:dev` and `:test` environments by default. To enable error reporting in dev:
 
 1. Set the HONEYBADGER_API_KEY as documented above
 2. Remove `:dev` from the `exclude_envs` by adding this to your config/dev.exs
