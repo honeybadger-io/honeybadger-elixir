@@ -70,15 +70,8 @@ defmodule Honeybadger.Logger do
   ## Helpers
 
   defp notify(reason, metadata, stacktrace) do
-    breadcrumbs =
-      metadata
-      |> Map.get(Collector.metadata_key(), Collector.breadcrumbs())
-      |> Collector.put(Breadcrumb.from_error(reason))
-
-    metadata_with_breadcrumbs =
-      metadata
-      |> Map.delete(Collector.metadata_key())
-      |> Map.put(:breadcrumbs, breadcrumbs)
+    breadcrumbs = Collector.put(Collector.breadcrumbs(), Breadcrumb.from_error(reason))
+    metadata_with_breadcrumbs = Map.put(metadata, :breadcrumbs, breadcrumbs)
 
     Honeybadger.notify(reason, metadata: metadata_with_breadcrumbs, stacktrace: stacktrace)
   end

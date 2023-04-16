@@ -9,10 +9,7 @@ defmodule Honeybadger.Breadcrumbs.CollectorTest do
     Collector.add(bc1)
     Collector.add(bc2)
 
-    assert Collector.output() == %{
-             enabled: true,
-             trail: [bc1, bc2]
-           }
+    assert Collector.output() == %{enabled: true, trail: [bc1, bc2]}
   end
 
   test "runs metadata through sanitizer" do
@@ -25,9 +22,7 @@ defmodule Honeybadger.Breadcrumbs.CollectorTest do
 
     Collector.add(bc1)
 
-    assert List.first(Collector.output()[:trail]).metadata == %{
-             key1: "[DEPTH]"
-           }
+    assert List.first(Collector.output()[:trail]).metadata == %{key1: "[DEPTH]"}
   end
 
   test "ignores when breadcrumbs are disabled" do
@@ -35,10 +30,7 @@ defmodule Honeybadger.Breadcrumbs.CollectorTest do
       Collector.add("test1")
       Collector.add("test2")
 
-      assert Collector.output() == %{
-               enabled: false,
-               trail: []
-             }
+      assert Collector.output() == %{enabled: false, trail: []}
     end)
   end
 
