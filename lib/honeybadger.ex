@@ -369,7 +369,7 @@ defmodule Honeybadger do
   """
   @spec context() :: map()
   def context do
-    Logger.metadata() |> Map.new() |> Map.delete(Collector.metadata_key())
+    Map.new(Logger.metadata())
   end
 
   @doc """

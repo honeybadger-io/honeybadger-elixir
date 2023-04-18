@@ -1,35 +1,34 @@
 defmodule Honeybadger.Breadcrumbs.Collector do
   @moduledoc false
 
-  @doc """
-  The Collector provides an interface for accessing and affecting the current
-  set of breadcrumbs. Most operations are delegated to the supplied Buffer
-  implementation. This is mainly for internal use.
-  """
+  # The Collector provides an interface for accessing and affecting the current set of
+  # breadcrumbs. Most operations are delegated to the supplied Buffer implementation. This is
+  # mainly for internal use.
 
   alias Honeybadger.Breadcrumbs.{RingBuffer, Breadcrumb}
   alias Honeybadger.Utils
 
-  @buffer_impl RingBuffer
   @buffer_size 40
-  @metadata_key :hb_breadcrumbs
+  @collector_key :hb_breadcrumbs
 
   @type t :: %{enabled: boolean(), trail: [Breadcrumb.t()]}
+
+  def key, do: @collector_key
 
   @spec output() :: t()
   def output(), do: output(breadcrumbs())
 
-  @spec output(@buffer_impl.t()) :: t()
+  @spec output(RingBuffer.t()) :: t()
   def output(breadcrumbs) do
     %{
       enabled: Honeybadger.get_env(:breadcrumbs_enabled),
-      trail: @buffer_impl.to_list(breadcrumbs)
+      trail: RingBuffer.to_list(breadcrumbs)
     }
   end
 
-  @spec put(@buffer_impl.t(), Breadcrumb.t()) :: @buffer_impl.t()
+  @spec put(RingBuffer.t(), Breadcrumb.t()) :: RingBuffer.t()
   def put(breadcrumbs, breadcrumb) do
-    @buffer_impl.add(
+    RingBuffer.add(
       breadcrumbs,
       Map.update(breadcrumb, :metadata, %{}, &Utils.sanitize(&1, max_depth: 1))
     )
@@ -38,7 +37,7 @@ defmodule Honeybadger.Breadcrumbs.Collector do
   @spec add(Breadcrumb.t()) :: :ok
   def add(breadcrumb) do
     if Honeybadger.get_env(:breadcrumbs_enabled) do
-      Logger.metadata([{@metadata_key, put(breadcrumbs(), breadcrumb)}])
+      Process.put(@collector_key, put(breadcrumbs(), breadcrumb))
     end
 
     :ok
@@ -46,14 +45,11 @@ defmodule Honeybadger.Breadcrumbs.Collector do
 
   @spec clear() :: :ok
   def clear() do
-    Logger.metadata([{@metadata_key, @buffer_impl.new(@buffer_size)}])
+    Process.put(@collector_key, RingBuffer.new(@buffer_size))
   end
 
-  def metadata_key(), do: @metadata_key
-
-  @spec breadcrumbs() :: @buffer_impl.t()
+  @spec breadcrumbs() :: RingBuffer.t()
   def breadcrumbs() do
-    Logger.metadata()
-    |> Keyword.get(@metadata_key, @buffer_impl.new(@buffer_size))
+    Process.get(@collector_key, RingBuffer.new(@buffer_size))
   end
 end
