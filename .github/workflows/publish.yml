@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'What is the new version?'
+        description: 'What is the new version? (i.e. 3.5.6)'
         required: true
   
 jobs:
@@ -59,13 +59,13 @@ jobs:
       - name: Commit mix.exs
         run: |
           git add mix.exs CHANGELOG.md
-          git commit -m 'Release ${{ inputs.version }}'
+          git commit -m 'Release v${{ inputs.version }}'
 
       - name: Publish
         # todo: run mix publish --yes instead of shipit. and then git push with tags
         run: mix shipit release-${{ inputs.version }} ${{ inputs.version }}
         
       - name: Push changes on git
-        run: git push origin ${{ inputs.version }}
+        run: git push origin v${{ inputs.version }}
         
     
