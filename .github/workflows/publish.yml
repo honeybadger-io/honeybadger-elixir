@@ -1,0 +1,71 @@
+name: Publish New Release
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'What is the new version?'
+        required: true
+  
+jobs:
+  ci:
+    uses: ./.github/workflows/elixir.yml
+    secrets: inherit
+
+  publish:
+    needs: [ci]
+    name: Build and publish to hex.pm
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GH_PUBLISH_PAT }}
+          fetch-depth: 0
+          ref: master
+
+      - name: Setup Elixir
+        uses: erlef/setup-elixir@v1
+        with:
+          otp-version: '1.12'
+          elixir-version: '24.0'
+
+      - name: Restore dependencies cache
+        uses: actions/cache@v2
+        with:
+          path: deps
+          key: ${{ runner.os }}-publish-mix-${{ hashFiles('**/mix.lock') }}
+          restore-keys: ${{ runner.os }}-publish-mix-
+
+      - name: Install deps
+        run: |
+          mix deps.get
+          mix archive.install hex versioce shipit
+
+      - name: Run compile
+        run: |
+          mix deps.compile
+          mix compile --warnings-as-errors
+
+      - name: Bump version and generate changelog
+        run: |
+          mix bump ${{ inputs.version }}
+          mix changelog
+        
+      - name: Git Config
+        run: |
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
+        
+      - name: Commit mix.exs
+        run: |
+          git add mix.exs CHANGELOG.md
+          git commit -m 'Release ${{ inputs.version }}'
+
+      - name: Publish
+        # todo: run mix publish --yes instead of shipit. and then git push with tags
+        run: mix shipit release-${{ inputs.version }} ${{ inputs.version }}
+        
+      - name: Push changes on git
+        run: git push origin ${{ inputs.version }}
+        
+    
