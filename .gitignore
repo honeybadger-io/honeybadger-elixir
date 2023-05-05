@@ -5,3 +5,5 @@ erl_crash.dump
 *.beam
 .iex.exs
 /doc
+RELEASE.md
+.idea
