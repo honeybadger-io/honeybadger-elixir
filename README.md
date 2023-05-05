@@ -420,26 +420,26 @@ will be accepted.
 1. Fork it.
 2. Create a topic branch `git checkout -b my_branch`
 3. Commit your changes `git commit -am "Boom"`
-4. Update the
-   [Changelog](https://github.com/honeybadger-io/honeybadger-elixir/blob/master/CHANGELOG.md)
-5. Push to your branch `git push origin my_branch`
-6. Send a [pull request](https://github.com/honeybadger-io/honeybadger-elixir/pulls)
+4. Push to your branch `git push origin my_branch`
+5. Send a [pull request](https://github.com/honeybadger-io/honeybadger-elixir/pulls)
 
 ### Publishing a release on hex.pm
 
-Make sure you have the following dependencies, and tests pass locally and in CI:
+#### Github Workflow
 
-```sh
-mix deps.get
-mix archive.install hex shipit
-mix test
-```
+A new version can be published on Hex.pm using the Publish New Release workflow. 
+The workflow can be triggered manually from the Github Actions page and takes the following input:
+- `version`: One of `patch`, `minor` or `major`. The version number will be bumped accordingly.
+- `changes`: An entry to be added to the changelog.
 
-1. Update the version property in `mix.exs`
-2. Create a git commit with all the changes so that your working directory is clean
-3. Run `mix shipit BRANCH VERSION` from your terminal, which will do the following:
-    1. Upload the new version of honeybadger to hex.pm
-    2. Create a git tag with the version number and push it to GitHub
+#### Manual Release
+
+Versioning, changelog generation and publishing to hex.pm is handled by the `mix expublish` task.
+You can read more about it [here](https://github.com/ucwaldo/expublish).
+
+1. `mix deps.get`
+2. echo "CHANGELOG ENTRY" > RELEASE.MD
+3. `mix expublish.[patch|minor|major]`
 
 ### License
 
