@@ -6,6 +6,11 @@ adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- %% CHANGELOG_ENTRIES %% -->
 
+## 0.20.0 - 2023-05-05
+
+- stop using logger metadata for breadcrumbs\n- publish using github actions
+
+
 ## [v0.19.0] - 2022-10-27
 ### Added
 - Add config option `exclude_errors` that excludes errors from being sent to the Honeybadger servers.(#443)
