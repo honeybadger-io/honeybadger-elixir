@@ -8,7 +8,8 @@ adheres to [Semantic Versioning](http://semver.org/).
 
 ## 0.20.0 - 2023-05-05
 
-- stop using logger metadata for breadcrumbs\n- publish using github actions
+- stop using logger metadata for breadcrumbs
+- publish using github actions
 
 
 ## [v0.19.0] - 2022-10-27
