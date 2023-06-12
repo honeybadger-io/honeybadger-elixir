@@ -65,7 +65,7 @@ defmodule Honeybadger.Client do
     if pid = Process.whereis(__MODULE__) do
       GenServer.cast(pid, {:notice, notice})
     else
-      Logger.warn(fn ->
+      Logger.warning(fn ->
         "[Honeybadger] Unable to notify, the :honeybadger client isn't running"
       end)
     end
@@ -139,10 +139,10 @@ defmodule Honeybadger.Client do
         post_notice(url, headers, payload, hackney_opts)
 
       {:error, %Jason.EncodeError{message: message}} ->
-        Logger.warn(fn -> "[Honeybadger] Notice encoding failed: #{message}" end)
+        Logger.warning(fn -> "[Honeybadger] Notice encoding failed: #{message}" end)
 
       {:error, %Protocol.UndefinedError{description: message}} ->
-        Logger.warn(fn -> "[Honeybadger] Notice encoding failed: #{message}" end)
+        Logger.warning(fn -> "[Honeybadger] Notice encoding failed: #{message}" end)
     end
 
     {:noreply, state}
@@ -169,14 +169,14 @@ defmodule Honeybadger.Client do
 
       {:ok, code, _headers, ref} when code == 429 ->
         body = body_from_ref(ref)
-        Logger.warn(fn -> "[Honeybadger] API failure: #{inspect(body)}" end)
+        Logger.warning(fn -> "[Honeybadger] API failure: #{inspect(body)}" end)
 
       {:ok, code, _headers, ref} when code in 400..599 ->
         body = body_from_ref(ref)
-        Logger.warn(fn -> "[Honeybadger] API failure: #{inspect(body)}" end)
+        Logger.warning(fn -> "[Honeybadger] API failure: #{inspect(body)}" end)
 
       {:error, reason} ->
-        Logger.warn(fn -> "[Honeybadger] connection error: #{inspect(reason)}" end)
+        Logger.warning(fn -> "[Honeybadger] connection error: #{inspect(reason)}" end)
     end
   end
 
