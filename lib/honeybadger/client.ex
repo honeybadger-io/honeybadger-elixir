@@ -5,10 +5,12 @@ defmodule Honeybadger.Client do
 
   require Logger
 
+  @external_resource version = Honeybadger.Mixfile.project()[:version]
+
   @headers [
     {"Accept", "application/json"},
     {"Content-Type", "application/json"},
-    {"User-Agent", "Honeybadger Elixir"}
+    {"User-Agent", "Honeybadger Elixir #{version}"}
   ]
   @max_connections 20
   @notices_endpoint "/v1/notices"
