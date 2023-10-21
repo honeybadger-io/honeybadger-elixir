@@ -63,7 +63,7 @@ defmodule Honeybadger do
   structures in the context.
 
       Honeybadger.context(user_id: 1, account: "My Favorite Customer")
-      Honeybadger.context(%{user_id: 2, account: "That Needy Customer")
+      Honeybadger.context(%{user_id: 2, account: "That Needy Customer"})
 
   ### Using the Plug
 
