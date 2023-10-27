@@ -1,4 +1,4 @@
-use Mix.Config
+import Config
 
 config :honeybadger,
   environment_name: :test,
