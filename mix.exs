@@ -51,7 +51,7 @@ defmodule Honeybadger.Mixfile do
 
   def application do
     [
-      applications: [:hackney, :logger, :jason, :telemetry],
+      extra_applications: [:logger],
       env: [
         api_key: {:system, "HONEYBADGER_API_KEY"},
         app: nil,
