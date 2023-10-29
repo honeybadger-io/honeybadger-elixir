@@ -17,7 +17,7 @@ defmodule Honeybadger.NoticeTest do
     }
 
     metadata = %{plug_env: plug_env, tags: [:test], context: %{user_id: 1, account_id: 1}}
-    stack = [{Kernel, :+, [1], [file: 'lib/elixir/lib/kernel.ex', line: 321]}]
+    stack = [{Kernel, :+, [1], [file: ~c"lib/elixir/lib/kernel.ex", line: 321]}]
 
     notice = Notice.new(exception, metadata, stack)
 
