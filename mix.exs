@@ -94,7 +94,7 @@ defmodule Honeybadger.Mixfile do
       {:expublish, "~> 2.5", only: [:dev], runtime: false},
 
       # Test dependencies
-      {:plug_cowboy, ">= 1.0.0 and < 3.0.0", only: :test}
+      {:plug_cowboy, ">= 2.0.0 and < 3.0.0", only: :test}
     ]
   end
 
