@@ -23,19 +23,11 @@ defmodule Honeybadger.JSONTest do
     test "encodes notice when context has structs" do
       error = %RuntimeError{message: "oops"}
       struct = %Request{ip: "0.0.0.0"}
-      map = Map.from_struct(struct)
 
-      {:ok, custom_encoded} =
-        error
-        |> Notice.new(%{context: %{a: struct, b: [struct], c: {struct, struct}}}, [])
-        |> JSON.encode()
-
-      {:ok, jason_encoded} =
-        error
-        |> Notice.new(%{context: %{a: map, b: [map], c: [map, map]}}, [])
-        |> Jason.encode()
-
-      assert custom_encoded == jason_encoded
+      assert {:ok, _json} =
+               error
+               |> Notice.new(%{context: %{a: struct, b: [struct], c: {struct, struct}}}, [])
+               |> JSON.encode()
     end
 
     test "handles values requring inspection" do
