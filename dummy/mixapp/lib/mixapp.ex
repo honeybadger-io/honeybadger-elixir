@@ -1,2 +1,0 @@
-defmodule Mixapp do
-end

@@ -1,5 +1,5 @@
 defmodule Honeybadger.Breadcrumbs.CollectorTest do
-  use Honeybadger.Case, async: true
+  use Honeybadger.Case
 
   alias Honeybadger.Breadcrumbs.{Collector, Breadcrumb}
 
@@ -13,12 +13,7 @@ defmodule Honeybadger.Breadcrumbs.CollectorTest do
   end
 
   test "runs metadata through sanitizer" do
-    bc1 =
-      Breadcrumb.new("test1",
-        metadata: %{
-          key1: %{key2: 12}
-        }
-      )
+    bc1 = Breadcrumb.new("test1", metadata: %{key1: %{key2: 12}})
 
     Collector.add(bc1)
 

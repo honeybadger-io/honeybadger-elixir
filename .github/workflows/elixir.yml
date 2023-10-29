@@ -43,7 +43,7 @@ jobs:
           restore-keys: ${{ runner.os }}-${{ matrix.pair.otp }}-${{ matrix.pair.elixir }}-mix-
 
       - name: Run mix deps.get
-        run: mix deps.get --only test
+        run: mix deps.ci
 
       - name: Run mix format
         run: mix format --check-formatted
@@ -57,4 +57,4 @@ jobs:
         if: ${{ matrix.lint }}
 
       - name: Run tests
-        run: mix test
+        run: mix test.ci

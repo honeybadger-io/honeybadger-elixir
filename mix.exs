@@ -12,8 +12,10 @@ defmodule Honeybadger.Mixfile do
       consolidate_protocols: Mix.env() != :test,
       build_embedded: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,
+      aliases: aliases(),
       deps: deps(),
       elixirc_paths: elixirc_paths(Mix.env()),
+      preferred_cli_env: ["test.ci": :test],
 
       # Hex
       package: package(),
@@ -106,6 +108,19 @@ defmodule Honeybadger.Mixfile do
         "Changelog" => "#{@source_url}/blob/master/CHANGELOG.md",
         "GitHub" => @source_url
       }
+    ]
+  end
+
+  defp aliases do
+    [
+      "deps.ci": [
+        "deps.get --only test",
+        "cmd --cd dummy/mixapp mix deps.get --only test"
+      ],
+      "test.ci": [
+        "test --raise",
+        "cmd --cd dummy/mixapp mix test --raise"
+      ]
     ]
   end
 end
