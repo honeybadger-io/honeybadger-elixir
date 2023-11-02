@@ -6,6 +6,11 @@ adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- %% CHANGELOG_ENTRIES %% -->
 
+## 0.21.0 - 2023-11-02
+
+switched from Logger.warn to Logger.warning
+
+
 ## 0.20.0 - 2023-05-05
 
 - stop using logger metadata for breadcrumbs
