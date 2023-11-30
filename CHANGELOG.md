@@ -264,7 +264,7 @@ When upgrading to v0.11, users should be aware of a few important changes:
 
       Example:
         # config/dev.exs
-        config :honeybager, environment_name: :dev
+        config :honeybadger, environment_name: :dev
 
   Doing this will ensure you get accurate environment information for exceptions
   that happen at runtime as well as compile time. You can also set the
