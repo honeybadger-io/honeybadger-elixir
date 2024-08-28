@@ -174,7 +174,10 @@ defmodule Honeybadger.Client do
     {:noreply, state}
   end
 
-  def handle_cast({:event, event}, %{enabled: true, event_url: event_url, headers: headers} = state) do
+  def handle_cast(
+        {:event, event},
+        %{enabled: true, event_url: event_url, headers: headers} = state
+      ) do
     case Honeybadger.JSON.encode(event) do
       {:ok, payload} ->
         opts =

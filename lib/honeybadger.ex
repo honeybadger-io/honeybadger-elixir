@@ -334,16 +334,18 @@ defmodule Honeybadger do
 
   @spec event(String.t(), map()) :: :ok
   def event(event_type, event_data) when is_map(event_data) do
-    ts = DateTime.utc_now() |> DateTime.to_string()
     event_data
     |> Map.put(:event_type, event_type)
-    |> Map.put(:ts, ts)
-    |> Client.send_event()
+    |> event()
   end
 
   @spec event(map()) :: :ok
   def event(event_data) do
-    Client.send_event(event_data)
+    ts = DateTime.utc_now() |> DateTime.to_string()
+
+    event_data
+    |> Map.put(:ts, ts)
+    |> Client.send_event()
   end
 
   @doc """
