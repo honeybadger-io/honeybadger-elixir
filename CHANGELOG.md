@@ -6,6 +6,11 @@ adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- %% CHANGELOG_ENTRIES %% -->
 
+## 0.22.0 - 2024-08-29
+
+### Added - Add Honeybadger.event to send events to Insights
+
+
 ## 0.21.0 - 2023-11-02
 
 switched from Logger.warn to Logger.warning
