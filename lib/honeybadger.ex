@@ -344,7 +344,7 @@ defmodule Honeybadger do
     ts = DateTime.utc_now() |> DateTime.to_string()
 
     event_data
-    |> Map.put(:ts, ts)
+    |> Map.put_new(:ts, ts)
     |> Client.send_event()
   end
 
