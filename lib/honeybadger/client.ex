@@ -14,6 +14,7 @@ defmodule Honeybadger.Client do
   ]
   @max_connections 20
   @notices_endpoint "/v1/notices"
+  @events_endpoint "/v1/events"
 
   # State
 
@@ -24,6 +25,7 @@ defmodule Honeybadger.Client do
           proxy: binary(),
           proxy_auth: {binary(), binary()},
           url: binary(),
+          event_url: binary(),
           hackney_opts: keyword()
         }
 
@@ -34,6 +36,7 @@ defmodule Honeybadger.Client do
     :proxy,
     :proxy_auth,
     :url,
+    :event_url,
     :hackney_opts
   ]
 
@@ -55,6 +58,7 @@ defmodule Honeybadger.Client do
       proxy: get_env(opts, :proxy),
       proxy_auth: get_env(opts, :proxy_auth),
       url: get_env(opts, :origin) <> @notices_endpoint,
+      event_url: get_env(opts, :origin) <> @events_endpoint,
       hackney_opts: get_env(opts, :hackney_opts)
     }
   end
@@ -67,6 +71,20 @@ defmodule Honeybadger.Client do
     else
       Logger.warning(fn ->
         "[Honeybadger] Unable to notify, the :honeybadger client isn't running"
+      end)
+    end
+  end
+
+  @doc """
+  Upload the event data
+  """
+  @spec send_event(map) :: :ok
+  def send_event(event) when is_map(event) do
+    if pid = Process.whereis(__MODULE__) do
+      GenServer.cast(pid, {:event, event})
+    else
+      Logger.warning(fn ->
+        "[Honeybadger] Unable to post event, the :honeybadger client isn't running"
       end)
     end
   end
@@ -143,6 +161,44 @@ defmodule Honeybadger.Client do
 
       {:error, %Protocol.UndefinedError{description: message}} ->
         Logger.warning(fn -> "[Honeybadger] Notice encoding failed: #{message}" end)
+    end
+
+    {:noreply, state}
+  end
+
+  def handle_cast({:event, _}, %{enabled: false} = state) do
+    {:noreply, state}
+  end
+
+  def handle_cast({:event, _}, %{api_key: nil} = state) do
+    {:noreply, state}
+  end
+
+  def handle_cast(
+        {:event, event},
+        %{enabled: true, event_url: event_url, headers: headers} = state
+      ) do
+    case Honeybadger.JSON.encode(event) do
+      {:ok, payload} ->
+        opts =
+          state
+          |> Map.take([:proxy, :proxy_auth])
+          |> Enum.into(Keyword.new())
+          |> Keyword.put(:pool, __MODULE__)
+
+        hackney_opts =
+          state
+          |> Map.get(:hackney_opts)
+          |> Keyword.merge(opts)
+
+        # post logic for events is the same as notices
+        post_notice(event_url, headers, payload, hackney_opts)
+
+      {:error, %Jason.EncodeError{message: message}} ->
+        Logger.warning(fn -> "[Honeybadger] Event encoding failed: #{message}" end)
+
+      {:error, %Protocol.UndefinedError{description: message}} ->
+        Logger.warning(fn -> "[Honeybadger] Event encoding failed: #{message}" end)
     end
 
     {:noreply, state}

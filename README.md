@@ -382,6 +382,29 @@ Honeybadger.add_breadcrumb("Email sent", metadata: %{
 
 ---
 
+### `Honeybadger.event`: Send an event to Honeybadger Insights.
+
+Use the `Honeybadger.event/1` function to send event data to the events API. A
+`ts` field with the current timestamp will be added to the data if it isn't
+provided. You can also use `Honeybadger.event/2`, which accepts a string as the
+first parameter and adds that value to the `event_type` field in the map before
+being sent to the API.
+
+#### Examples:
+
+```elixir
+Honeybadger.event(%{
+  event_type: "user_created",
+  user: user.id
+})
+
+Honeybadger.event("project_deleted", %{
+  project: project.name
+})
+```
+
+---
+
 ## Proxy configuration
 
 If your server needs a proxy to access Honeybadger, add the following to your config
@@ -427,7 +450,7 @@ will be accepted.
 
 #### Github Workflow
 
-A new version can be published on Hex.pm using the Publish New Release workflow. 
+A new version can be published on Hex.pm using the Publish New Release workflow.
 The workflow can be triggered manually from the Github Actions page and takes the following input:
 - `version`: One of `patch`, `minor` or `major`. The version number will be bumped accordingly.
 - `changes`: An entry to be added to the changelog.

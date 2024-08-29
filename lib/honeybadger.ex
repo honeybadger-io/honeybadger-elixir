@@ -332,6 +332,22 @@ defmodule Honeybadger do
     end
   end
 
+  @spec event(String.t(), map()) :: :ok
+  def event(event_type, event_data) when is_map(event_data) do
+    event_data
+    |> Map.put(:event_type, event_type)
+    |> event()
+  end
+
+  @spec event(map()) :: :ok
+  def event(event_data) do
+    ts = DateTime.utc_now() |> DateTime.to_string()
+
+    event_data
+    |> Map.put_new(:ts, ts)
+    |> Client.send_event()
+  end
+
   @doc """
   Stores a breadcrumb item.
 
