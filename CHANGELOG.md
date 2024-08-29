@@ -8,7 +8,8 @@ adheres to [Semantic Versioning](http://semver.org/).
 
 ## 0.22.0 - 2024-08-29
 
-### Added - Add Honeybadger.event to send events to Insights
+### Added 
+- Add Honeybadger.event to send events to Insights
 
 
 ## 0.21.0 - 2023-11-02
