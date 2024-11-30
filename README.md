@@ -10,7 +10,7 @@ Elixir Plug, Logger and client for the :zap: [Honeybadger error notifier](https:
 
 [<img src="https://docs-honeybadger.s3.amazonaws.com/elixirsips.jpg" alt="ElixirSips" width=600/>](https://honeybadger.wistia.com/medias/krtqjywtp3)
 
-[Watch our screencast](https://josh-rubyist.wistia.com/medias/pggpan0f9j) by Josh Adams of [ElixirSips](http://elixirsips.com/)!
+[Watch our screencast](https://honeybadger.wistia.com/medias/krtqjywtp3) by Josh Adams of [ElixirSips](http://elixirsips.com/)!
 
 ### Version Requirements
 
