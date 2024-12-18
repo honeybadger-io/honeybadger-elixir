@@ -93,11 +93,18 @@ defmodule Honeybadger.Logger do
     |> Map.new()
   end
 
-  defp extract_details([["GenServer ", _pid, _res, _stack, _last, _, _, last], _, state]) do
+  defp extract_details([["GenServer " <> _ | rest], _, state]) do
+    last = extract_last_message(rest)
     %{last_message: last, state: state}
   end
 
-  defp extract_details([[":gen_event handler ", name, _, _, _, _stack, _last, last], _, state]) do
+  defp extract_details([[":gen_event handler ", name | rest], _, state]) do
+    last = extract_last_message(rest)
+    %{name: name, last_message: last, state: state}
+  end
+
+  defp extract_details([["gen_event handler ", name | rest], _, state]) do
+    last = extract_last_message(rest)
     %{name: name, last_message: last, state: state}
   end
 
@@ -111,6 +118,17 @@ defmodule Honeybadger.Logger do
 
   defp extract_details(_message) do
     %{}
+  end
+
+  defp extract_last_message(parts) do
+    parts
+    |> Enum.join("")
+    |> String.split("\n")
+    |> Enum.find(fn line -> String.contains?(line, "Last message:") end)
+    |> case do
+      nil -> ""
+      line -> String.replace(line, "Last message: ", "")
+    end
   end
 
   defp get_config(key) do
