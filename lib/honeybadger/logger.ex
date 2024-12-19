@@ -93,11 +93,23 @@ defmodule Honeybadger.Logger do
     |> Map.new()
   end
 
+  # Elixir < 1.17
   defp extract_details([["GenServer ", _pid, _res, _stack, _last, _, _, last], _, state]) do
     %{last_message: last, state: state}
   end
 
+  # Elixir < 1.17
   defp extract_details([[":gen_event handler ", name, _, _, _, _stack, _last, last], _, state]) do
+    %{name: name, last_message: last, state: state}
+  end
+
+  # Elixir >= 1.17
+  defp extract_details([["GenServer ", _pid, _res, _stack, _last, _, _, _, last], _, state]) do
+    %{last_message: last, state: state}
+  end
+
+  # Elixir >= 1.17
+  defp extract_details([[":gen_event handler ", name, _, _, _, _stack, _, _last, last], _, state]) do
     %{name: name, last_message: last, state: state}
   end
 
