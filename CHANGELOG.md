@@ -6,6 +6,11 @@ adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- %% CHANGELOG_ENTRIES %% -->
 
+## 0.22.1 - 2024-12-19
+
+Bugfix for Elixir 1.17
+
+
 ## 0.22.0 - 2024-08-29
 
 ### Added 
