@@ -23,12 +23,18 @@ Elixir Plug, Logger and client for the :zap: [Honeybadger error notifier](https:
 ### 1. Install the package
 
 Add the Honeybadger package to `deps/0` in your
-application's `mix.exs` file and run `mix do deps.get, deps.compile`
+application's `mix.exs`:
 
 ```elixir
 defp deps do
-  [{:honeybadger, "~> 0.16"}]
+  [{:honeybadger, "~> 0.22"}]
 end
+```
+
+Then run:
+
+```sh
+mix do deps.get, deps.compile
 ```
 
 ### 2. Set your API key and environment name
