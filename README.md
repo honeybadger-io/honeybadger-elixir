@@ -102,7 +102,14 @@ end
 #### Logger
 
 Just set the `use_logger` option to `true` in your application's `config.exs`
-and you're good to go! Any
+and you're good to go:
+
+```elixir
+config :honeybadger,
+  use_logger: true
+```
+
+Any
 [SASL](http://www.erlang.org/doc/apps/sasl/error_logging.html) compliant
 processes that crash will send an error report to the `Honeybadger.Logger`.
 After the error reaches the logger we take care of notifying Honeybadger for
