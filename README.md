@@ -105,6 +105,14 @@ defmodule MyPlugApp do
 end
 ```
 
+### 4. Report a test error
+
+To report a test error to Honeybadger, fire up `iex -S mix`, then run:
+
+```elixir
+Honeybadger.notify("Hello Elixir!")
+```
+
 #### Logger
 
 Just set the `use_logger` option to `true` in your application's `config.exs`
