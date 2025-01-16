@@ -15,6 +15,8 @@ defmodule Honeybadger.Client do
   @max_connections 20
   @notices_endpoint "/v1/notices"
   @events_endpoint "/v1/events"
+  @batch_size 100
+  @flush_interval 60_000
 
   # State
 
@@ -26,7 +28,9 @@ defmodule Honeybadger.Client do
           proxy_auth: {binary(), binary()},
           url: binary(),
           event_url: binary(),
-          hackney_opts: keyword()
+          hackney_opts: keyword(),
+          buffer: list(),
+          timer_ref: reference()
         }
 
   defstruct [
@@ -37,7 +41,9 @@ defmodule Honeybadger.Client do
     :proxy_auth,
     :url,
     :event_url,
-    :hackney_opts
+    :hackney_opts,
+    buffer: [],
+    timer_ref: nil
   ]
 
   # API
@@ -123,7 +129,7 @@ defmodule Honeybadger.Client do
 
     :ok = :hackney_pool.start_pool(__MODULE__, max_connections: @max_connections)
 
-    {:ok, state}
+    {:ok, %{state | buffer: [], timer_ref: schedule_flush()}}
   end
 
   @impl GenServer
@@ -174,41 +180,103 @@ defmodule Honeybadger.Client do
     {:noreply, state}
   end
 
-  def handle_cast(
-        {:event, event},
-        %{enabled: true, event_url: event_url, headers: headers} = state
-      ) do
-    case Honeybadger.JSON.encode(event) do
-      {:ok, payload} ->
-        opts =
-          state
-          |> Map.take([:proxy, :proxy_auth])
-          |> Enum.into(Keyword.new())
-          |> Keyword.put(:pool, __MODULE__)
+  def handle_cast({:event, payload}, %{enabled: true} = state) do
+    new_buffer = [payload | state.buffer]
 
-        hackney_opts =
-          state
-          |> Map.get(:hackney_opts)
-          |> Keyword.merge(opts)
-
-        # post logic for events is the same as notices
-        post_notice(event_url, headers, payload, hackney_opts)
-
-      {:error, %Jason.EncodeError{message: message}} ->
-        Logger.warning(fn -> "[Honeybadger] Event encoding failed: #{message}" end)
-
-      {:error, %Protocol.UndefinedError{description: message}} ->
-        Logger.warning(fn -> "[Honeybadger] Event encoding failed: #{message}" end)
+    cond do
+      length(new_buffer) >= @batch_size ->
+        # Buffer is full, flush immediately
+        do_flush(new_buffer, state)
+      true ->
+        # Buffer isn't full yet, just store the event
+        {:noreply, %{state | buffer: new_buffer}}
     end
-
-    {:noreply, state}
   end
 
   @impl GenServer
+  def handle_info(:flush, state) do
+    # Cancel existing timer
+    if state.timer_ref, do: Process.cancel_timer(state.timer_ref)
+
+    # Flush current buffer and schedule next flush
+    do_flush(state.buffer, state)
+  end
+
   def handle_info(message, state) do
     Logger.info(fn -> "[Honeybadger] unexpected message: #{inspect(message)}" end)
-
     {:noreply, state}
+  end
+
+  defp do_flush([], state) do
+    {:noreply, %{state | buffer: [], timer_ref: schedule_flush()}}
+  end
+
+  defp do_flush(buffer, state) do
+    # Reverse buffer to maintain chronological order
+    events = Enum.reverse(buffer)
+
+    opts =
+      state
+      |> Map.take([:proxy, :proxy_auth])
+      |> Enum.into(Keyword.new())
+      |> Keyword.put(:pool, __MODULE__)
+
+    hackney_opts =
+      state
+      |> Map.get(:hackney_opts)
+      |> Keyword.merge(opts)
+
+    post_events(state.event_url, state.headers, events, hackney_opts)
+
+    {:noreply, %{state | buffer: [], timer_ref: schedule_flush()}}
+  end
+
+  defp post_events(url, headers, events, hackney_opts) do
+    encoded_events = Enum.flat_map(events, fn event ->
+      try do
+        case Honeybadger.JSON.encode(event) do
+          {:ok, json} -> [json]
+          {:error, %Jason.EncodeError{message: message}} ->
+            Logger.warning(fn -> "[Honeybadger] Event encoding failed: #{message} for event: #{inspect(event)}" end)
+            []
+          {:error, %Protocol.UndefinedError{description: message}} ->
+            Logger.warning(fn -> "[Honeybadger] Event encoding failed: #{message} for event: #{inspect(event)}" end)
+            []
+          {:error, error} ->
+            Logger.warning(fn -> "[Honeybadger] Event encoding failed with unexpected error: #{inspect(error)} for event: #{inspect(event)}" end)
+            []
+        end
+      rescue
+        error ->
+          Logger.warning(fn -> "[Honeybadger] Unexpected error while encoding event: #{inspect(error)} for event: #{inspect(event)}" end)
+          []
+      end
+    end)
+
+    if encoded_events != [] do
+      payload = encoded_events |> Enum.join("\n")
+
+      case :hackney.post(url, headers, payload, hackney_opts) do
+        {:ok, code, _headers, ref} when code in 200..399 ->
+          body = body_from_ref(ref)
+          Logger.debug(fn -> "[Honeybadger] Events API success: #{inspect(body)}" end)
+
+        {:ok, code, _headers, ref} when code == 429 ->
+          body = body_from_ref(ref)
+          Logger.warning(fn -> "[Honeybadger] Events API failure: #{inspect(body)}" end)
+
+        {:ok, code, _headers, ref} when code in 400..599 ->
+          body = body_from_ref(ref)
+          Logger.warning(fn -> "[Honeybadger] Events API failure: #{inspect(body)}" end)
+
+        {:error, reason} ->
+          Logger.warning(fn -> "[Honeybadger] Events connection error: #{inspect(reason)}" end)
+      end
+    end
+  end
+
+  defp schedule_flush do
+    Process.send_after(self(), :flush, @flush_interval)
   end
 
   # API Integration
