@@ -23,12 +23,18 @@ Elixir Plug, Logger and client for the :zap: [Honeybadger error notifier](https:
 ### 1. Install the package
 
 Add the Honeybadger package to `deps/0` in your
-application's `mix.exs` file and run `mix do deps.get, deps.compile`
+application's `mix.exs`:
 
 ```elixir
 defp deps do
-  [{:honeybadger, "~> 0.16"}]
+  [{:honeybadger, "~> 0.22"}]
 end
+```
+
+Then run:
+
+```sh
+mix do deps.get, deps.compile
 ```
 
 ### 2. Set your API key and environment name
@@ -99,10 +105,25 @@ defmodule MyPlugApp do
 end
 ```
 
+### 4. Report a test error
+
+To report a test error to Honeybadger, fire up `iex -S mix`, then run:
+
+```elixir
+Honeybadger.notify("Hello Elixir!")
+```
+
 #### Logger
 
 Just set the `use_logger` option to `true` in your application's `config.exs`
-and you're good to go! Any
+and you're good to go:
+
+```elixir
+config :honeybadger,
+  use_logger: true
+```
+
+Any
 [SASL](http://www.erlang.org/doc/apps/sasl/error_logging.html) compliant
 processes that crash will send an error report to the `Honeybadger.Logger`.
 After the error reaches the logger we take care of notifying Honeybadger for
