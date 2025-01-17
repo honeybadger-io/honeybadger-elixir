@@ -72,7 +72,7 @@ takes higher precedence over the `Mix.env()` value.
 
 ### 3. Report a test error
 
--> **Note:** Honeybadger does _not_ report errors in `dev` and `test` environments by default. To enable reporting in development environments, temporarily add `exclude_envs: []` to your Honeybadger config.
+-> **Note:** Honeybadger does not report errors in `dev` and `test` environments by default. To enable reporting in development environments, temporarily add `exclude_envs: []` to your Honeybadger config.
 
 To report a test error to Honeybadger, fire up `iex -S mix`, then run:
 
