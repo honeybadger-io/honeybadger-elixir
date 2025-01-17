@@ -19,7 +19,6 @@ Elixir Plug, Logger and client for the :zap: [Honeybadger error notifier](https:
 - Plug >= 1.0
 - Phoenix >= 1.0 (This is an optional dependency and the version requirement applies only if you are using Phoenix)
 
-
 ### 1. Install the package
 
 Add the Honeybadger package to `deps/0` in your
@@ -39,9 +38,14 @@ mix do deps.get, deps.compile
 
 ### 2. Set your API key and environment name
 
-By default the environment variable `HONEYBADGER_API_KEY` will be used to find
-your API key to the Honeybadger API. If you would like to specify your key or
-any other configuration options a different way, you can do so in `config.exs`:
+By default, the environment variable `HONEYBADGER_API_KEY` will be used to
+report errors to the Honeybadger API:
+
+```sh
+export HONEYBADGER_API_KEY={{PROJECT_API_KEY}}
+```
+
+You can alternatively configure Honeybadger settings in `config.exs`:
 
 ```elixir
 config :honeybadger,
@@ -66,7 +70,19 @@ environment. This ensures that we can give you accurate environment information
 even during compile time. Explicitly setting the `environment_name` config
 takes higher precedence over the `Mix.env()` value.
 
-### 3. Enable error reporting
+### 3. Report a test error
+
+-> **Note:** Honeybadger does _not_ report errors in `dev` and `test` environments by default. To enable reporting in development environments, temporarily add `exclude_envs: []` to your Honeybadger config.
+
+To report a test error to Honeybadger, fire up `iex -S mix`, then run:
+
+```elixir
+Honeybadger.notify("Hello Elixir!")
+```
+
+After you've tested your Honeybadger installation, you may want to configure one or more of the following integrations to automatically report errors.
+
+### 4. Enable automatic error reporting
 
 The Honeybadger package can be used as a Plug alongside your Phoenix
 applications, as a logger backend, or as a standalone client for sprinkling in
@@ -103,14 +119,6 @@ defmodule MyPlugApp do
 
   [... the rest of your plug ...]
 end
-```
-
-### 4. Report a test error
-
-To report a test error to Honeybadger, fire up `iex -S mix`, then run:
-
-```elixir
-Honeybadger.notify("Hello Elixir!")
 ```
 
 #### Logger
