@@ -169,7 +169,7 @@ defmodule Honeybadger do
 
   require Logger
 
-  alias Honeybadger.{Client, Notice}
+  alias Honeybadger.{Client, Notice, EventsWorker}
   alias Honeybadger.Breadcrumbs.{Collector, Breadcrumb}
 
   @type notify_options ::
@@ -204,7 +204,18 @@ defmodule Honeybadger do
       Honeybadger.Breadcrumbs.Telemetry.attach()
     end
 
-    Supervisor.start_link([{Client, [config]}], strategy: :one_for_one)
+    events_worker_config = [
+      backend: Client,
+      batch_size: config[:events_batch_size],
+      timeout: config[:events_timeout]
+    ]
+
+    children = [{Client, [config]}]
+    children = if config[:events_worker_enabled],
+      do: children ++ [{events_worker(), events_worker_config}],
+      else: children
+
+    Supervisor.start_link(children, strategy: :one_for_one)
   end
 
   @doc """
@@ -343,9 +354,14 @@ defmodule Honeybadger do
   def event(event_data) do
     ts = DateTime.utc_now() |> DateTime.to_string()
 
-    event_data
+    data = event_data
     |> Map.put_new(:ts, ts)
-    |> Client.send_event()
+
+    if get_env(:events_worker_enabled) do
+      events_worker().push(data)
+    else
+      Client.send_event(data)
+    end
   end
 
   @doc """
@@ -518,5 +534,9 @@ defmodule Honeybadger do
 
   defp contextual_metadata(metadata) do
     %{context: metadata}
+  end
+
+  defp events_worker do
+    Application.get_env(:honeybadger, :events_worker, EventsWorker)
   end
 end
