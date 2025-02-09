@@ -207,13 +207,17 @@ defmodule Honeybadger do
     events_worker_config = [
       backend: Client,
       batch_size: config[:events_batch_size],
-      timeout: config[:events_timeout]
+      timeout: config[:events_timeout],
+      max_queue_size: config[:events_max_queue_size],
+      max_batch_retries: config[:events_max_batch_retries]
     ]
 
     children = [{Client, [config]}]
-    children = if config[:events_worker_enabled],
-      do: children ++ [{events_worker(), events_worker_config}],
-      else: children
+
+    children =
+      if config[:events_worker_enabled],
+        do: children ++ [{events_worker(), events_worker_config}],
+        else: children
 
     Supervisor.start_link(children, strategy: :one_for_one)
   end
@@ -354,8 +358,9 @@ defmodule Honeybadger do
   def event(event_data) do
     ts = DateTime.utc_now() |> DateTime.to_string()
 
-    data = event_data
-    |> Map.put_new(:ts, ts)
+    data =
+      event_data
+      |> Map.put_new(:ts, ts)
 
     if get_env(:events_worker_enabled) do
       events_worker().push(data)
