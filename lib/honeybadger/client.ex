@@ -3,6 +3,8 @@ defmodule Honeybadger.Client do
 
   use GenServer
 
+  alias Honeybadger.{HTTPAdapter, HTTPAdapter.HTTPResponse}
+
   require Logger
 
   @external_resource version = Honeybadger.Mixfile.project()[:version]
@@ -12,7 +14,6 @@ defmodule Honeybadger.Client do
     {"Content-Type", "application/json"},
     {"User-Agent", "Honeybadger Elixir #{version}"}
   ]
-  @max_connections 20
   @notices_endpoint "/v1/notices"
   @events_endpoint "/v1/events"
 
@@ -121,14 +122,12 @@ defmodule Honeybadger.Client do
     warn_if_incomplete_env(state)
     warn_in_dev_mode(state)
 
-    :ok = :hackney_pool.start_pool(__MODULE__, max_connections: @max_connections)
-
     {:ok, state}
   end
 
   @impl GenServer
   def terminate(_reason, _state) do
-    :ok = :hackney_pool.stop_pool(__MODULE__)
+    :ok
   end
 
   @impl GenServer
@@ -218,28 +217,19 @@ defmodule Honeybadger.Client do
   end
 
   defp post_notice(url, headers, payload, hackney_opts) do
-    case :hackney.post(url, headers, payload, hackney_opts) do
-      {:ok, code, _headers, ref} when code in 200..399 ->
-        body = body_from_ref(ref)
+    case HTTPAdapter.request(:post, url, payload, headers, hackney_opts) do
+      {:ok, %HTTPResponse{body: body, status: status}} when status in 200..399 ->
         Logger.debug(fn -> "[Honeybadger] API success: #{inspect(body)}" end)
 
-      {:ok, code, _headers, ref} when code == 429 ->
-        body = body_from_ref(ref)
+      {:ok, %HTTPResponse{body: body, status: status}} when status == 429 ->
         Logger.warning(fn -> "[Honeybadger] API failure: #{inspect(body)}" end)
 
-      {:ok, code, _headers, ref} when code in 400..599 ->
-        body = body_from_ref(ref)
+      {:ok, %HTTPResponse{body: body, status: status}} when status in 400..599 ->
         Logger.warning(fn -> "[Honeybadger] API failure: #{inspect(body)}" end)
 
       {:error, reason} ->
         Logger.warning(fn -> "[Honeybadger] connection error: #{inspect(reason)}" end)
     end
-  end
-
-  defp body_from_ref(ref) do
-    ref
-    |> :hackney.body()
-    |> elem(1)
   end
 
   # Incomplete Env
