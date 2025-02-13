@@ -5,15 +5,15 @@ defmodule Honeybadger.HTTPAdapter do
   You can configure the HTTP adapter that Honeybadger uses by setting the
   following option:
 
-      http_adapter: Honeybadger.HTTPAdapter.Httpc
+      http_adapter: Honeybadger.HTTPAdapter.Req
 
   Default options can be set by passing a list of options:
 
-      http_adapter: {Honeybadger.HTTPAdapter.Httpc, [...]}
+      http_adapter: {Honeybadger.HTTPAdapter.Req, [...]}
 
   You can also set the client for the application:
 
-      config :honeybadger, :http_adapter, Honeybadger.HTTPAdapter.Httpc
+      config :honeybadger, :http_adapter, Honeybadger.HTTPAdapter.Req
 
   ## Usage
       defmodule MyApp.MyHTTPAdapter do
@@ -85,7 +85,6 @@ defmodule Honeybadger.HTTPAdapter do
   @default_http_client Enum.find_value(
                          [
                            {Req, Honeybadger.HTTPAdapter.Req},
-                           {:httpc, Honeybadger.HTTPAdapter.Httpc},
                            {Finch, Honeybadger.HTTPAdapter.Finch},
                            {:hackney, Honeybadger.HTTPAdapter.Hackney}
                          ],
