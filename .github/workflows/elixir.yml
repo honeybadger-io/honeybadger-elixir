@@ -42,7 +42,7 @@ jobs:
           elixir-version: ${{matrix.pair.elixir}}
 
       - name: Restore dependencies cache
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: deps
           key: ${{ runner.os }}-${{ matrix.pair.otp }}-${{ matrix.pair.elixir }}-mix-${{ hashFiles('**/mix.lock') }}
