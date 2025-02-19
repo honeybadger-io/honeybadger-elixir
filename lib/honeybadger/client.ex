@@ -126,11 +126,6 @@ defmodule Honeybadger.Client do
   end
 
   @impl GenServer
-  def terminate(_reason, _state) do
-    :ok
-  end
-
-  @impl GenServer
   def handle_cast({:notice, _notice}, %{enabled: false} = state) do
     {:noreply, state}
   end
