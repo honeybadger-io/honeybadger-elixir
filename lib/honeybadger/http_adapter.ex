@@ -85,7 +85,6 @@ defmodule Honeybadger.HTTPAdapter do
   @default_http_client Enum.find_value(
                          [
                            {Req, Honeybadger.HTTPAdapter.Req},
-                           {Finch, Honeybadger.HTTPAdapter.Finch},
                            {:hackney, Honeybadger.HTTPAdapter.Hackney}
                          ],
                          fn {dep, module} ->

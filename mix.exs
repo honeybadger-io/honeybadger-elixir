@@ -83,7 +83,6 @@ defmodule Honeybadger.Mixfile do
 
   defp deps do
     [
-      {:finch, "~> 0.19", optional: true},
       {:hackney, "~> 1.1", optional: true},
       {:req, "~> 0.5.0", optional: true},
       {:jason, "~> 1.0"},
