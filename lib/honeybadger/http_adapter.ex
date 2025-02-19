@@ -54,7 +54,7 @@ defmodule Honeybadger.HTTPAdapter do
       Response status: #{response.status}
 
       Response headers:
-      #{Enum.reduce(response.headers, "", fn {k, v}, acc -> acc <> "\n#{k}: #{v}" end)}
+      #{Enum.map_join(response.headers, "\n", fn {key, val} -> "#{key}: #{val}" end)}
 
       Response body:
       #{inspect(response.body)}
