@@ -77,7 +77,7 @@ defmodule Honeybadger.HTTPAdapter do
   """
   @spec user_agent_header() :: {binary(), binary()}
   def user_agent_header do
-    version = Application.spec(:honeybadger, :vsn) || "0.0.0"
+    version = Application.spec(:honeybadger, :vsn)
 
     {"User-Agent", "Honeybadger-#{version}"}
   end
