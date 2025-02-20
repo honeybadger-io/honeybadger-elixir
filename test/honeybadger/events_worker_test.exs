@@ -218,6 +218,17 @@ defmodule Honeybadger.EventsWorkerTest do
 
       GenServer.stop(pid)
     end
+
+    test "preserves batches while throttling", %{config: config} do
+      {:ok, _pid} = EventsWorker.start_link(config)
+      TestBackend.set_behavior(:throttle)
+      first_batch = [%{id: 1}, %{id: 2}]
+      rest = [%{id: 3}, %{id: 4}, %{id: 5}, %{id: 6}]
+      Enum.each(first_batch ++ rest, &EventsWorker.push(&1))
+      assert_receive {:events_sent, ^first_batch}, 50
+      state = EventsWorker.state()
+      assert length(state.batches) == 3
+    end
   end
 
   describe "termination" do

@@ -109,21 +109,21 @@ defmodule Honeybadger.EventsWorker do
     if timer_ref, do: Process.cancel_timer(timer_ref)
 
     {new_batches, throttling} =
-      Enum.reduce_while(state.batches, {[], nil}, fn %{batch: batch, attempts: attempts} = b,
-                                                     {acc, throttling} ->
+      Enum.reduce(state.batches, {[], nil}, fn %{batch: batch, attempts: attempts} = b,
+                                               {acc, throttling} ->
         # If we already decided to back off this round, just keep the rest
         if throttling do
-          {:halt, {acc ++ [b], throttling}}
+          {acc ++ [b], throttling}
         else
           case state.backend.send_events(batch) do
             :ok ->
               Logger.debug("Sent batch of #{length(batch)} events.")
-              {:cont, {acc, nil}}
+              {acc, nil}
 
             {:error, :throttled} ->
               # If 429, set backoff and keep this batch (no attempts increment).
               Logger.warning("Rate limited (429) - waiting for #{state.throttle_wait}ms")
-              {:halt, {acc ++ [b], true}}
+              {acc ++ [b], true}
 
             {:error, reason} ->
               Logger.debug("Failed to send batch (attempt #{attempts + 1}): #{inspect(reason)}")
@@ -131,10 +131,10 @@ defmodule Honeybadger.EventsWorker do
 
               if updated_attempts < state.max_batch_retries do
                 # Keep batch, increment attempts
-                {:cont, {acc ++ [%{b | attempts: updated_attempts}], nil}}
+                {acc ++ [%{b | attempts: updated_attempts}], nil}
               else
                 Logger.debug("Dropping batch after #{updated_attempts} attempts.")
-                {:cont, {acc, nil}}
+                {acc, nil}
               end
           end
         end
