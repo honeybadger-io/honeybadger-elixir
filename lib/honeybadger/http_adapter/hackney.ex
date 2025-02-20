@@ -10,6 +10,7 @@ defmodule Honeybadger.HTTPAdapter.Hackney do
   """
 
   alias Honeybadger.{HTTPAdapter, HTTPAdapter.HTTPResponse}
+  alias Honeybadger.InvalidResponseError
 
   @behaviour HTTPAdapter
 
@@ -26,6 +27,32 @@ defmodule Honeybadger.HTTPAdapter.Hackney do
     |> :hackney.request(url, headers, body, opts)
     |> format_response()
   end
+
+  @impl HTTPAdapter
+  def decode_response_body(response, opts) do
+    case decode(response.headers, response.body, opts) do
+      {:ok, body} -> {:ok, %{response | body: body}}
+      {:error, _error} -> {:error, InvalidResponseError.exception(response: response)}
+    end
+  end
+
+  defp decode(headers, body, opts) when is_binary(body) do
+    case List.keyfind(headers, "content-type", 0) do
+      {"content-type", "application/json" <> _rest} ->
+        Jason.decode(body, opts)
+
+      {"content-type", "text/javascript" <> _rest} ->
+        Jason.decode(body, opts)
+
+      {"content-type", "application/x-www-form-urlencoded" <> _rest} ->
+        {:ok, URI.decode_query(body)}
+
+      _any ->
+        {:ok, body}
+    end
+  end
+
+  defp decode(_headers, body, _opts), do: {:ok, body}
 
   defp format_response({:ok, status_code, headers, client_ref}) do
     {:ok, %HTTPResponse{status: status_code, headers: headers, body: body_from_ref(client_ref)}}

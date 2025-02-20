@@ -14,7 +14,7 @@ if Code.ensure_loaded?(Req) do
     @behaviour HTTPAdapter
 
     @impl HTTPAdapter
-    def request(method, url, body, headers, req_opts \\ []) do
+    def request(method, url, body, headers, opts \\ []) do
       headers = headers ++ [HTTPAdapter.user_agent_header()]
 
       opts =
@@ -33,11 +33,17 @@ if Code.ensure_loaded?(Req) do
       |> Req.request()
       |> case do
         {:ok, response} ->
-          {:ok, %HTTPResponse{status: response.status, headers: response.headers, body: response.body}}
+          {:ok,
+           %HTTPResponse{status: response.status, headers: response.headers, body: response.body}}
 
         {:error, error} ->
           {:error, error}
       end
+    end
+
+    @impl HTTPAdapter
+    def decode_response_body(response, _opts) do
+      {:ok, response}
     end
   end
 end

@@ -68,6 +68,31 @@ defmodule Honeybadger.HTTPAdapterTest do
          body: %{"a" => 1}
        }}
     end
+
+    def decode_response_body(response, opts) do
+      case decode(response.headers, response.body, opts) do
+        {:ok, body} -> {:ok, %{response | body: body}}
+        {:error, _error} -> {:error, InvalidResponseError.exception(response: response)}
+      end
+    end
+
+    defp decode(headers, body, opts) when is_binary(body) do
+      case List.keyfind(headers, "content-type", 0) do
+        {"content-type", "application/json" <> _rest} ->
+          Jason.decode(body, opts)
+
+        {"content-type", "text/javascript" <> _rest} ->
+          Jason.decode(body, opts)
+
+        {"content-type", "application/x-www-form-urlencoded" <> _rest} ->
+          {:ok, URI.decode_query(body)}
+
+        _any ->
+          {:ok, body}
+      end
+    end
+
+    defp decode(_headers, body, _opts), do: {:ok, body}
   end
 
   test "request/5" do
@@ -161,80 +186,5 @@ defmodule Honeybadger.HTTPAdapterTest do
                 http_adapter: HTTPMock,
                 request_url: "form-data-body-already-decoded"
               }}
-  end
-
-  defmodule CustomJWTAdapter do
-    @moduledoc false
-
-    def sign(_claims, _alg, _secret, _opts), do: :signed
-
-    def verify(_binary, _secret, _opts), do: :verified
-  end
-
-  defmodule CustomJSONLibrary do
-    @moduledoc false
-
-    def decode(_binary), do: {:ok, %{"alg" => "none", "custom_json" => true}}
-
-    def encode!(_any), do: ""
-  end
-
-  @body %{"a" => "1", "b" => "2"}
-  @headers [{"content-type", "application/json"}]
-  @json_library (Code.ensure_loaded?(JSON) && JSON) || Jason
-  @json_encoded_body @json_library.encode!(@body)
-  @uri_encoded_body URI.encode_query(@body)
-
-  test "decode_response/2" do
-    assert {:ok, response} =
-             HTTPAdapter.decode_response(
-               %HTTPResponse{body: @json_encoded_body, headers: @headers},
-               []
-             )
-
-    assert response.body == @body
-
-    assert {:ok, response} =
-             HTTPAdapter.decode_response(
-               %HTTPResponse{
-                 body: @json_encoded_body,
-                 headers: [{"content-type", "application/json; charset=utf-8"}]
-               },
-               []
-             )
-
-    assert response.body == @body
-
-    assert {:ok, response} =
-             HTTPAdapter.decode_response(
-               %HTTPResponse{
-                 body: @json_encoded_body,
-                 headers: [{"content-type", "text/javascript"}]
-               },
-               []
-             )
-
-    assert response.body == @body
-
-    assert {:ok, response} =
-             HTTPAdapter.decode_response(
-               %HTTPResponse{
-                 body: @uri_encoded_body,
-                 headers: [{"content-type", "application/x-www-form-urlencoded"}]
-               },
-               []
-             )
-
-    assert response.body == @body
-
-    assert {:ok, response} =
-             HTTPAdapter.decode_response(%HTTPResponse{body: @body, headers: []}, [])
-
-    assert response.body == @body
-
-    assert {:error, %InvalidResponseError{} = error} =
-             HTTPAdapter.decode_response(%HTTPResponse{body: "%", headers: @headers}, [])
-
-    assert error.response.body == "%"
   end
 end

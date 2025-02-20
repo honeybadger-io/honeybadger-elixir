@@ -192,7 +192,7 @@ defmodule HoneybadgerTest do
           assert_receive {:api_request, _}
         end)
 
-      assert logged =~ "[Honeybadger] API success: %{}"
+      assert logged =~ "[Honeybadger] API success: \"{}\""
     end
 
     test "sending a notice on an inactive environment doesn't make an HTTP request" do

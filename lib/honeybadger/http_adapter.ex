@@ -23,6 +23,11 @@ defmodule Honeybadger.HTTPAdapter do
         def request(method, url, body, headers, opts) do
           # ...
         end
+
+        @impl true
+        def decode_response_body(response, opts) do
+          # ...
+        end
       end
   """
 
@@ -69,6 +74,9 @@ defmodule Honeybadger.HTTPAdapter do
   @callback request(method(), binary(), body(), headers(), Keyword.t()) ::
               {:ok, map()} | {:error, any()}
 
+  @callback decode_response_body(HTTPResponse.t(), Keyword.t()) ::
+              {:ok, HTTPResponse.t()} | {:error, InvalidResponseError.t()}
+
   @doc """
   Sets a user agent header.
 
@@ -109,7 +117,7 @@ defmodule Honeybadger.HTTPAdapter do
     |> http_adapter.request(url, body, headers, http_adapter_opts)
     |> case do
       {:ok, response} ->
-        decode_response(response, opts)
+        http_adapter.decode_response_body(response, opts)
 
       {:error, error} ->
         {:error,
@@ -139,34 +147,4 @@ defmodule Honeybadger.HTTPAdapter do
       http_adapter when is_atom(http_adapter) -> {http_adapter, nil}
     end
   end
-
-  @doc """
-  Decodes request response body.
-  """
-  @spec decode_response(HTTPResponse.t(), Keyword.t()) ::
-          {:ok, HTTPResponse.t()} | {:error, InvalidResponseError.t()}
-  def decode_response(%HTTPResponse{} = response, opts) do
-    case decode(response.headers, response.body, opts) do
-      {:ok, body} -> {:ok, %{response | body: body}}
-      {:error, _error} -> {:error, InvalidResponseError.exception(response: response)}
-    end
-  end
-
-  defp decode(headers, body, opts) when is_binary(body) do
-    case List.keyfind(headers, "content-type", 0) do
-      {"content-type", "application/json" <> _rest} ->
-        Jason.decode(body, opts)
-
-      {"content-type", "text/javascript" <> _rest} ->
-        Jason.decode(body, opts)
-
-      {"content-type", "application/x-www-form-urlencoded" <> _rest} ->
-        {:ok, URI.decode_query(body)}
-
-      _any ->
-        {:ok, body}
-    end
-  end
-
-  defp decode(_headers, body, _opts), do: {:ok, body}
 end
