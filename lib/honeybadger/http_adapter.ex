@@ -113,11 +113,13 @@ defmodule Honeybadger.HTTPAdapter do
   def request(method, url, body, headers, opts) do
     {http_adapter, http_adapter_opts} = get_adapter(opts)
 
-    method
-    |> http_adapter.request(url, body, headers, http_adapter_opts)
-    |> case do
-      {:ok, response} ->
-        http_adapter.decode_response_body(response, opts)
+    with {:ok, response} <- http_adapter.request(method, url, body, headers, http_adapter_opts),
+         {:ok, decoded_response} <- http_adapter.decode_response_body(response, opts) do
+      {request_result(decoded_response),
+       %{decoded_response | http_adapter: http_adapter, request_url: url}}
+    else
+      {:error, %Honeybadger.InvalidResponseError{} = error} ->
+        {:error, error}
 
       {:error, error} ->
         {:error,
@@ -126,16 +128,6 @@ defmodule Honeybadger.HTTPAdapter do
            http_adapter: http_adapter,
            request_url: url
          )}
-    end
-    |> case do
-      {:ok, %{status: status} = resp} when status in 200..399 ->
-        {:ok, %{resp | http_adapter: http_adapter, request_url: url}}
-
-      {:ok, %{status: status} = resp} when status in 400..599 ->
-        {:error, %{resp | http_adapter: http_adapter, request_url: url}}
-
-      {:error, error} ->
-        {:error, error}
     end
   end
 
@@ -147,4 +139,7 @@ defmodule Honeybadger.HTTPAdapter do
       http_adapter when is_atom(http_adapter) -> {http_adapter, nil}
     end
   end
+
+  defp request_result(%{status: status}) when status in 200..399, do: :ok
+  defp request_result(%{status: status}) when status in 400..599, do: :error
 end
