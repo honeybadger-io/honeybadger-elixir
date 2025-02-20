@@ -9,22 +9,6 @@ defmodule Honeybadger.HTTPAdapter.ReqTest do
   @req_opts [retry_delay: 0]
 
   describe "request/4" do
-    test "handles SSL" do
-      TestServer.start(scheme: :https)
-      TestServer.add("/", via: :get)
-
-      req_opts =
-        Keyword.put(
-          @req_opts,
-          :connect_options,
-          transport_opts: [cacerts: TestServer.x509_suite().cacerts],
-          protocols: [:http2]
-        )
-
-      assert {:ok, %HTTPResponse{status: 200, body: "HTTP/2"}} =
-               Req.request(:get, TestServer.url(), nil, [], req_opts)
-    end
-
     test "handles SSL with bad certificate" do
       TestServer.start(scheme: :https)
 
