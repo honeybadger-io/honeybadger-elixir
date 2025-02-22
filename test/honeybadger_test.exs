@@ -3,8 +3,27 @@ defmodule HoneybadgerTest do
 
   doctest Honeybadger
 
+  defmodule MockEventsWorker do
+    use GenServer
+
+    def start_link(_), do: GenServer.start_link(__MODULE__, [], name: __MODULE__)
+    def push(data), do: GenServer.cast(__MODULE__, {:push, data})
+
+    @impl true
+    def init(_), do: {:ok, []}
+
+    @impl true
+    def handle_cast({:push, data}, state) do
+      pid = Application.get_env(:honeybadger, :mock_worker_test_pid)
+      send(pid, {:worker_push, data})
+      {:noreply, state}
+    end
+  end
+
   setup do
     {:ok, _} = Honeybadger.API.start(self())
+
+    Application.put_env(:honeybadger, :mock_worker_test_pid, self())
 
     on_exit(&Honeybadger.API.stop/0)
   end
@@ -403,6 +422,77 @@ defmodule HoneybadgerTest do
 
     assert_raise FunctionClauseError, fn ->
       Honeybadger.context(3)
+    end
+  end
+
+  describe "Honeybadger.event/2" do
+    setup do
+      restart_with_config(exclude_envs: [])
+    end
+
+    test "adds event_type to event data" do
+      Honeybadger.event("test_event", %{key: "value"})
+
+      assert_receive {:api_request, data}
+      assert data["event_type"] == "test_event"
+      assert data["key"] == "value"
+    end
+
+    test "works with empty event data" do
+      Honeybadger.event("test_event", %{})
+
+      assert_receive {:api_request, data}
+      assert data["event_type"] == "test_event"
+      ts = data["ts"]
+      assert Map.has_key?(data, "ts")
+      # Verify timestamp format matches DateTime.to_string() format
+      assert {:ok, _, _} = DateTime.from_iso8601(ts)
+    end
+  end
+
+  describe "Honeybadger.event/1" do
+    test "adds timestamp if not present" do
+      restart_with_config(exclude_envs: [])
+      event_data = %{event_type: "test_event", key: "value"}
+
+      Honeybadger.event(event_data)
+
+      assert_receive {:api_request, data}
+      assert data["event_type"] == "test_event"
+      assert data["key"] == "value"
+      assert Map.has_key?(data, "ts")
+    end
+
+    test "sends to EventsWorker when enabled" do
+      restart_with_config(
+        exclude_envs: [],
+        events_worker_enabled: true,
+        events_worker: __MODULE__.MockEventsWorker
+      )
+
+      event_data = %{event_type: "test_event"}
+
+      Honeybadger.event(event_data)
+
+      assert_receive {:worker_push, data}
+      assert data.event_type == "test_event"
+      assert Map.has_key?(data, :ts)
+
+      refute_receive {:api_request, _}
+    end
+
+    test "sends to Client when worker disabled" do
+      restart_with_config(exclude_envs: [])
+
+      event_data = %{event_type: "test_event"}
+
+      Honeybadger.event(event_data)
+
+      assert_receive {:api_request, data}
+      assert data["event_type"] == "test_event"
+      assert Map.has_key?(data, "ts")
+
+      refute_receive {:worker_push, _}
     end
   end
 end
