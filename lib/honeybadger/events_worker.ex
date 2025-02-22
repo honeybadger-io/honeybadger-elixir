@@ -35,9 +35,9 @@ defmodule Honeybadger.EventsWorker do
             timer_ref: reference() | nil,
             throttling: boolean(),
             dropped_events: non_neg_integer(),
-            queue: [term()],
             last_dropped_log: non_neg_integer(),
-            batches: [[term()]]
+            queue: [any()],
+            batches: :queue.queue()
           }
 
     @enforce_keys [
@@ -59,7 +59,7 @@ defmodule Honeybadger.EventsWorker do
       throttling: false,
       dropped_events: 0,
       queue: [],
-      batches: []
+      batches: :queue.new()
     ]
   end
 
@@ -99,7 +99,7 @@ defmodule Honeybadger.EventsWorker do
       queue = [event | state.queue]
 
       if length(queue) >= state.batch_size do
-        batches = state.batches ++ [%{batch: Enum.reverse(queue), attempts: 0}]
+        batches = :queue.in(%{batch: Enum.reverse(queue), attempts: 0}, state.batches)
         state = attempt_send(%{state | queue: [], batches: batches})
         {:noreply, state}
       else
@@ -123,7 +123,7 @@ defmodule Honeybadger.EventsWorker do
   @impl true
   # Flush the queue into a new batch and attempt to send it
   def handle_info(:flush, %State{queue: queue} = state) do
-    batches = state.batches ++ [%{batch: Enum.reverse(queue), attempts: 0}]
+    batches = :queue.in(%{batch: Enum.reverse(queue), attempts: 0}, state.batches)
     {:noreply, attempt_send(%{state | queue: [], batches: batches})}
   end
 
@@ -137,7 +137,7 @@ defmodule Honeybadger.EventsWorker do
     final_state =
       if state.queue != [] do
         batch = %{batch: Enum.reverse(state.queue), attempts: 0}
-        %{state | queue: [], batches: state.batches ++ [batch]}
+        %{state | queue: [], batches: :queue.in(batch, state.batches)}
       else
         state
       end
@@ -163,40 +163,40 @@ defmodule Honeybadger.EventsWorker do
   defp attempt_send(%State{timer_ref: timer_ref} = state) do
     if timer_ref, do: Process.cancel_timer(timer_ref)
 
-    {new_batches, throttling} =
-      Enum.reduce(state.batches, {[], nil}, fn
+    {new_batches_list, throttling} =
+      Enum.reduce(:queue.to_list(state.batches), {[], false}, fn
         # If already throttled, skip sending and retain the batch.
         b, {acc, true} ->
           {acc ++ [b], true}
 
-        %{batch: batch, attempts: attempts} = b, {acc, nil} ->
+        %{batch: batch, attempts: attempts} = b, {acc, false} ->
           case state.send_events_fn.(batch) do
             :ok ->
               Logger.debug("[Honeybadger] Sent batch of #{length(batch)} events.")
-              {acc, nil}
-
-            {:error, :throttled} ->
-              Logger.warning(
-                "[Honeybadger] Rate limited (429) events - waiting for #{state.throttle_wait}ms"
-              )
-
-              {acc ++ [b], true}
+              {acc, false}
 
             {:error, reason} ->
-              Logger.debug(
-                "[Honeybadger] Failed to send events batch (attempt #{attempts + 1}): #{inspect(reason)}"
-              )
-
+              throttling = reason == :throttled
               updated_attempts = attempts + 1
 
+              if throttling do
+                Logger.warning(
+                  "[Honeybadger] Rate limited (429) events - (batch attempt #{updated_attempts}) - waiting for #{state.throttle_wait}ms"
+                )
+              else
+                Logger.debug(
+                  "[Honeybadger] Failed to send events batch (attempt #{updated_attempts}): #{inspect(reason)}"
+                )
+              end
+
               if updated_attempts < state.max_batch_retries do
-                {acc ++ [%{b | attempts: updated_attempts}], nil}
+                {acc ++ [%{b | attempts: updated_attempts}], throttling}
               else
                 Logger.debug(
                   "[Honeybadger] Dropping events batch after #{updated_attempts} attempts."
                 )
 
-                {acc, nil}
+                {acc, throttling}
               end
           end
       end)
@@ -221,14 +221,21 @@ defmodule Honeybadger.EventsWorker do
         if(throttling, do: state.throttle_wait, else: state.timeout)
       )
 
-    %{state | batches: new_batches, throttling: throttling, timer_ref: timer_ref}
+    %{
+      state
+      | batches: :queue.from_list(new_batches_list),
+        throttling: throttling,
+        timer_ref: timer_ref
+    }
   end
 
   @spec total_event_count(State.t()) :: non_neg_integer()
   # Counts events in both the queue and pending batches.
   defp total_event_count(%State{batches: batches, queue: queue}) do
     events_count = length(queue)
-    batch_count = Enum.reduce(batches, 0, fn %{batch: b}, acc -> acc + length(b) end)
+
+    batch_count = :queue.fold(fn %{batch: b}, acc -> acc + length(b) end, 0, batches)
+
     events_count + batch_count
   end
 end

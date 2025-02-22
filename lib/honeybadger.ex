@@ -205,7 +205,7 @@ defmodule Honeybadger do
     end
 
     events_worker_config = [
-      backend: Client,
+      send_events_fn: &Client.send_events/1,
       batch_size: config[:events_batch_size],
       timeout: config[:events_timeout],
       max_queue_size: config[:events_max_queue_size],
