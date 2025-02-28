@@ -2,7 +2,7 @@ defmodule Honeybadger.Insights.BaseTest do
   use Honeybadger.Case, async: false
 
   defmodule TestEventFilter do
-    def filter(data, _name) do
+    def filter(data, _raw, _name) do
       Map.put(data, :was_filtered, true)
     end
   end
@@ -25,6 +25,11 @@ defmodule Honeybadger.Insights.BaseTest do
     def process_event(event_data) do
       send(self(), {:event_processed, event_data})
     end
+
+    # We need to make sure to detach so each run is clean
+    def detach() do
+      Enum.each(@telemetry_events, fn e -> :telemetry.detach(e) end)
+    end
   end
 
   test "attaches to and processes telemetry events" do
@@ -45,6 +50,8 @@ defmodule Honeybadger.Insights.BaseTest do
       assert event2.event_type == "test.event.two"
       assert event2.was_processed
       assert event1.was_filtered
+
+      TestInsights.detach()
     end)
   end
 
@@ -64,6 +71,8 @@ defmodule Honeybadger.Insights.BaseTest do
     assert_received {:event_processed, event}, 50
     refute get_in(event, [:nested, :more, :flash])
     refute get_in(event, [:nested, :__changed__])
+
+    TestInsights.detach()
   end
 
   test "removes params" do
@@ -83,6 +92,8 @@ defmodule Honeybadger.Insights.BaseTest do
         refute event[:params]
         refute event[:assigns]
         refute event[:assigns]
+
+        TestInsights.detach()
       end
     )
   end
@@ -98,6 +109,8 @@ defmodule Honeybadger.Insights.BaseTest do
 
         assert_received {:event_processed, _event1}, 50
         refute_received {:event_processed, _event2}
+
+        TestInsights.detach()
       end
     )
   end

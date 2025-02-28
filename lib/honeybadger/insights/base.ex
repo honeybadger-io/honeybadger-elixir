@@ -44,8 +44,12 @@ defmodule Honeybadger.Insights.Base do
         end
       end
 
-      def event_filter(map, name) do
-        Application.get_env(:honeybadger, :event_filter).filter(map, name)
+      def event_filter(map, meta, name) do
+        if Application.get_env(:honeybadger, :event_filter) do
+          Application.get_env(:honeybadger, :event_filter).filter(map, meta, name)
+        else
+          map
+        end
       end
 
       def get_telemetry_events() do
@@ -139,7 +143,7 @@ defmodule Honeybadger.Insights.Base do
             extract_metadata(metadata, name)
             |> Map.reject(fn {_, v} -> is_nil(v) end)
           )
-          |> event_filter(name)
+          |> event_filter(metadata, name)
           |> process_event()
         end
 
@@ -160,8 +164,8 @@ defmodule Honeybadger.Insights.Base do
       def extract_metadata(meta, _event_name), do: meta
 
       @doc """
-      Process the event data. Default implementation logs the data.
-      Child modules can override this for custom processing.
+      Process the event data. Child modules can override this for custom
+      processing.
       """
       def process_event(event_data), do: Honeybadger.event(event_data)
 

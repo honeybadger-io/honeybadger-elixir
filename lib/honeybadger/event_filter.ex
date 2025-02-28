@@ -9,5 +9,18 @@ defmodule Honeybadger.EventFilter do
         event_filter: MyApp.MyEventFilter
   """
 
-  @callback filter(map(), String.t()) :: map()
+  @doc """
+  Filters an instrumented event.
+
+  ## Parameters
+
+    * `metadata` - The current metadata for the event
+    * `raw_event` - The raw event metadata
+    * `event_name` - The name of the telemetry event being processed, in dot form "a.b.c"
+
+  ## Returns
+
+    The filtered metadata map that will be sent to Honeybadger
+  """
+  @callback filter(metadata :: map(), raw_event :: map(), event_name :: String.t()) :: map()
 end

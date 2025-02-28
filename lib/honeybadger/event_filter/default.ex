@@ -3,7 +3,7 @@ defmodule Honeybadger.EventFilter.Default do
 
   alias Honeybadger.Utils
 
-  def filter(meta, _name) do
+  def filter(meta, _raw, _name) do
     meta
     |> disable(:filter_disable_url, :url)
     |> disable(:filter_disable_session, :session)
