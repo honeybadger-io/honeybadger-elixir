@@ -43,20 +43,42 @@ defmodule Honeybadger.Filter.Mixin do
         filter_map(map, Honeybadger.get_env(:filter_keys))
       end
 
-      def filter_map(map, keys) when is_list(keys) do
-        filter_keys = Enum.map(keys, &Honeybadger.Utils.canonicalize/1)
+      def filter_map(map, keys) when is_map(map) and is_list(keys) do
+        # Pre-canonicalize filter keys once
+        filter_keys = MapSet.new(keys, &Honeybadger.Utils.canonicalize/1)
 
-        drop_keys =
-          map
-          |> Map.keys()
-          |> Enum.filter(&Enum.member?(filter_keys, Honeybadger.Utils.canonicalize(&1)))
-
-        Map.drop(map, drop_keys)
+        # Use recursion to process the map
+        do_filter_map(map, filter_keys)
       end
 
-      def filter_map(map, _keys) do
-        map
+      def filter_map(value, _keys), do: value
+
+      # Convert struct to map, filter it, then convert back to the same struct type
+      defp do_filter_map(%{__struct__: struct_type} = struct, filter_keys) do
+        struct
+        |> Map.from_struct()
+        |> do_filter_map(filter_keys)
+        |> then(fn filtered_map -> struct(struct_type, filtered_map) end)
       end
+
+      # Handle maps recursively
+      defp do_filter_map(map, filter_keys) when is_map(map) do
+        Enum.reduce(map, %{}, fn {key, value}, acc ->
+          if MapSet.member?(filter_keys, Honeybadger.Utils.canonicalize(key)) do
+            acc
+          else
+            Map.put(acc, key, do_filter_map(value, filter_keys))
+          end
+        end)
+      end
+
+      # Handle lists by mapping over each element
+      defp do_filter_map(list, filter_keys) when is_list(list) do
+        Enum.map(list, &do_filter_map(&1, filter_keys))
+      end
+
+      # Handle all other data types by returning them as-is
+      defp do_filter_map(value, _filter_keys), do: value
 
       defoverridable Honeybadger.Filter
     end

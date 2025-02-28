@@ -204,6 +204,16 @@ defmodule Honeybadger do
       Honeybadger.Breadcrumbs.Telemetry.attach()
     end
 
+    if config[:insights_enabled] do
+      [
+        Honeybadger.Insights.Ecto,
+        Honeybadger.Insights.LiveView,
+        Honeybadger.Insights.Oban,
+        Honeybadger.Insights.Phoenix
+      ]
+      |> Enum.each(& &1.attach())
+    end
+
     Supervisor.start_link([{Client, [config]}], strategy: :one_for_one)
   end
 
