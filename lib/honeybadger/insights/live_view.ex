@@ -13,15 +13,14 @@ defmodule Honeybadger.Insights.LiveView do
 
   def extract_metadata(meta, _) do
     %{
-      meta: meta,
-      duration: Map.get(meta, :duration, 0) / 1000,
+      # duration: Map.get(meta, :duration, 0) / 1000,
       url: Map.get(meta, :uri),
+      socket_id: Map.get(meta, :socket_id),
       view: extract_view(meta),
       assigns: extract_assigns(meta),
       params: Map.get(meta, :params),
-      live_view_event: Map.get(meta, :event)
+      event: Map.get(meta, :event)
     }
-    |> Map.reject(fn {_, v} -> is_nil(v) end)
   end
 
   defp extract_view(%{socket: socket}) do

@@ -69,13 +69,17 @@ defmodule Honeybadger.Mixfile do
         use_logger: true,
         ignored_domains: [:cowboy],
         notice_filter: Honeybadger.NoticeFilter.Default,
+        event_filter: Honeybadger.EventFilter.Default,
         filter: Honeybadger.Filter.Default,
-        filter_keys: [:password, :credit_card],
+        filter_keys: [:password, :credit_card, :__changed__, :flash, :_csrf_token],
         filter_args: false,
         filter_disable_url: false,
         filter_disable_params: false,
+        filter_disable_assigns: false,
         filter_disable_session: false,
-        exclude_errors: []
+        exclude_errors: [],
+        insights_enabled: false,
+        insights_config: %{}
       ],
       mod: {Honeybadger, []}
     ]

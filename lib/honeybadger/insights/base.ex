@@ -21,19 +21,27 @@ defmodule Honeybadger.Insights.Base do
       |> Atom.to_string()
       |> String.split(".")
       |> List.last()
-      |> String.downcase()
+      |> Macro.underscore()
       |> String.to_atom()
 
     quote do
-      # Store the namespace for use in the module
+      # Store the namespace for use in the module. Uses Macro.underscore/1, so
+      # Base.MyModule would become :my_module.
       @config_namespace unquote(namespace)
 
       @doc """
       Checks if all required dependencies are available.
       """
       def dependencies_available? do
-        @required_dependencies
-        |> Enum.all?(fn mod -> Code.ensure_loaded?(mod) end)
+        # We are using this strategy to deal with a compiler warning about the
+        # empty case never being reached.
+        deps = @required_dependencies
+
+        if Enum.empty?(deps) do
+          true
+        else
+          Enum.all?(deps, fn mod -> Code.ensure_loaded?(mod) end)
+        end
       end
 
       def event_filter(map, name) do
@@ -45,7 +53,7 @@ defmodule Honeybadger.Insights.Base do
       end
 
       def get_insights_config(key, default) do
-        insights_config = Application.get_env(:honeybadger, :insights, %{})
+        insights_config = Application.get_env(:honeybadger, :insights_config, %{})
         module_config = Map.get(insights_config, @config_namespace, %{})
         Map.get(module_config, key, default)
       end
@@ -92,6 +100,32 @@ defmodule Honeybadger.Insights.Base do
         )
       end
 
+      defp process_measurements(measurements) do
+        measurements
+        |> Map.drop([
+          :monotonic_time,
+          # Absinthe
+          :end_time_mono
+        ])
+        |> Enum.reduce(%{}, fn {key, value}, acc ->
+          case key do
+            key
+            when key in [
+                   :duration,
+                   :total_time,
+                   :decode_time,
+                   :query_time,
+                   :queue_time,
+                   :idle_time
+                 ] ->
+              Map.put(acc, key, System.convert_time_unit(value, :native, :millisecond))
+
+            _ ->
+              Map.put(acc, key, value)
+          end
+        end)
+      end
+
       @doc """
       Handles telemetry events and processes the data.
       """
@@ -100,8 +134,11 @@ defmodule Honeybadger.Insights.Base do
 
         unless ignore?(metadata) do
           %{event_type: name}
-          |> Map.merge(Map.drop(measurements, [:monotonic_time]))
-          |> Map.merge(extract_metadata(metadata, name))
+          |> Map.merge(process_measurements(measurements))
+          |> Map.merge(
+            extract_metadata(metadata, name)
+            |> Map.reject(fn {_, v} -> is_nil(v) end)
+          )
           |> event_filter(name)
           |> process_event()
         end

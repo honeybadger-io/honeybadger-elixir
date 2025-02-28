@@ -3,8 +3,7 @@ defmodule Honeybadger.Insights.BaseTest do
 
   defmodule TestEventFilter do
     def filter(data, _name) do
-      # Simply pass through the data
-      data
+      Map.put(data, :was_filtered, true)
     end
   end
 
@@ -28,15 +27,10 @@ defmodule Honeybadger.Insights.BaseTest do
     end
   end
 
-  setup do
-    # Attach our test insights
-    TestInsights.attach()
-
-    :ok
-  end
-
   test "attaches to and processes telemetry events" do
     with_config([event_filter: TestEventFilter], fn ->
+      TestInsights.attach()
+
       # Send test events
       :telemetry.execute([:test, :event, :one], %{value: 1}, %{data: "test"})
       :telemetry.execute([:test, :event, :two], %{value: 2}, %{data: "other"})
@@ -45,14 +39,18 @@ defmodule Honeybadger.Insights.BaseTest do
       assert_received {:event_processed, event1}, 50
       assert event1.event_type == "test.event.one"
       assert event1.was_processed
+      assert event1.was_filtered
 
       assert_received {:event_processed, event2}
       assert event2.event_type == "test.event.two"
       assert event2.was_processed
+      assert event1.was_filtered
     end)
   end
 
   test "sanitizes nested data" do
+    TestInsights.attach()
+
     :telemetry.execute([:test, :event, :one], %{value: 1}, %{
       data: "test",
       nested: %{
@@ -72,6 +70,8 @@ defmodule Honeybadger.Insights.BaseTest do
     with_config(
       [filter_disable_params: true, filter_disable_assigns: true, filter_disable_session: true],
       fn ->
+        TestInsights.attach()
+
         :telemetry.execute([:test, :event, :two], %{value: 1}, %{
           data: "test",
           session: %{user_id: 123},
@@ -83,6 +83,21 @@ defmodule Honeybadger.Insights.BaseTest do
         refute event[:params]
         refute event[:assigns]
         refute event[:assigns]
+      end
+    )
+  end
+
+  test "limits telemetry events" do
+    with_config(
+      [insights_config: %{test_insights: %{telemetry_events: ["test.event.one"]}}],
+      fn ->
+        TestInsights.attach()
+
+        :telemetry.execute([:test, :event, :one], %{value: 1}, %{data: "test"})
+        :telemetry.execute([:test, :event, :two], %{value: 2}, %{data: "other"})
+
+        assert_received {:event_processed, _event1}, 50
+        refute_received {:event_processed, _event2}
       end
     )
   end

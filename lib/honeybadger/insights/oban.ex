@@ -6,12 +6,12 @@ defmodule Honeybadger.Insights.Oban do
   @required_dependencies [Oban]
 
   @telemetry_events [
-    "oban.job.stop"
+    "oban.job.stop",
+    "oban.job.exception"
   ]
 
   def extract_metadata(meta, _name) do
-    meta
-    |> Map.take([
+    Map.take(meta, [
       :args,
       :attempt,
       :id,

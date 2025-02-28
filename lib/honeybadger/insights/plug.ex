@@ -1,10 +1,19 @@
-defmodule Honeybadger.Insights.Phoenix do
+defmodule Honeybadger.Insights.Plug do
   @moduledoc false
 
   use Honeybadger.Insights.Base
 
-  @required_dependencies [Phoenix.Endpoint]
+  @required_dependencies [Plug]
 
+  # This defaults to a default phoenix event prefix
+  #
+  #   plug Plug.Telemetry, event_prefix: [:phoenix, :endpoint]
+  #
+  # It can be customized by updating insights_config
+  #
+  #  config :honeybadger, insights_config: %{
+  #    plug: %{telemetry_events: ["my.prefix.stop"]}}
+  #
   @telemetry_events [
     "phoenix.endpoint.stop"
   ]

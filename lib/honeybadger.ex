@@ -163,6 +163,8 @@ defmodule Honeybadger do
 
       config :honeybadger,
         ecto_repos: [MyApp.Repo]
+
+  #### Insights
   """
 
   use Application
@@ -206,10 +208,14 @@ defmodule Honeybadger do
 
     if config[:insights_enabled] do
       [
+        Honeybadger.Insights.Plug,
         Honeybadger.Insights.Ecto,
         Honeybadger.Insights.LiveView,
         Honeybadger.Insights.Oban,
-        Honeybadger.Insights.Phoenix
+        Honeybadger.Insights.Phoenix,
+        Honeybadger.Insights.Absinthe,
+        Honeybadger.Insights.Finch,
+        Honeybadger.Insights.Tesla
       ]
       |> Enum.each(& &1.attach())
     end

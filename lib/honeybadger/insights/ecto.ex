@@ -26,8 +26,7 @@ defmodule Honeybadger.Insights.Ecto do
   end
 
   def extract_metadata(meta, _name) do
-    meta
-    |> Map.take([:query, :decode_time, :query_time, :queue_time, :source])
+    Map.take(meta, [:query, :decode_time, :query_time, :queue_time, :source])
   end
 
   def ignore?(%{query: query, source: source}) do
