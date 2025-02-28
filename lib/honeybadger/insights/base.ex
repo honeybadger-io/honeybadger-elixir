@@ -163,7 +163,7 @@ defmodule Honeybadger.Insights.Base do
       Process the event data. Default implementation logs the data.
       Child modules can override this for custom processing.
       """
-      def process_event(event_data), do: IO.inspect(event_data)
+      def process_event(event_data), do: Honeybadger.event(event_data)
 
       defoverridable extract_metadata: 2, process_event: 1, get_telemetry_events: 0, ignore?: 1
     end
