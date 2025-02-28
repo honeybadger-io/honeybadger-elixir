@@ -212,7 +212,6 @@ defmodule Honeybadger do
         Honeybadger.Insights.Ecto,
         Honeybadger.Insights.LiveView,
         Honeybadger.Insights.Oban,
-        Honeybadger.Insights.Phoenix,
         Honeybadger.Insights.Absinthe,
         Honeybadger.Insights.Finch,
         Honeybadger.Insights.Tesla
