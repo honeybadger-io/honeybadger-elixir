@@ -19,6 +19,20 @@ defmodule Honeybadger.Utils do
   end
 
   @doc """
+  Concatenate a list of items with a dot separator.
+
+  # Example
+
+      iex> Honeybadger.Utils.dotify([:Honeybadger, :Utils])
+      "Honeybadger.Utils"
+  """
+  def dotify(path) when is_list(path) do
+    path
+    |> Enum.map(&to_string/1)
+    |> Enum.join(".")
+  end
+
+  @doc """
   Transform value into a consistently cased string representation
 
   # Example
@@ -39,6 +53,9 @@ defmodule Honeybadger.Utils do
   - recursively truncates deep structures (to a depth of 20)
   - constrains large string values (to 64k)
   - filters out any map keys that might contain sensitive information.
+
+  Options:
+  - `:remove_filtered` - When `true`, filtered keys will be removed instead of replaced with "[FILTERED]". Default: `false`
   """
   @depth_token "[DEPTH]"
   @truncated_token "[TRUNCATED]"
@@ -52,7 +69,8 @@ defmodule Honeybadger.Utils do
     base = %{
       max_depth: @default_max_depth,
       max_string_size: @default_max_string_size,
-      filter_keys: Honeybadger.get_env(:filter_keys)
+      filter_keys: Honeybadger.get_env(:filter_keys),
+      remove_filtered: false
     }
 
     opts =
@@ -70,14 +88,22 @@ defmodule Honeybadger.Utils do
     sanitize_val(Map.from_struct(struct), opts)
   end
 
-  defp sanitize_val(v, %{depth: depth, filter_keys: filter_keys} = opts) when is_map(v) do
-    for {key, val} <- v, into: %{} do
+  defp sanitize_val(v, opts) when is_map(v) do
+    %{depth: depth, filter_keys: filter_keys, remove_filtered: remove_filtered} = opts
+
+    Enum.reduce(v, %{}, fn {key, val}, acc ->
       if MapSet.member?(filter_keys, canonicalize(key)) do
-        {key, @filtered_token}
+        if remove_filtered do
+          # Skip this key entirely when remove_filtered is true
+          acc
+        else
+          # Traditional behavior: replace with filtered token
+          Map.put(acc, key, @filtered_token)
+        end
       else
-        {key, sanitize_val(val, Map.put(opts, :depth, depth + 1))}
+        Map.put(acc, key, sanitize_val(val, Map.put(opts, :depth, depth + 1)))
       end
-    end
+    end)
   end
 
   defp sanitize_val(v, %{depth: depth} = opts) when is_list(v) do
