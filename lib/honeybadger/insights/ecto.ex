@@ -7,8 +7,7 @@ defmodule Honeybadger.Insights.Ecto do
   @telemetry_events []
 
   @excluded_queries [
-    "begin",
-    "commit",
+    ~r/^(begin|commit)( immediate)?( transaction)?$/i,
     # Also exclude pg_notify which is often used with Oban
     ~r/SELECT pg_notify/,
     ~r/schema_migrations/
