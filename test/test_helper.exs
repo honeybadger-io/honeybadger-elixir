@@ -4,6 +4,12 @@ Application.put_all_env(
   ex_unit: [
     assert_receive_timeout: 400,
     refute_receive_timeout: 200
+  ],
+  honeybadger: [
+    environment_name: :test,
+    api_key: "abc123",
+    origin: "http://localhost:4444",
+    events_worker_enabled: true
   ]
 )
 
