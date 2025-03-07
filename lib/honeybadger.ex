@@ -204,20 +204,7 @@ defmodule Honeybadger do
       Honeybadger.Breadcrumbs.Telemetry.attach()
     end
 
-    events_worker_config = [
-      send_events_fn: &Client.send_events/1,
-      batch_size: config[:events_batch_size],
-      timeout: config[:events_timeout],
-      max_queue_size: config[:events_max_queue_size],
-      max_batch_retries: config[:events_max_batch_retries]
-    ]
-
-    children = [{Client, [config]}]
-
-    children =
-      if config[:events_worker_enabled],
-        do: children ++ [{events_worker(), events_worker_config}],
-        else: children
+    children = [{Client, [config]}, EventsWorker]
 
     Supervisor.start_link(children, strategy: :one_for_one)
   end
@@ -361,7 +348,7 @@ defmodule Honeybadger do
     data = Map.put_new(event_data, :ts, ts)
 
     if get_env(:events_worker_enabled) do
-      events_worker().push(data)
+      EventsWorker.push(data)
     else
       Client.send_event(data)
     end
@@ -537,9 +524,5 @@ defmodule Honeybadger do
 
   defp contextual_metadata(metadata) do
     %{context: metadata}
-  end
-
-  defp events_worker do
-    Application.get_env(:honeybadger, :events_worker, EventsWorker)
   end
 end

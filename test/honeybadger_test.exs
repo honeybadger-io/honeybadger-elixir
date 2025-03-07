@@ -427,13 +427,13 @@ defmodule HoneybadgerTest do
 
   describe "Honeybadger.event/2" do
     setup do
-      restart_with_config(exclude_envs: [])
+      restart_with_config(exclude_envs: [], events_batch_size: 1)
     end
 
     test "adds event_type to event data" do
       Honeybadger.event("test_event", %{key: "value"})
 
-      assert_receive {:api_request, data}
+      assert_receive {:api_request, [data]}
       assert data["event_type"] == "test_event"
       assert data["key"] == "value"
     end
@@ -441,7 +441,7 @@ defmodule HoneybadgerTest do
     test "works with empty event data" do
       Honeybadger.event("test_event", %{})
 
-      assert_receive {:api_request, data}
+      assert_receive {:api_request, [data]}
       assert data["event_type"] == "test_event"
       ts = data["ts"]
       assert Map.has_key?(data, "ts")
@@ -452,7 +452,11 @@ defmodule HoneybadgerTest do
 
   describe "Honeybadger.event/1" do
     test "adds timestamp if not present" do
-      restart_with_config(exclude_envs: [])
+      restart_with_config(
+        exclude_envs: [],
+        events_worker_enabled: false
+      )
+
       event_data = %{event_type: "test_event", key: "value"}
 
       Honeybadger.event(event_data)
@@ -463,36 +467,39 @@ defmodule HoneybadgerTest do
       assert Map.has_key?(data, "ts")
     end
 
-    test "sends to EventsWorker when enabled" do
+    test "sends to Client events_worker is disabled" do
       restart_with_config(
         exclude_envs: [],
-        events_worker_enabled: true,
-        events_worker: __MODULE__.MockEventsWorker
+        events_worker_enabled: false
       )
 
       event_data = %{event_type: "test_event"}
-
       Honeybadger.event(event_data)
-
-      assert_receive {:worker_push, data}
-      assert data.event_type == "test_event"
-      assert Map.has_key?(data, :ts)
-
-      refute_receive {:api_request, _}
+      assert_receive {:api_request, _}
     end
 
-    test "sends to Client when worker disabled" do
-      restart_with_config(exclude_envs: [])
+    test "sends to events_worker when enabled" do
+      restart_with_config(
+        exclude_envs: [],
+        events_batch_size: 3,
+        events_worker_enabled: true
+      )
 
-      event_data = %{event_type: "test_event"}
+      events = [
+        %{ts: "1", event_type: "test_event"},
+        %{ts: "2", event_type: "test_event"},
+        %{ts: "3", event_type: "test_event"}
+      ]
 
-      Honeybadger.event(event_data)
+      Enum.each(events, &Honeybadger.event/1)
+      assert_receive {:api_request, request_events}
 
-      assert_receive {:api_request, data}
-      assert data["event_type"] == "test_event"
-      assert Map.has_key?(data, "ts")
+      stringified_events =
+        Enum.map(events, fn map ->
+          Map.new(map, fn {k, v} -> {to_string(k), v} end)
+        end)
 
-      refute_receive {:worker_push, _}
+      assert request_events == stringified_events
     end
   end
 end

@@ -261,6 +261,9 @@ defmodule Honeybadger.Client do
         |> Map.get(:hackney_opts)
         |> Keyword.merge(opts)
 
+      headers =
+        List.keyreplace(headers, "Content-Type", 0, {"Content-Type", "application/x-ndjson"})
+
       response =
         case :hackney.post(event_url, headers, payload, hackney_opts) do
           {:ok, code, _headers, _ref} when code in 200..399 ->

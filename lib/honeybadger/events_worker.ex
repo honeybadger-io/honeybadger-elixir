@@ -7,7 +7,7 @@ defmodule Honeybadger.EventsWorker do
   If a batch fails to send, it will be retried (up to a configurable maximum) or dropped.
   In case of throttling (e.g. receiving a 429), the flush delay is increased.
   """
-  
+
   @dropped_log_interval 60_000
 
   use GenServer
@@ -65,8 +65,12 @@ defmodule Honeybadger.EventsWorker do
 
   @spec start_link(Keyword.t()) :: GenServer.on_start()
   def start_link(opts \\ []) do
-    {name, opts} = Keyword.pop(opts, :name, __MODULE__)
-    GenServer.start_link(__MODULE__, opts, name: name)
+    if Honeybadger.get_env(:events_worker_enabled) do
+      {name, opts} = Keyword.pop(opts, :name, __MODULE__)
+      GenServer.start_link(__MODULE__, opts, name: name)
+    else
+      :ignore
+    end
   end
 
   @spec push(event :: map(), GenServer.server()) :: :ok
@@ -81,9 +85,20 @@ defmodule Honeybadger.EventsWorker do
 
   @impl true
   def init(opts) do
-    state = struct!(State, opts)
-    timer_ref = schedule_flush(state)
-    {:ok, %{state | timer_ref: timer_ref, last_dropped_log: System.monotonic_time(:millisecond)}}
+    config = %{
+      send_events_fn: Keyword.get(opts, :send_events_fn, &Honeybadger.Client.send_events/1),
+      batch_size: Keyword.get(opts, :batch_size, Honeybadger.get_env(:events_batch_size)),
+      timeout: Keyword.get(opts, :timeout, Honeybadger.get_env(:events_timeout)),
+      throttle_wait: Keyword.get(opts, :throttle_wait),
+      max_queue_size:
+        Keyword.get(opts, :max_queue_size, Honeybadger.get_env(:events_max_queue_size)),
+      max_batch_retries:
+        Keyword.get(opts, :max_batch_retries, Honeybadger.get_env(:events_max_batch_retries)),
+      last_dropped_log: System.monotonic_time(:millisecond)
+    }
+
+    state = struct!(State, config)
+    {:ok, %{state | timer_ref: schedule_flush(state)}}
   end
 
   @impl true

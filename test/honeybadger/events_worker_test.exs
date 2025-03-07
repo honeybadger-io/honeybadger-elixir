@@ -1,5 +1,5 @@
 defmodule Honeybadger.EventsWorkerTest do
-  use ExUnit.Case, async: true
+  use Honeybadger.Case, async: true
   require Logger
 
   alias Honeybadger.EventsWorker
@@ -67,7 +67,7 @@ defmodule Honeybadger.EventsWorkerTest do
   describe "max_queue_size" do
     test "drops events from queue", %{config: config, change_behavior: change_behavior} do
       {:ok, pid} =
-        start_worker(config ++ [timeout: 5000, max_queue_size: 4])
+        start_worker(Keyword.merge(config, timeout: 5000, max_queue_size: 4))
 
       change_behavior.(:error)
       events = [%{id: 1}, %{id: 2}, %{id: 3}, %{id: 4}, %{id: 5}, %{id: 6}]
