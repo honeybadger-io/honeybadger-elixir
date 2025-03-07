@@ -358,9 +358,7 @@ defmodule Honeybadger do
   def event(event_data) do
     ts = DateTime.utc_now() |> DateTime.to_string()
 
-    data =
-      event_data
-      |> Map.put_new(:ts, ts)
+    data = Map.put_new(event_data, :ts, ts)
 
     if get_env(:events_worker_enabled) do
       events_worker().push(data)

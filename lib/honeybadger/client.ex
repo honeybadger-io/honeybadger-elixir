@@ -92,7 +92,7 @@ defmodule Honeybadger.Client do
   @doc """
   Send events in batches
   """
-  @spec send_events(list) :: :ok | {:error, :rate_limited} | {:error, atom()}
+  @spec send_events(list) :: :ok | {:error, reason :: atom()}
   def send_events(events) when is_list(events) do
     if pid = Process.whereis(__MODULE__) do
       # 30 second timeout
@@ -239,31 +239,22 @@ defmodule Honeybadger.Client do
     {:reply, {:error, :no_api_key}, state}
   end
 
-  def handle_call(
-        {:events, events},
-        _from,
-        %{enabled: true, event_url: event_url, headers: headers} = state
-      ) do
+  def handle_call({:events, events}, _from, state) do
+    %{event_url: event_url, headers: headers} = state
     # Convert each event to JSON and join with newlines
     encoded_events = Enum.map(events, &Honeybadger.JSON.encode/1)
 
     # Check if any encoding failed
-    if Enum.any?(encoded_events, fn
-         {:error, _} -> true
-         {:ok, _} -> false
-       end) do
+    if Enum.any?(encoded_events, &match?({:error, _}, &1)) do
       {:reply, {:error, :encoding_error}, state}
     else
-      payload =
-        encoded_events
-        |> Enum.map(fn {:ok, json} -> json end)
-        |> Enum.join("\n")
+      payload = Enum.map_join(encoded_events, "\n", &elem(&1, 1))
 
       opts =
         state
         |> Map.take([:proxy, :proxy_auth])
-        |> Enum.into(Keyword.new())
-        |> Keyword.put(:pool, __MODULE__)
+        |> Map.put(:pool, __MODULE__)
+        |> Keyword.new()
 
       hackney_opts =
         state

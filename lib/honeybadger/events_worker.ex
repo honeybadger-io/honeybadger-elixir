@@ -1,6 +1,4 @@
 defmodule Honeybadger.EventsWorker do
-  @dropped_log_interval 60_000
-
   @moduledoc """
   A GenServer that batches and sends events with retry and throttling logic.
 
@@ -9,6 +7,8 @@ defmodule Honeybadger.EventsWorker do
   If a batch fails to send, it will be retried (up to a configurable maximum) or dropped.
   In case of throttling (e.g. receiving a 429), the flush delay is increased.
   """
+  
+  @dropped_log_interval 60_000
 
   use GenServer
   require Logger
@@ -65,23 +65,23 @@ defmodule Honeybadger.EventsWorker do
 
   @spec start_link(Keyword.t()) :: GenServer.on_start()
   def start_link(opts \\ []) do
-    name = Keyword.get(opts, :name, __MODULE__)
-    GenServer.start_link(__MODULE__, Keyword.drop(opts, [:name]), name: name)
+    {name, opts} = Keyword.pop(opts, :name, __MODULE__)
+    GenServer.start_link(__MODULE__, opts, name: name)
   end
 
-  @spec push(event :: map(), server :: pid() | atom()) :: :ok
+  @spec push(event :: map(), GenServer.server()) :: :ok
   def push(event, server \\ __MODULE__) do
     GenServer.cast(server, {:push, event})
   end
 
-  @spec state(server :: pid() | atom()) :: __MODULE__.State.t()
+  @spec state(GenServer.server()) :: State.t()
   def state(server \\ __MODULE__) do
     GenServer.call(server, {:state})
   end
 
   @impl true
   def init(opts) do
-    state = struct!(State, Map.new(opts))
+    state = struct!(State, opts)
     timer_ref = schedule_flush(state)
     {:ok, %{state | timer_ref: timer_ref, last_dropped_log: System.monotonic_time(:millisecond)}}
   end
