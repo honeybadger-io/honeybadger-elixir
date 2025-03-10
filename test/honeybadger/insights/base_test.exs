@@ -55,6 +55,35 @@ defmodule Honeybadger.Insights.BaseTest do
     end)
   end
 
+  test "process measurement data" do
+    TestInsights.attach()
+
+    measurements = %{
+      duration: 1_000_000,
+      total_time: 2_000_000,
+      decode_time: 3_000_000,
+      query_time: 4_000_000,
+      queue_time: 5_000_000,
+      idle_time: 6_000_000,
+      monotonic_time: 10_000_000
+    }
+
+    :telemetry.execute([:test, :event, :two], measurements, %{data: "other"})
+
+    assert_received {:event_processed, event}, 50
+
+    # Hardcoded expected values after converting native to milliseconds
+    # Assuming 1000 native time units equal 1 millisecond:
+    assert event.duration == 1
+    assert event.total_time == 2
+    assert event.decode_time == 3
+    assert event.query_time == 4
+    assert event.queue_time == 5
+    assert event.idle_time == 6
+
+    refute Map.has_key?(event, :monotonic_time)
+  end
+
   test "sanitizes nested data" do
     TestInsights.attach()
 

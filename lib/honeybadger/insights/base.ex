@@ -11,6 +11,7 @@ defmodule Honeybadger.Insights.Base do
       Module.register_attribute(__MODULE__, :required_dependencies, [])
       @required_dependencies []
       Module.register_attribute(__MODULE__, :telemetry_events, [])
+      @time_keys ~w(duration total_time decode_time query_time queue_time idle_time)a
 
       @before_compile Honeybadger.Insights.Base
 
@@ -105,28 +106,15 @@ defmodule Honeybadger.Insights.Base do
       end
 
       defp process_measurements(measurements) do
-        measurements
-        |> Map.drop([
-          :monotonic_time,
-          # Absinthe
-          :end_time_mono
-        ])
-        |> Enum.reduce(%{}, fn {key, value}, acc ->
-          case key do
-            key
-            when key in [
-                   :duration,
-                   :total_time,
-                   :decode_time,
-                   :query_time,
-                   :queue_time,
-                   :idle_time
-                 ] ->
-              Map.put(acc, key, System.convert_time_unit(value, :native, :millisecond))
+        Enum.reduce(measurements, %{}, fn
+          {key, _vl}, acc when key in ~w(monotonic_time end_time_mono)a ->
+            acc
 
-            _ ->
-              Map.put(acc, key, value)
-          end
+          {key, val}, acc when key in @time_keys ->
+            Map.put(acc, key, System.convert_time_unit(val, :native, :millisecond))
+
+          {key, val}, acc ->
+            Map.put(acc, key, val)
         end)
       end
 
