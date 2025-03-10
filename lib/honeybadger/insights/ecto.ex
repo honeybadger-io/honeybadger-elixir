@@ -25,7 +25,9 @@ defmodule Honeybadger.Insights.Ecto do
   end
 
   def extract_metadata(meta, _name) do
-    Map.take(meta, [:query, :decode_time, :query_time, :queue_time, :source])
+    meta
+    |> Map.take([:query, :decode_time, :query_time, :queue_time, :source])
+    |> Map.update!(:query, &obfuscate(&1, meta.repo.__adapter__()))
   end
 
   def ignore?(%{query: query, source: source}) do
@@ -50,6 +52,30 @@ defmodule Honeybadger.Insights.Ecto do
 
       telemetry_prefix ->
         telemetry_prefix ++ [:query]
+    end
+  end
+
+  @escape_quotes ~r/(\\\"|\\')/
+  @squote_data ~r/'(?:[^']|'')*'/
+  @dquote_data ~r/"(?:[^"]|"")*"/
+  @number_data ~r/\b\d+\b/
+  @double_quoters ~r/(postgres|sqlite3|postgis)/i
+
+  def obfuscate(sql, adapter) when is_binary(sql) do
+    sql
+    |> String.replace(~r/\s+/, " ")
+    |> String.replace(@escape_quotes, "")
+    |> String.replace(@squote_data, "'?'")
+    |> maybe_replace_dquote(adapter)
+    |> String.replace(@number_data, "?")
+    |> String.trim()
+  end
+
+  defp maybe_replace_dquote(sql, adapter) do
+    if Regex.match?(@double_quoters, to_string(adapter)) do
+      sql
+    else
+      String.replace(sql, @dquote_data, "\"?\"")
     end
   end
 end
