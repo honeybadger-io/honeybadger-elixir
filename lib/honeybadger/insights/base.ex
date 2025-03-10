@@ -9,41 +9,47 @@ defmodule Honeybadger.Insights.Base do
 
       # Define empty defaults for the attributes
       Module.register_attribute(__MODULE__, :required_dependencies, [])
+      @required_dependencies []
       Module.register_attribute(__MODULE__, :telemetry_events, [])
 
       @before_compile Honeybadger.Insights.Base
+
+      def dependencies_available? do
+        Honeybadger.Insights.Base.dependencies_available?(@required_dependencies)
+      end
+
+      def get_insights_config(key, default) do
+        Honeybadger.Insights.Base.get_insights_config(key, default, __MODULE__)
+      end
     end
   end
 
-  defmacro __before_compile__(env) do
-    namespace =
-      env.module
+  @doc """
+  Checks if all required dependencies are available.
+  """
+  def dependencies_available?(deps) do
+    if Enum.empty?(deps), do: true, else: Enum.all?(deps, &Code.ensure_loaded?/1)
+  end
+
+  @doc """
+  Retrieves a configuration value from the insights configuration.
+  """
+  def get_insights_config(key, default, mod) do
+    config_namespace =
+      mod
       |> Atom.to_string()
       |> String.split(".")
       |> List.last()
       |> Macro.underscore()
       |> String.to_atom()
 
+    insights_config = Application.get_env(:honeybadger, :insights_config, %{})
+    module_config = Map.get(insights_config, config_namespace, %{})
+    Map.get(module_config, key, default)
+  end
+
+  defmacro __before_compile__(_env) do
     quote do
-      # Store the namespace for use in the module. Uses Macro.underscore/1, so
-      # Base.MyModule would become :my_module.
-      @config_namespace unquote(namespace)
-
-      @doc """
-      Checks if all required dependencies are available.
-      """
-      def dependencies_available? do
-        # We are using this strategy to deal with a compiler warning about the
-        # empty case never being reached.
-        deps = @required_dependencies
-
-        if Enum.empty?(deps) do
-          true
-        else
-          Enum.all?(deps, fn mod -> Code.ensure_loaded?(mod) end)
-        end
-      end
-
       def event_filter(map, meta, name) do
         if Application.get_env(:honeybadger, :event_filter) do
           Application.get_env(:honeybadger, :event_filter).filter(map, meta, name)
@@ -54,12 +60,6 @@ defmodule Honeybadger.Insights.Base do
 
       def get_telemetry_events() do
         get_insights_config(:telemetry_events, @telemetry_events)
-      end
-
-      def get_insights_config(key, default) do
-        insights_config = Application.get_env(:honeybadger, :insights_config, %{})
-        module_config = Map.get(insights_config, @config_namespace, %{})
-        Map.get(module_config, key, default)
       end
 
       @doc """
