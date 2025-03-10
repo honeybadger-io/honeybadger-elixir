@@ -32,7 +32,6 @@ defmodule Honeybadger.EventsWorker do
             throttle_wait: pos_integer(),
 
             # Internal state
-            timer_ref: reference() | nil,
             throttling: boolean(),
             dropped_events: non_neg_integer(),
             last_dropped_log: non_neg_integer(),
@@ -53,7 +52,6 @@ defmodule Honeybadger.EventsWorker do
       :max_queue_size,
       :timeout,
       :max_batch_retries,
-      :timer_ref,
       :last_dropped_log,
       throttle_wait: 60000,
       throttling: false,
@@ -98,86 +96,57 @@ defmodule Honeybadger.EventsWorker do
     }
 
     state = struct!(State, config)
-    {:ok, %{state | timer_ref: schedule_flush(state)}}
+    {:ok, state, state.timeout}
   end
 
   @impl true
   def handle_call({:state}, _from, %State{} = state) do
-    {:reply, state, state}
+    {:reply, state, state, current_timeout(state)}
   end
 
   @impl true
   def handle_cast({:push, event}, %State{} = state) do
     if total_event_count(state) >= state.max_queue_size do
-      {:noreply, %{state | dropped_events: state.dropped_events + 1}}
+      {:noreply, %{state | dropped_events: state.dropped_events + 1}, current_timeout(state)}
     else
       queue = [event | state.queue]
 
       if length(queue) >= state.batch_size do
-        batches = :queue.in(%{batch: Enum.reverse(queue), attempts: 0}, state.batches)
-        state = attempt_send(%{state | queue: [], batches: batches})
-        {:noreply, state}
+        flush(%{state | queue: queue})
       else
-        {:noreply, %{state | queue: queue}}
+        {:noreply, %{state | queue: queue}, current_timeout(state)}
       end
     end
   end
 
   @impl true
-  # With empty batches and queue just reschedule another flush
-  def handle_info(:flush, %State{batches: [], queue: []} = state) do
-    {:noreply, %{state | timer_ref: schedule_flush(state)}}
-  end
+  def handle_info(:timeout, state), do: flush(state)
 
   @impl true
-  # With an empty queue, just attempt to send the batches
-  def handle_info(:flush, %State{queue: []} = state) do
-    {:noreply, attempt_send(state)}
-  end
-
-  @impl true
-  # Flush the queue into a new batch and attempt to send it
-  def handle_info(:flush, %State{queue: queue} = state) do
-    batches = :queue.in(%{batch: Enum.reverse(queue), attempts: 0}, state.batches)
-    {:noreply, attempt_send(%{state | queue: [], batches: batches})}
-  end
-
-  @impl true
-  def terminate(_reason, %State{timer_ref: timer_ref} = state) do
-    if timer_ref, do: Process.cancel_timer(timer_ref)
-
+  def terminate(_reason, %State{} = state) do
     Logger.debug("[Honeybadger] Terminating with #{total_event_count(state)} events unsent")
-
-    # Best effort final flush (inline)
-    final_state =
-      if state.queue != [] do
-        batch = %{batch: Enum.reverse(state.queue), attempts: 0}
-        %{state | queue: [], batches: :queue.in(batch, state.batches)}
-      else
-        state
-      end
-
-    _ = attempt_send(final_state)
-
+    _ = flush(state)
     :ok
   end
 
-  @spec schedule_flush(State.t()) :: reference() | nil
-  # Schedules a flush timer (or reuses the current one when throttled with no
-  # new events).
-  defp schedule_flush(%State{timer_ref: timer_ref, throttling: true}), do: timer_ref
+  @spec flush(State.t()) :: {:noreply, State.t(), pos_integer()}
+  defp flush(state) do
+    cond do
+      state.queue == [] and :queue.is_empty(state.batches) ->
+        {:noreply, state, current_timeout(state)}
 
-  defp schedule_flush(%State{timer_ref: timer_ref, timeout: timeout}) do
-    if timer_ref, do: Process.cancel_timer(timer_ref)
-    Process.send_after(self(), :flush, timeout)
+      state.queue == [] ->
+        attempt_send(state)
+
+      true ->
+        batches = :queue.in(%{batch: Enum.reverse(state.queue), attempts: 0}, state.batches)
+        attempt_send(%{state | queue: [], batches: batches})
+    end
   end
 
   @spec attempt_send(State.t()) :: State.t()
-  # Sends pending batches, handling retries and throttling, and schedules the
-  # next flush.
-  defp attempt_send(%State{timer_ref: timer_ref} = state) do
-    if timer_ref, do: Process.cancel_timer(timer_ref)
-
+  # Sends pending batches, handling retries and throttling
+  defp attempt_send(%State{} = state) do
     {new_batches_list, throttling} =
       Enum.reduce(:queue.to_list(state.batches), {[], false}, fn
         # If already throttled, skip sending and retain the batch.
@@ -229,19 +198,9 @@ defmodule Honeybadger.EventsWorker do
         state
       end
 
-    timer_ref =
-      Process.send_after(
-        self(),
-        :flush,
-        if(throttling, do: state.throttle_wait, else: state.timeout)
-      )
+    new_state = %{state | batches: :queue.from_list(new_batches_list), throttling: throttling}
 
-    %{
-      state
-      | batches: :queue.from_list(new_batches_list),
-        throttling: throttling,
-        timer_ref: timer_ref
-    }
+    {:noreply, new_state, current_timeout(new_state)}
   end
 
   @spec total_event_count(State.t()) :: non_neg_integer()
@@ -253,4 +212,8 @@ defmodule Honeybadger.EventsWorker do
 
     events_count + batch_count
   end
+
+  @spec current_timeout(State.t()) :: pos_integer()
+  defp current_timeout(%State{throttling: true, throttle_wait: wait}), do: wait
+  defp current_timeout(%State{timeout: timeout}), do: timeout
 end
