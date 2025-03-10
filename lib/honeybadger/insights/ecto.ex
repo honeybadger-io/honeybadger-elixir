@@ -20,7 +20,8 @@ defmodule Honeybadger.Insights.Ecto do
   ]
 
   def get_telemetry_events do
-    Honeybadger.get_env(:ecto_repos)
+    :ecto_repos
+    |> Honeybadger.get_env()
     |> Enum.map(&get_telemetry_prefix/1)
   end
 
@@ -34,26 +35,18 @@ defmodule Honeybadger.Insights.Ecto do
     if source in get_insights_config(:excluded_sources, @excluded_sources) do
       true
     else
-      get_insights_config(:excluded_queries, @excluded_queries)
-      |> Enum.any?(fn pattern ->
-        case pattern do
+      :excluded_queries
+      |> get_insights_config(@excluded_queries)
+      |> Enum.any?(fn
           pattern when is_binary(pattern) -> query == pattern
-          %Regex{} -> Regex.match?(pattern, query)
-          _ -> false
-        end
-      end)
+          %Regex{} = pattern -> Regex.match?(pattern, query)
+          _pattern -> false
+        end)
     end
   end
 
   defp get_telemetry_prefix(repo) do
-    case Keyword.get(repo.config(), :telemetry_prefix) do
-      nil ->
-        []
-
-      telemetry_prefix ->
-        telemetry_prefix ++ [:query]
-    end
-  end
+    Keyword.get(repo.config(), :telemetry_prefix, []) ++ [:query]
 
   @escape_quotes ~r/(\\\"|\\')/
   @squote_data ~r/'(?:[^']|'')*'/

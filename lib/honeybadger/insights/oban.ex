@@ -10,19 +10,10 @@ defmodule Honeybadger.Insights.Oban do
     "oban.job.exception"
   ]
 
-  def extract_metadata(meta, _name) do
-    Map.take(meta, [
-      :args,
-      :attempt,
-      :id,
-      :memory,
-      :prefix,
-      :queue,
-      :queue_time,
-      :state,
-      :tags,
-      :time,
-      :worker
-    ])
+  def extract_metadata(%{conf: conf, job: job, state: state}, _name) do
+    job
+    |> Map.take(~w(args attempt id queue tags worker)a)
+    |> Map.put(:prefix, conf.prefix)
+    |> Map.put(:state, state)
   end
 end

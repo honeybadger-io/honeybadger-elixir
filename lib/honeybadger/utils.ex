@@ -27,9 +27,7 @@ defmodule Honeybadger.Utils do
       "Honeybadger.Utils"
   """
   def dotify(path) when is_list(path) do
-    path
-    |> Enum.map(&to_string/1)
-    |> Enum.join(".")
+    Enum.map_join(path, ".", &to_string/1)
   end
 
   @doc """
