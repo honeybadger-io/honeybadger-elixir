@@ -38,15 +38,16 @@ defmodule Honeybadger.Insights.Ecto do
       :excluded_queries
       |> get_insights_config(@excluded_queries)
       |> Enum.any?(fn
-          pattern when is_binary(pattern) -> query == pattern
-          %Regex{} = pattern -> Regex.match?(pattern, query)
-          _pattern -> false
-        end)
+        pattern when is_binary(pattern) -> query == pattern
+        %Regex{} = pattern -> Regex.match?(pattern, query)
+        _pattern -> false
+      end)
     end
   end
 
   defp get_telemetry_prefix(repo) do
     Keyword.get(repo.config(), :telemetry_prefix, []) ++ [:query]
+  end
 
   @escape_quotes ~r/(\\\"|\\')/
   @squote_data ~r/'(?:[^']|'')*'/
