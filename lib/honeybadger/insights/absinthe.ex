@@ -1,5 +1,31 @@
 defmodule Honeybadger.Insights.Absinthe do
-  @moduledoc false
+  @moduledoc """
+  Captures telemetry events from GraphQL operations executed via Absinthe.
+
+  ## Default Configuration
+
+  By default, this module listens for the following Absinthe telemetry events:
+
+      "absinthe.execute.operation.stop"
+      "absinthe.execute.operation.exception"
+
+  ## Custom Configuration
+
+  You can customize the telemetry events to listen for by updating the insights_config:
+
+      config :honeybadger, insights_config: %{
+        absinthe: %{
+          telemetry_events: [
+            "absinthe.execute.operation.stop",
+            "absinthe.execute.operation.exception",
+            "absinthe.resolve.field.stop"
+          ]
+        }
+      }
+
+  Note that adding field-level events like "absinthe.resolve.field.stop" can
+  significantly increase the number of telemetry events generated.
+  """
 
   use Honeybadger.Insights.Base
 

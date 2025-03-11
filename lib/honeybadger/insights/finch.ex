@@ -1,5 +1,30 @@
 defmodule Honeybadger.Insights.Finch do
-  @moduledoc false
+  @moduledoc """
+  Captures telemetry events from HTTP requests made using Finch.
+
+  ## Default Configuration
+
+  By default, this module listens for the standard Finch request telemetry event:
+
+      "finch.request.stop"
+
+  ## Custom Configuration
+
+  You can customize the telemetry events to listen for by updating the insights_config:
+
+      config :honeybadger, insights_config: %{
+        finch: %{
+          telemetry_events: ["finch.request.stop", "finch.request.exception"],
+
+          # Include full URLs in telemetry events (default: false - only hostname is included)
+          full_url: false
+        }
+      }
+
+  By default, only the hostname from URLs is captured for security and privacy reasons.
+  If you need to capture the full URL including paths (but not query parameters),
+  you can enable the `full_url` option.
+  """
 
   use Honeybadger.Insights.Base
 
@@ -13,8 +38,15 @@ defmodule Honeybadger.Insights.Finch do
     metadata = %{
       name: meta.name,
       method: meta.request.method,
-      url: reconstruct_url(meta.request)
+      host: meta.request.host
     }
+
+    metadata =
+      if get_insights_config(:full_url, false) do
+        Map.put(metadata, :url, reconstruct_url(meta.request))
+      else
+        metadata
+      end
 
     case meta.result do
       {:ok, response} when is_struct(response, Finch.Response) ->

@@ -1,4 +1,39 @@
 defmodule Honeybadger.Insights.Ecto do
+  @moduledoc """
+  Captures database query telemetry events from Ecto repositories.
+
+  ## Default Configuration
+
+  By default, this module listens for telemetry events from all configured
+  Ecto repositories. It reads the `:ecto_repos` configuration to identify
+  repositories and their telemetry prefixes.
+
+  ## Custom Configuration
+
+  You can customize this module's behavior with the following configuration options:
+
+      config :honeybadger, insights_config: %{
+        ecto: %{
+          # A list of strings or regex patterns of queries to exclude
+          excluded_queries: [
+            ~r/^(begin|commit)( immediate)?( transaction)?$/i,
+            ~r/SELECT pg_notify/,
+            ~r/schema_migrations/
+          ],
+
+          # A list of table/source names to exclude
+          excluded_sources: [
+            "schema_migrations",
+            "oban_jobs",
+            "oban_peers"
+          ]
+        }
+      }
+
+  By default, transaction bookkeeping queries and schema migration checks are excluded,
+  as well as queries to common background job tables.
+  """
+
   @moduledoc false
 
   use Honeybadger.Insights.Base

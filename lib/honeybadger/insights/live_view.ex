@@ -1,5 +1,29 @@
 defmodule Honeybadger.Insights.LiveView do
-  @moduledoc false
+  @moduledoc """
+  Captures telemetry events from Phoenix LiveView.
+
+  ## Default Configuration
+
+  By default, this module listens for the following LiveView telemetry events:
+
+     "phoenix.live_component.handle_event.stop"
+     "phoenix.live_view.mount.stop"
+     "phoenix.live_view.update.stop"
+
+  ## Custom Configuration
+
+  You can customize the telemetry events to listen for by updating the insights_config:
+
+     config :honeybadger, insights_config: %{
+       live_view: %{
+         telemetry_events: [
+           "phoenix.live_view.mount.stop",
+           "phoenix.live_view.update.stop",
+           "phoenix.live_view.handle_event.stop"
+         ]
+       }
+     }
+  """
 
   use Honeybadger.Insights.Base
 

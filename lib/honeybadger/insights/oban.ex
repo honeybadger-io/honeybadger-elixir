@@ -1,5 +1,28 @@
 defmodule Honeybadger.Insights.Oban do
-  @moduledoc false
+  @moduledoc """
+  Captures telemetry events from Oban job processing.
+
+  ## Default Configuration
+
+  By default, this module listens for the following Oban telemetry events:
+
+     "oban.job.stop"
+     "oban.job.exception"
+
+  ## Custom Configuration
+
+  You can customize the telemetry events to listen for by updating the insights_config:
+
+     config :honeybadger, insights_config: %{
+       oban: %{
+         telemetry_events: [
+           "oban.job.stop",
+           "oban.job.exception",
+           "oban.engine.start"
+         ]
+       }
+     }
+  """
 
   use Honeybadger.Insights.Base
 

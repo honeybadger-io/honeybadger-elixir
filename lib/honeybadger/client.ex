@@ -79,6 +79,7 @@ defmodule Honeybadger.Client do
   Upload the event data
   """
   @spec send_event(map) :: :ok
+
   def send_event(event) when is_map(event) do
     if pid = Process.whereis(__MODULE__) do
       GenServer.cast(pid, {:event, event})

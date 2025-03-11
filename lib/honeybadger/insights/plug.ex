@@ -1,19 +1,33 @@
 defmodule Honeybadger.Insights.Plug do
-  @moduledoc false
+  @moduledoc """
+  Captures telemetry events from HTTP requests processed by Plug and Phoenix.
+
+  ## Default Configuration
+
+  By default, this module listens for the standard Phoenix endpoint telemetry event:
+
+      "phoenix.endpoint.stop"
+
+  This is compatible with the default Phoenix configuration that adds telemetry
+  via `Plug.Telemetry`:
+
+      plug Plug.Telemetry, event_prefix: [:phoenix, :endpoint]
+
+  ## Custom Configuration
+
+  You can customize the telemetry events to listen for by updating the insights_config:
+
+      config :honeybadger, insights_config: %{
+        plug: %{
+          telemetry_events: ["my.prefix.stop", "another.event"]
+        }
+      }
+  """
 
   use Honeybadger.Insights.Base
 
   @required_dependencies [Plug]
 
-  # This defaults to a default phoenix event prefix
-  #
-  #   plug Plug.Telemetry, event_prefix: [:phoenix, :endpoint]
-  #
-  # It can be customized by updating insights_config
-  #
-  #  config :honeybadger, insights_config: %{
-  #    plug: %{telemetry_events: ["my.prefix.stop"]}}
-  #
   @telemetry_events [
     "phoenix.endpoint.stop"
   ]
