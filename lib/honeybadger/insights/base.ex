@@ -155,7 +155,8 @@ defmodule Honeybadger.Insights.Base do
       Process the event data. Child modules can override this for custom
       processing.
       """
-      def process_event(event_data), do: Honeybadger.event(event_data)
+      def process_event(event_data) when is_map(event_data), do: Honeybadger.event(event_data)
+      def process_event(_event_data), do: nil
 
       defoverridable extract_metadata: 2, process_event: 1, get_telemetry_events: 0, ignore?: 1
     end

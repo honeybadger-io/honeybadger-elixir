@@ -22,5 +22,5 @@ defmodule Honeybadger.EventFilter do
 
     The filtered metadata map that will be sent to Honeybadger
   """
-  @callback filter(metadata :: map(), raw_event :: map(), event_name :: String.t()) :: map()
+  @callback filter(metadata :: map(), raw_event :: map(), event_name :: String.t()) :: map() | nil
 end

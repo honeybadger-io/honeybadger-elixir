@@ -150,6 +150,117 @@ rescue
 end
 ```
 
+## Insights Automatic Instrumentation
+
+Honeybadger Insights allows you to automatically track various events in your
+application. To enable Insights automatic instrumentation, add the following to
+your configuration:
+
+```elixir
+config :honeybadger,
+  insights_enabled: true
+```
+
+### Supported Libraries
+
+Honeybadger automatically instruments the following libraries when they are available:
+
+* Absinthe: GraphQL query execution
+* Ecto: Database queries
+* Finch: HTTP client requests
+* LiveView: Phoenix LiveView lifecycle events
+* Oban: Background job processing
+* Plug/Phoenix: HTTP requests
+* Tesla: HTTP client requests
+
+### Custom Configuration
+
+Each library can be configured individually using the `insights_config` option:
+
+```elixir
+config :honeybadger, insights_config: %{
+  # Ecto configuration
+  ecto: %{
+    # A list of strings or regex patterns of queries to exclude
+    excluded_queries: [~r/^(begin|commit)/i],
+
+    # A list of table/source names to exclude
+    excluded_sources: ["schema_migrations"]
+  },
+
+  # Finch/Tesla configuration
+  finch: %{
+    # Include full URLs instead of just hostnames
+    full_url: false
+  },
+
+  # Plug configuration
+  plug: %{
+    telemetry_events: ["phoenix.endpoint.stop"]
+  },
+
+  # LiveView configuration
+  live_view: %{
+    telemetry_events: [
+      "phoenix.live_view.mount.stop",
+      "phoenix.live_view.update.stop"
+    ]
+  },
+
+  # Absinthe configuration
+  absinthe: %{
+    telemetry_events: [
+      "absinthe.execute.operation.stop",
+      "absinthe.execute.operation.exception"
+    ]
+  },
+
+  # Oban configuration
+  oban: %{
+    telemetry_events: [
+      "oban.job.stop",
+      "oban.job.exception"
+    ]
+  }
+}
+```
+
+### Event Filtering
+
+You can filter out or customize automatic events sent to Honeybadger Insights
+by implementing the `Honeybadger.EventFilter` behaviour:
+
+```elixir
+defmodule MyApp.EventFilter do
+  @behaviour Honeybadger.EventFilter
+
+  @default_filter &Honeybadger.EventFilter.Default.filter/3
+
+  @impl Honeybadger.EventFilter
+  # Pattern match on the event type name
+  def filter(event, raw, "phoenix.endpoint.stop" = name) do
+    if event.duration < 100 do
+      event
+      |> Map.put(:slow, true)
+      # You might want to run the event through the default filter to remove
+      # any sensitive data
+      |> @default_filter.(raw, name)
+    else
+      # Ignore events that are fast
+      nil
+    end
+  end
+
+  def filter(event, raw, name), do: @default_filter.(event, raw, name)
+end
+```
+
+Then configure the filter in your application's configuration:
+
+```elixir
+config :honeybadger, event_filter: MyApp.EventFilter
+```
+
 ## Breadcrumbs
 
 Breadcrumbs allow you to record events along a processes execution path. If
@@ -311,19 +422,20 @@ Here are all of the options you can pass in the keyword list:
 | ------------------------ | --------------------------------------------------------------------------------------------- | ---------------------------------------- |
 | `app`                    | Name of your app's OTP Application as an atom                                                 | `Mix.Project.config[:app]`               |
 | `api_key`                | Your application's Honeybadger API key                                                        | `System.get_env("HONEYBADGER_API_KEY"))` |
-| `environment_name`       | (required) The name of the environment your app is running in.                                | `:prod`                                    |
-|`exclude_errors`          |Filters out errors from being sent to Honeybadger        | `[]`|
+| `environment_name`       | (required) The name of the environment your app is running in.                                | `:prod`                                  |
+| `exclude_errors`         | Filters out errors from being sent to Honeybadger                                             | `[]`                                     |
 | `exclude_envs`           | Environments that you want to disable Honeybadger notifications                               | `[:dev, :test]`                          |
 | `hostname`               | Hostname of the system your application is running on                                         | `:inet.gethostname`                      |
 | `origin`                 | URL for the Honeybadger API                                                                   | `"https://api.honeybadger.io"`           |
 | `project_root`           | Directory root for where your application is running                                          | `System.cwd/0`                           |
 | `revision`               | The project's git revision                                                                    | `nil`                                    |
 | `filter`                 | Module implementing `Honeybadger.Filter` to filter data before sending to Honeybadger.io      | `Honeybadger.Filter.Default`             |
-| `filter_keys`            | A list of keywords (atoms) to filter.  Only valid if `filter` is `Honeybadger.Filter.Default` | `[:password, :credit_card]`              |
+| `filter_keys`            | A list of keywords (atoms) to filter.  Only valid if `filter` is `Honeybadger.Filter.Default` | `[:password, :credit_card, :__changed__, :flash, :_csrf_token]` |
 | `filter_args`            | If true, will remove function arguments in backtraces                                         | `true`                                   |
 | `filter_disable_url`     | If true, will remove the request url                                                          | `false`                                  |
 | `filter_disable_session` | If true, will remove the request session                                                      | `false`                                  |
 | `filter_disable_params`  | If true, will remove the request params                                                       | `false`                                  |
+| `filter_disable_assigns` | If true, will remove the live_view event assigns                                              | `false`                                  |
 | `fingerprint_adapter`    | Implementation of FingerprintAdapter behaviour                                                |                                          |
 | `notice_filter`          | Module implementing `Honeybadger.NoticeFilter`. If `nil`, no filtering is done.               | `Honeybadger.NoticeFilter.Default`       |
 | `sasl_logging_only`      | If true, will notifiy for SASL errors but not Logger calls                                    | `true`                                   |
@@ -331,6 +443,9 @@ Here are all of the options you can pass in the keyword list:
 | `ignored_domains`        | Add domains to ignore Error events in `Honeybadger.Logger`.                                   | `[:cowboy]`                              |
 | `breadcrumbs_enabled`    | Enable breadcrumb event tracking                                                              | `false`                                  |
 | `ecto_repos`             | Modules with implemented Ecto.Repo behaviour for tracking SQL breadcrumb events               | `[]`                                     |
+| `event_filter`           | Module implementing `Honeybadger.EventFilter`. If `nil`, no filtering is done.                | `Honeybadger.EventFilter.Default`        |
+| `insights_enabled`       | Enable sending automatic events to Honeybadger Insights                                       | `false`                                  |
+| `insights_config`        | Specific library Configuration for Honeybadger Insights.                                      | `%{}`                                    |
 
 ## Public Interface
 

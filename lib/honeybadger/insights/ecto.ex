@@ -34,8 +34,6 @@ defmodule Honeybadger.Insights.Ecto do
   as well as queries to common background job tables.
   """
 
-  @moduledoc false
-
   use Honeybadger.Insights.Base
 
   @required_dependencies [Ecto.Repo]
