@@ -68,8 +68,7 @@ defmodule Honeybadger.Insights.Base do
       """
       def attach do
         if dependencies_available?() do
-          get_telemetry_events()
-          |> Enum.each(&attach_event/1)
+          Enum.each(get_telemetry_events(), &attach_event/1)
 
           :ok
         else
@@ -128,7 +127,8 @@ defmodule Honeybadger.Insights.Base do
           %{event_type: name}
           |> Map.merge(process_measurements(measurements))
           |> Map.merge(
-            extract_metadata(metadata, name)
+            metadata
+            |> extract_metadata(name)
             |> Map.reject(fn {_, v} -> is_nil(v) end)
           )
           |> event_filter(metadata, name)
