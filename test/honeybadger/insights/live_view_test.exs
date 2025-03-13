@@ -2,6 +2,8 @@ defmodule Honeybadger.Insights.LiveViewTest do
   use Honeybadger.Case, async: false
   use Honeybadger.InsightsCase
 
+  @required_atoms [:phoenix, :live_view, :live_component, :operation]
+
   # Define mock module for testing
   defmodule Phoenix.LiveView do
   end

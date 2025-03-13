@@ -85,7 +85,7 @@ defmodule Honeybadger.Insights.Base do
       The event can be either a string (dot-separated) or a list of atoms.
       """
       def attach_event(event) when is_binary(event) do
-        event_atoms = event |> String.split(".") |> Enum.map(&String.to_atom/1)
+        event_atoms = event |> String.split(".") |> Enum.map(&String.to_existing_atom/1)
         attach_event(event_atoms, event)
       end
 
