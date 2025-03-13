@@ -1,5 +1,5 @@
 defmodule Honeybadger.Insights.AbsintheTest do
-  use Honeybadger.Case, async: false
+  use Honeybadger.Case, async: true
   use Honeybadger.InsightsCase
 
   # Define mock module for testing
