@@ -43,6 +43,21 @@ defmodule Honeybadger.Insights.Tesla do
     end
   end
 
+  # Ignore telemetry events from Finch adapters, since we are already
+  # instrumenting Finch requests in the Finch adapter module.
+  def ignore?(meta) do
+    adapter =
+      meta
+      |> Map.get(:env, %{})
+      |> Map.get(:__client__, %{})
+      |> Map.get(:adapter)
+
+    case adapter do
+      {Tesla.Adapter.Finch, _, _} -> true
+      _ -> false
+    end
+  end
+
   defp extract_host(url) when is_binary(url) do
     case URI.parse(url) do
       %URI{host: host} when is_binary(host) and host != "" -> host

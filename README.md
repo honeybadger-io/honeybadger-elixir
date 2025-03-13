@@ -167,11 +167,11 @@ Honeybadger automatically instruments the following libraries when they are avai
 
 * Absinthe: GraphQL query execution
 * Ecto: Database queries
-* Finch: HTTP client requests
+* Finch: HTTP client requests, often used by other libraries like Req
+* Tesla: HTTP client requests
 * LiveView: Phoenix LiveView lifecycle events
 * Oban: Background job processing
 * Plug/Phoenix: HTTP requests
-* Tesla: HTTP client requests
 
 ### Custom Configuration
 

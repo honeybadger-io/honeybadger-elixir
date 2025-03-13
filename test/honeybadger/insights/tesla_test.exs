@@ -1,10 +1,14 @@
+# Define a mock Tesla module just for testing
+defmodule Tesla do
+  defmodule Adapter do
+    defmodule Finch do
+    end
+  end
+end
+
 defmodule Honeybadger.Insights.TeslaTest do
   use Honeybadger.Case, async: false
   use Honeybadger.InsightsCase
-
-  # Define a mock Tesla module just for testing
-  defmodule Tesla do
-  end
 
   describe "Tesla instrumentation" do
     test "captures Tesla request events" do
@@ -50,6 +54,23 @@ defmodule Honeybadger.Insights.TeslaTest do
       assert event["host"] == "a.example.net"
       assert event["status_code"] == 500
       assert event["duration"] == 30
+    end
+
+    test "Ignores telemetry events from Finch adapters" do
+      :telemetry.execute(
+        [:tesla, :request, :stop],
+        %{},
+        %{
+          env: %{
+            method: :post,
+            url: "https://a.example.net/users",
+            status: 500,
+            __client__: %{adapter: {Tesla.Adapter.Finch, :a, :b}}
+          }
+        }
+      )
+
+      refute_receive {:api_request, _}
     end
 
     test "captures full url" do
