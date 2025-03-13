@@ -15,8 +15,6 @@ Application.put_all_env(
 
 ExUnit.start(assert_receive_timeout: 1000, refute_receive_timeout: 1000)
 
-Code.require_file("test/support/insights_case.ex")
-
 defmodule Honeybadger.Case do
   use ExUnit.CaseTemplate
 

@@ -49,6 +49,7 @@ defmodule Honeybadger.Mixfile do
   # into the host apps mix tasks. This way our release task is shown only in
   # our mix tasks
   defp elixirc_paths(:dev), do: ["lib", "mix"]
+  defp elixirc_paths(:test), do: ["lib", "test/support"]
   defp elixirc_paths(_), do: ["lib"]
 
   def application do
