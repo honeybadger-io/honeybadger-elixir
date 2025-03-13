@@ -82,6 +82,8 @@ defmodule Honeybadger.Insights.BaseTest do
     assert event.idle_time == 6
 
     refute Map.has_key?(event, :monotonic_time)
+
+    TestInsights.detach()
   end
 
   test "sanitizes nested data" do
