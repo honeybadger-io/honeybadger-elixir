@@ -15,8 +15,8 @@ defmodule Honeybadger.HTTPAdapter.Hackney do
   @behaviour HTTPAdapter
 
   @impl HTTPAdapter
-  def request(method, url, body, headers, hackney_opts \\ nil) do
-    opts = hackney_opts || []
+  def request(method, url, body, headers, opts \\ []) do
+    opts = opts || []
 
     body = binary_or_empty_binary(body)
 

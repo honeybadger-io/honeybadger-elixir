@@ -22,7 +22,7 @@ defmodule Honeybadger.HTTPAdapter.Req do
           headers: headers,
           body: body
         ],
-        opts
+        opts || []
       )
 
     req = apply(Req, :new, [opts])
