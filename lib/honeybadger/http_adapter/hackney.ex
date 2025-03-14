@@ -16,15 +16,12 @@ defmodule Honeybadger.HTTPAdapter.Hackney do
 
   @impl HTTPAdapter
   def request(method, url, body, headers, hackney_opts \\ nil) do
-    raise_on_missing_hackney!()
-
     headers = headers ++ [HTTPAdapter.user_agent_header()]
     opts = hackney_opts || []
 
     body = binary_or_empty_binary(body)
 
-    method
-    |> :hackney.request(url, headers, body, opts)
+    apply(:hackney, :request, [method, url, headers, body, opts])
     |> format_response()
   end
 
@@ -61,21 +58,8 @@ defmodule Honeybadger.HTTPAdapter.Hackney do
   defp format_response({:error, error}), do: {:error, error}
 
   defp body_from_ref(ref) do
-    ref
-    |> :hackney.body()
+    apply(:hackney, :body, [ref])
     |> elem(1)
-  end
-
-  defp raise_on_missing_hackney! do
-    Code.ensure_loaded?(:hackney) ||
-      raise """
-      #{inspect(__MODULE__)} requires `:hackney` to be included in your
-      application.
-
-      Please add it to your dependencies:
-
-          {:hackney, "~> 1.1"}
-      """
   end
 
   defp binary_or_empty_binary(nil), do: ""

@@ -90,23 +90,13 @@ defmodule Honeybadger.HTTPAdapter do
     {"User-Agent", "Honeybadger-#{version}"}
   end
 
-  @default_http_client Enum.find_value(
-                         [
-                           {Req, Honeybadger.HTTPAdapter.Req},
-                           {:hackney, Honeybadger.HTTPAdapter.Hackney}
-                         ],
-                         fn {dep, module} ->
-                           Code.ensure_loaded?(dep) && {module, []}
-                         end
-                       )
-
   @doc """
   Makes an HTTP request.
 
   ## Options
 
-  - `:http_adapter` - The HTTP adapter to use, defaults to
-    `#{inspect(elem(@default_http_client, 0))}`
+  - `:http_adapter` - The HTTP adapter to use, defaults to to one of the available adapters
+    (Req is preferred, falling back to Hackney if available)
   """
   @spec request(atom(), binary(), binary() | nil, list(), Keyword.t()) ::
           {:ok, HTTPResponse.t()} | {:error, HTTPResponse.t()} | {:error, term()}
@@ -131,8 +121,11 @@ defmodule Honeybadger.HTTPAdapter do
     end
   end
 
+  defp request_result(%{status: status}) when status in 200..399, do: :ok
+  defp request_result(%{status: status}) when status in 400..599, do: :error
+
   defp get_adapter(opts) do
-    default_http_adapter = Application.get_env(:honeybadger, :http_adapter, @default_http_client)
+    default_http_adapter = Application.get_env(:honeybadger, :http_adapter, installed_adapter())
 
     case Keyword.get(opts, :http_adapter, default_http_adapter) do
       {http_adapter, opts} -> {http_adapter, opts}
@@ -140,6 +133,73 @@ defmodule Honeybadger.HTTPAdapter do
     end
   end
 
-  defp request_result(%{status: status}) when status in 200..399, do: :ok
-  defp request_result(%{status: status}) when status in 400..599, do: :error
+  defp installed_adapter do
+    key = {__MODULE__, :installed_adapter}
+
+    case :persistent_term.get(key, :undefined) do
+      :undefined ->
+        adapter = find_installed_adapter()
+        :persistent_term.put(key, adapter)
+        adapter
+
+      adapter ->
+        adapter
+    end
+  end
+
+  defp find_installed_adapter do
+    Enum.find_value(
+      [
+        {Req, Honeybadger.HTTPAdapter.Req},
+        {:hackney, Honeybadger.HTTPAdapter.Hackney}
+      ],
+      fn {dep, module} ->
+        Code.ensure_loaded?(dep) && {module, []}
+      end
+    )
+  end
+
+  @doc """
+  Validates that the configured HTTP adapter's dependencies are available.
+
+  This should be called during application startup to ensure that the
+  configured adapter can be used.
+  """
+  def validate_adapter_availability! do
+    {adapter, _opts} = get_adapter([])
+
+    case adapter do
+      Honeybadger.HTTPAdapter.Hackney ->
+        ensure_dependency_available!(:hackney, "~> 1.8", adapter)
+
+      Honeybadger.HTTPAdapter.Req ->
+        ensure_dependency_available!(Req, "~> 0.3", adapter)
+
+      nil ->
+        raise """
+        Honeybadger requires an HTTP client but neither Req nor Hackney is available.
+        Please add one of the following to your dependencies:
+          {:req, "~> 0.3"}    # Recommended
+          {:hackney, "~> 1.8"}
+        """
+
+      _ ->
+        # Custom adapter - assume user knows what they're doing
+        :ok
+    end
+  end
+
+  defp ensure_dependency_available!(module, version, adapter) do
+    unless Code.ensure_loaded?(module) do
+      raise """
+      Honeybadger is configured to use #{inspect(adapter)}, but #{inspect(module)} is not available.
+
+      Please add it to your dependencies:
+
+          {#{inspect(module)}, "#{version}"}
+
+      Or configure a different HTTP adapter in your config.
+      """
+    end
+  end
 end
