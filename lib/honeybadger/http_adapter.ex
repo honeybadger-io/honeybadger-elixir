@@ -78,19 +78,6 @@ defmodule Honeybadger.HTTPAdapter do
               {:ok, HTTPResponse.t()} | {:error, InvalidResponseError.t()}
 
   @doc """
-  Sets a user agent header.
-
-  The header value will be `Honeybadger-VERSION` with VERSION being the `:vsn` of
-  `:honeybadger` app.
-  """
-  @spec user_agent_header() :: {binary(), binary()}
-  def user_agent_header do
-    version = Application.spec(:honeybadger, :vsn)
-
-    {"User-Agent", "Honeybadger-#{version}"}
-  end
-
-  @doc """
   Makes an HTTP request.
 
   ## Options

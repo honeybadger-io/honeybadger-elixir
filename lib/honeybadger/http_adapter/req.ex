@@ -14,8 +14,6 @@ defmodule Honeybadger.HTTPAdapter.Req do
 
   @impl HTTPAdapter
   def request(method, url, body, headers, opts \\ []) do
-    headers = headers ++ [HTTPAdapter.user_agent_header()]
-
     opts =
       Keyword.merge(
         [
