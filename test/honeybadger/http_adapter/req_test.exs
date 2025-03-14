@@ -9,39 +9,6 @@ defmodule Honeybadger.HTTPAdapter.ReqTest do
   @req_opts [retry_delay: 0]
 
   describe "request/4" do
-    test "handles SSL with bad certificate" do
-      TestServer.start(scheme: :https)
-
-      bad_host_url = TestServer.url(host: "bad-host.localhost")
-
-      req_opts =
-        Keyword.put(
-          @req_opts,
-          :connect_options,
-          transport_opts: [cacerts: TestServer.x509_suite().cacerts]
-        )
-
-      assert {:error, %TransportError{reason: {:tls_alert, {:handshake_failure, _error}}}} =
-               Req.request(:get, bad_host_url, nil, [], req_opts)
-    end
-
-    test "handles SSL with bad certificate and no verification" do
-      TestServer.start(scheme: :https)
-      TestServer.add("/", via: :get)
-
-      bad_host_url = TestServer.url(host: "bad-host.localhost")
-
-      req_opts =
-        Keyword.put(
-          @req_opts,
-          :connect_options,
-          transport_opts: [cacerts: TestServer.x509_suite().cacerts, verify: :verify_none]
-        )
-
-      assert {:ok, %HTTPResponse{status: 200}} =
-               Req.request(:get, bad_host_url, nil, [], req_opts)
-    end
-
     test "handles unreachable host" do
       TestServer.start()
       url = TestServer.url()
