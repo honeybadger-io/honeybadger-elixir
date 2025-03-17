@@ -31,7 +31,7 @@ defmodule Honeybadger.Insights.Finch do
   @required_dependencies [Finch]
 
   @telemetry_events [
-    "finch.request.stop"
+    [:finch, :request, :stop]
   ]
 
   def extract_metadata(meta, _) do

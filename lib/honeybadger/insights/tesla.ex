@@ -13,7 +13,7 @@ defmodule Honeybadger.Insights.Tesla do
       full_url: false,
 
       # Custom telemetry event patterns to listen for (optional)
-      telemetry_events: ["tesla.request.stop", "tesla.request.exception"]
+      telemetry_events: [[:tesla, :request, :stop], [:tesla, :request, :exception]]
     }
   }
   """
@@ -23,8 +23,8 @@ defmodule Honeybadger.Insights.Tesla do
   @required_dependencies [Tesla]
 
   @telemetry_events [
-    "tesla.request.stop",
-    "tesla.request.exception"
+    [:tesla, :request, :stop],
+    [:tesla, :request, :exception]
   ]
 
   def extract_metadata(meta, _name) do

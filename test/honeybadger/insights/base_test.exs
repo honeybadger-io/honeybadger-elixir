@@ -2,7 +2,7 @@ defmodule Honeybadger.Insights.BaseTest do
   use Honeybadger.Case, async: false
 
   defmodule TestEventFilter do
-    def filter(data, _raw, _name) do
+    def filter_telemetry_event(data, _raw, _name) do
       Map.put(data, :was_filtered, true)
     end
   end
@@ -10,14 +10,13 @@ defmodule Honeybadger.Insights.BaseTest do
   defmodule TestInsights do
     use Honeybadger.Insights.Base
 
-    @required_dependencies []
     @telemetry_events [
-      "test.event.one",
-      "test.event.two"
+      [:test, :event, :one],
+      [:test, :event, :two]
     ]
 
     # Minimal extraction to verify it's called
-    def extract_metadata(meta, _name) do
+    def extract_metadata(meta, _event) do
       Map.put(meta, :was_processed, true)
     end
 
@@ -28,7 +27,9 @@ defmodule Honeybadger.Insights.BaseTest do
 
     # We need to make sure to detach so each run is clean
     def detach() do
-      Enum.each(@telemetry_events, fn e -> :telemetry.detach(e) end)
+      Enum.each(@telemetry_events, fn e ->
+        :telemetry.detach(Honeybadger.Utils.dotify(e))
+      end)
     end
   end
 
@@ -131,7 +132,7 @@ defmodule Honeybadger.Insights.BaseTest do
 
   test "limits telemetry events" do
     with_config(
-      [insights_config: %{test_insights: %{telemetry_events: ["test.event.one"]}}],
+      [insights_config: %{test_insights: %{telemetry_events: [[:test, :event, :one]]}}],
       fn ->
         TestInsights.attach()
 

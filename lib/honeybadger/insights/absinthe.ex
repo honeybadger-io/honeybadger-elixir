@@ -16,9 +16,9 @@ defmodule Honeybadger.Insights.Absinthe do
       config :honeybadger, insights_config: %{
         absinthe: %{
           telemetry_events: [
-            "absinthe.execute.operation.stop",
-            "absinthe.execute.operation.exception",
-            "absinthe.resolve.field.stop"
+            [:absinthe, :execute, :operation, :stop],
+            [:absinthe, :execute, :operation, :exception],
+            [:absinthe, :resolve, :field, :stop]
           ]
         }
       }
@@ -32,13 +32,13 @@ defmodule Honeybadger.Insights.Absinthe do
   @required_dependencies [Absinthe]
 
   @telemetry_events [
-    "absinthe.execute.operation.stop",
-    "absinthe.execute.operation.exception"
+    [:absinthe, :execute, :operation, :stop],
+    [:absinthe, :execute, :operation, :exception]
   ]
 
   # This is not loaded by default since it can add a ton of events, but is here
   # in case it is added to the insights_config.
-  def extract_metadata(%{resolution: resolution}, "absinthe.resolve.field.stop") do
+  def extract_metadata(%{resolution: resolution}, [:absinthe, :resolve, :field, :stop]) do
     %{
       field_name: resolution.definition.name,
       parent_type: resolution.parent_type.name,

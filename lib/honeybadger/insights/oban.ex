@@ -16,9 +16,9 @@ defmodule Honeybadger.Insights.Oban do
      config :honeybadger, insights_config: %{
        oban: %{
          telemetry_events: [
-           "oban.job.stop",
-           "oban.job.exception",
-           "oban.engine.start"
+           [:oban, :job, :stop],
+           [:oban, :job, :exception]
+           [:oban, :engine, :start]
          ]
        }
      }
@@ -29,11 +29,11 @@ defmodule Honeybadger.Insights.Oban do
   @required_dependencies [Oban]
 
   @telemetry_events [
-    "oban.job.stop",
-    "oban.job.exception"
+    [:oban, :job, :stop],
+    [:oban, :job, :exception]
   ]
 
-  def extract_metadata(%{conf: conf, job: job, state: state}, _name) do
+  def extract_metadata(%{conf: conf, job: job, state: state}, _event) do
     job
     |> Map.take(~w(args attempt id queue tags worker)a)
     |> Map.put(:prefix, conf.prefix)

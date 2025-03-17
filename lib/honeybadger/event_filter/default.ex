@@ -3,8 +3,8 @@ defmodule Honeybadger.EventFilter.Default do
 
   alias Honeybadger.Utils
 
-  def filter(meta, _raw, _name) do
-    meta
+  def filter_telemetry_event(data, _raw, _event) do
+    data
     |> disable(:filter_disable_url, :url)
     |> disable(:filter_disable_session, :session)
     |> disable(:filter_disable_assigns, :assigns)

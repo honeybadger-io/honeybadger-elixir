@@ -51,9 +51,13 @@ defmodule Honeybadger.Insights.Base do
 
   defmacro __before_compile__(_env) do
     quote do
-      def event_filter(map, meta, name) do
+      def event_filter(map, meta, event) do
         if Application.get_env(:honeybadger, :event_filter) do
-          Application.get_env(:honeybadger, :event_filter).filter(map, meta, name)
+          Application.get_env(:honeybadger, :event_filter).filter_telemetry_event(
+            map,
+            meta,
+            event
+          )
         else
           map
         end
@@ -82,23 +86,14 @@ defmodule Honeybadger.Insights.Base do
 
       @doc """
       Attaches a telemetry handler for a specific event.
-      The event can be either a string (dot-separated) or a list of atoms.
       """
-      def attach_event(event) when is_binary(event) do
-        event_atoms = event |> String.split(".") |> Enum.map(&String.to_existing_atom/1)
-        attach_event(event_atoms, event)
-      end
-
-      def attach_event(event) when is_list(event) do
+      def attach_event(event) do
         event_name = Honeybadger.Utils.dotify(event)
-        attach_event(event, event_name)
-      end
 
-      defp attach_event(event_atoms, event_name) do
         :telemetry.attach(
           # Use the event name as the handler ID
           event_name,
-          event_atoms,
+          event,
           &__MODULE__.handle_telemetry/4,
           nil
         )
@@ -120,18 +115,18 @@ defmodule Honeybadger.Insights.Base do
       @doc """
       Handles telemetry events and processes the data.
       """
-      def handle_telemetry(event_name, measurements, metadata, _opts) do
-        name = Honeybadger.Utils.dotify(event_name)
+      def handle_telemetry(event, measurements, metadata, _opts) do
+        name = Honeybadger.Utils.dotify(event)
 
         unless ignore?(metadata) do
           %{event_type: name}
           |> Map.merge(process_measurements(measurements))
           |> Map.merge(
             metadata
-            |> extract_metadata(name)
+            |> extract_metadata(event)
             |> Map.reject(fn {_, v} -> is_nil(v) end)
           )
-          |> event_filter(metadata, name)
+          |> event_filter(metadata, event)
           |> process_event()
         end
 
@@ -149,7 +144,7 @@ defmodule Honeybadger.Insights.Base do
       Extracts metadata from the telemetry event.
       Child modules should override this for specific events.
       """
-      def extract_metadata(meta, _event_name), do: meta
+      def extract_metadata(meta, _event), do: meta
 
       @doc """
       Process the event data. Child modules can override this for custom

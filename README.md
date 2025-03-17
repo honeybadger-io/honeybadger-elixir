@@ -196,30 +196,31 @@ config :honeybadger, insights_config: %{
 
   # Plug configuration
   plug: %{
-    telemetry_events: ["phoenix.endpoint.stop"]
+    telemetry_events: [[:phoenix, :endpoint, :stop]]
   },
 
   # LiveView configuration
   live_view: %{
     telemetry_events: [
-      "phoenix.live_view.mount.stop",
-      "phoenix.live_view.update.stop"
+      [:phoenix, :live_view, :mount, :stop],
+      [:phoenix, :live_view, :update, :stop]
     ]
   },
 
   # Absinthe configuration
   absinthe: %{
     telemetry_events: [
-      "absinthe.execute.operation.stop",
-      "absinthe.execute.operation.exception"
+      [:absinthe, :execute, :operation, :start],
+      [:absinthe, :execute, :operation, :stop],
+      [:absinthe, :execute, :operation, :exception]
     ]
   },
 
   # Oban configuration
   oban: %{
     telemetry_events: [
-      "oban.job.stop",
-      "oban.job.exception"
+      [:oban, :job, :stop],
+      [:oban, :job, :exception]
     ]
   }
 }
@@ -238,20 +239,20 @@ defmodule MyApp.EventFilter do
 
   @impl Honeybadger.EventFilter
   # Pattern match on the event type name
-  def filter(event, raw, "phoenix.endpoint.stop" = name) do
-    if event.duration < 100 do
-      event
+  def filter_telemetry_event(data, raw, [:phoenix, :live_view, :update, :stop] = event) do
+    if data.duration < 100 do
+      data
       |> Map.put(:slow, true)
       # You might want to run the event through the default filter to remove
       # any sensitive data
-      |> @default_filter.(raw, name)
+      |> @default_filter.(raw, event)
     else
       # Ignore events that are fast
       nil
     end
   end
 
-  def filter(event, raw, name), do: @default_filter.(event, raw, name)
+  def filter(data, raw, event), do: @default_filter.(data, raw, event)
 end
 ```
 

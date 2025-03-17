@@ -1,5 +1,5 @@
 defmodule Honeybadger.Insights.AbsintheTest do
-  use Honeybadger.Case, async: true
+  use Honeybadger.Case, async: false
   use Honeybadger.InsightsCase
 
   # Define mock module for testing
@@ -79,7 +79,7 @@ defmodule Honeybadger.Insights.AbsintheTest do
 
     test "extracts metadata from resolve field stop event" do
       restart_with_config(
-        insights_config: %{absinthe: %{telemetry_events: ["absinthe.resolve.field.stop"]}}
+        insights_config: %{absinthe: %{telemetry_events: [[:absinthe, :resolve, :field, :stop]]}}
       )
 
       resolution = %{

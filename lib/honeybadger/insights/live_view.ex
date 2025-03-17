@@ -17,9 +17,9 @@ defmodule Honeybadger.Insights.LiveView do
      config :honeybadger, insights_config: %{
        live_view: %{
          telemetry_events: [
-           "phoenix.live_view.mount.stop",
-           "phoenix.live_view.update.stop",
-           "phoenix.live_view.handle_event.stop"
+           [:phoenix, :live_component, :handle_event, :stop],
+           [:phoenix, :live_view, :mount, :stop],
+           [:phoenix, :live_view, :update, :stop]
          ]
        }
      }
@@ -30,9 +30,9 @@ defmodule Honeybadger.Insights.LiveView do
   @required_dependencies [Phoenix.LiveView]
 
   @telemetry_events [
-    "phoenix.live_component.handle_event.stop",
-    "phoenix.live_view.mount.stop",
-    "phoenix.live_view.update.stop"
+    [:phoenix, :live_component, :handle_event, :stop],
+    [:phoenix, :live_view, :mount, :stop],
+    [:phoenix, :live_view, :update, :stop]
   ]
 
   def extract_metadata(meta, _) do

@@ -10,17 +10,19 @@ defmodule Honeybadger.EventFilter do
   """
 
   @doc """
-  Filters an instrumented event.
+  Filters an instrumented telemetry event.
 
   ## Parameters
 
-    * `metadata` - The current metadata for the event
+    * `data` - The current data for the event
     * `raw_event` - The raw event metadata
-    * `event_name` - The name of the telemetry event being processed, in dot form "a.b.c"
+    * `event` - The telemetry event being processed, e.g. [:phoenix, :endpoint, :start]
 
   ## Returns
 
-    The filtered metadata map that will be sent to Honeybadger
+    The filtered metadata map that will be sent to Honeybadger or `nil` to skip
+    the event.
   """
-  @callback filter(metadata :: map(), raw_event :: map(), event_name :: String.t()) :: map() | nil
+  @callback filter_telemetry_event(data :: map(), raw_event :: map(), event :: [atom(), ...]) ::
+              map() | nil
 end

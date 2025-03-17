@@ -19,7 +19,7 @@ defmodule Honeybadger.Insights.Plug do
 
       config :honeybadger, insights_config: %{
         plug: %{
-          telemetry_events: ["my.prefix.stop", "another.event"]
+          telemetry_events: [[:my, :prefix, :stop]]
         }
       }
   """
@@ -29,7 +29,7 @@ defmodule Honeybadger.Insights.Plug do
   @required_dependencies [Plug]
 
   @telemetry_events [
-    "phoenix.endpoint.stop"
+    [:phoenix, :endpoint, :stop]
   ]
 
   def extract_metadata(meta, _) do
