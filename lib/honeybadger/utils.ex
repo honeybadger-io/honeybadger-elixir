@@ -45,6 +45,11 @@ defmodule Honeybadger.Utils do
     |> String.downcase()
   end
 
+  def uuid() do
+    :crypto.strong_rand_bytes(16)
+    |> Base.encode16(case: :lower)
+  end
+
   @doc """
   Configurable data sanitization. This currently:
 
