@@ -71,7 +71,7 @@ defmodule Honeybadger.Insights.Base do
       Attaches telemetry handlers if all required dependencies are available.
       """
       def attach do
-        if dependencies_available?() do
+        if dependencies_available?() && !get_insights_config(:disabled, false) do
           Enum.each(get_telemetry_events(), &attach_event/1)
 
           :ok
@@ -114,8 +114,17 @@ defmodule Honeybadger.Insights.Base do
 
       @doc """
       Handles telemetry events and processes the data.
+      This implementation forwards to handle_event_impl which can be overridden
+      by child modules to customize behavior while still calling the parent implementation.
       """
-      def handle_telemetry(event, measurements, metadata, _opts) do
+      def handle_telemetry(event_name, measurements, metadata, opts) do
+        handle_event_impl(event_name, measurements, metadata, opts)
+      end
+
+      @doc """
+      Implementation of handle_telemetry that can be called by overriding methods.
+      """
+      def handle_event_impl(event, measurements, metadata, _opts) do
         name = Honeybadger.Utils.dotify(event)
 
         unless ignore?(metadata) do
@@ -153,7 +162,11 @@ defmodule Honeybadger.Insights.Base do
       def process_event(event_data) when is_map(event_data), do: Honeybadger.event(event_data)
       def process_event(_event_data), do: nil
 
-      defoverridable extract_metadata: 2, process_event: 1, get_telemetry_events: 0, ignore?: 1
+      defoverridable handle_telemetry: 4,
+                     extract_metadata: 2,
+                     process_event: 1,
+                     get_telemetry_events: 0,
+                     ignore?: 1
     end
   end
 end
