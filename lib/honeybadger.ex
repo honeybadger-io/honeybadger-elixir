@@ -360,6 +360,7 @@ defmodule Honeybadger do
 
     event_data
     |> Map.put_new(:ts, ts)
+    |> maybe_add_request_id()
     |> Client.send_event()
   end
 
@@ -431,6 +432,25 @@ defmodule Honeybadger do
     Logger.reset_metadata()
 
     :ok
+  end
+
+  def set_request_id(request_id) do
+    Process.put(:hb_request_id, request_id)
+  end
+
+  def get_request_id do
+    Process.get(:hb_request_id)
+  end
+
+  def clear_request_id do
+    set_request_id(nil)
+  end
+
+  def maybe_add_request_id(data) when is_map(data) do
+    case get_request_id() do
+      nil -> data
+      request_id -> Map.put(data, :request_id, request_id)
+    end
   end
 
   @doc """
