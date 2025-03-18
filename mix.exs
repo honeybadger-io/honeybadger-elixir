@@ -2,7 +2,7 @@ defmodule Honeybadger.Mixfile do
   use Mix.Project
 
   @source_url "https://github.com/honeybadger-io/honeybadger-elixir"
-  @version "0.22.1"
+  @version "0.23.0"
 
   def project do
     [
