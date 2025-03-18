@@ -190,6 +190,8 @@ defmodule Honeybadger do
 
   @doc false
   def start(_type, _opts) do
+    Honeybadger.HTTPAdapter.validate_adapter_availability!()
+
     config =
       get_all_env()
       |> put_dynamic_env()
