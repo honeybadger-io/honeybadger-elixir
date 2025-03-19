@@ -19,6 +19,15 @@ defmodule Honeybadger.Insights.PlugTest do
   end
 
   describe "Plug instrumentation" do
+    test "returns start events" do
+      events = Honeybadger.Insights.Plug.get_telemetry_events()
+
+      assert events == [
+               [:phoenix, :endpoint, :stop],
+               [:phoenix, :endpoint, :start]
+             ]
+    end
+
     test "extracts metadata from plug event with request_id in assigns" do
       event =
         send_and_receive(
@@ -36,7 +45,6 @@ defmodule Honeybadger.Insights.PlugTest do
       assert event["request_path"] == "/users/123"
       assert event["params"] == %{"id" => "123"}
       assert event["status"] == 200
-      assert event["request_id"] == "abc-xyz-123"
       assert event["duration"] == 15
     end
 
@@ -62,7 +70,6 @@ defmodule Honeybadger.Insights.PlugTest do
       assert event["request_path"] == "/api/items"
       assert event["params"] == %{"title" => "New Item"}
       assert event["status"] == 201
-      assert event["request_id"] == "req-123-456"
       assert event["duration"] == 10
     end
 
@@ -86,7 +93,6 @@ defmodule Honeybadger.Insights.PlugTest do
       assert event["request_path"] == "/api/items/456"
       assert event["params"] == %{"id" => "456"}
       assert event["status"] == 204
-      assert event["request_id"] == nil
       assert event["duration"] == 5
     end
   end

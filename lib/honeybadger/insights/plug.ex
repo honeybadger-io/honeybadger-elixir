@@ -19,7 +19,7 @@ defmodule Honeybadger.Insights.Plug do
 
       config :honeybadger, insights_config: %{
         plug: %{
-          event_prefix: [:phoenix, :endpoint]
+          telemetry_events: [[:my, :prefix, :stop]]
         }
       }
   """
@@ -28,18 +28,30 @@ defmodule Honeybadger.Insights.Plug do
 
   @required_dependencies [Plug]
 
-  @telemetry_events []
+  @telemetry_events [
+    [:phoenix, :endpoint, :stop]
+  ]
 
   def get_telemetry_events() do
-    prefix = get_insights_config(:event_prefix, [:phoenix, :endpoint])
+    events = get_insights_config(:telemetry_events, @telemetry_events)
 
-    [prefix ++ [:start], prefix ++ [:stop]]
+    Enum.reduce(events, events, fn init, acc ->
+      if List.last(init) == :stop do
+        acc ++ [Enum.drop(init, -1) ++ [:start]]
+      else
+        acc
+      end
+    end)
   end
 
-  def handle_telemetry([_, _, :start], _measurements, meta, _config) do
-    meta.conn
+  def handle_telemetry([_, _, :start] = event, measurements, metadata, opts) do
+    metadata.conn
     |> get_request_id()
     |> Honeybadger.set_request_id()
+
+    if event in get_insights_config(:telemetry_events, @telemetry_events) do
+      handle_event_impl(event, measurements, metadata, opts)
+    end
   end
 
   def extract_metadata(meta, _) do
