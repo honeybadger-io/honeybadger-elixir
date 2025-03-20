@@ -17,7 +17,7 @@ defmodule Honeybadger.Insights.Oban do
        oban: %{
          telemetry_events: [
            [:oban, :job, :stop],
-           [:oban, :job, :exception]
+           [:oban, :job, :exception],
            [:oban, :engine, :start]
          ]
        }
@@ -29,7 +29,6 @@ defmodule Honeybadger.Insights.Oban do
   @required_dependencies [Oban]
 
   @telemetry_events [
-    [:oban, :job, :start],
     [:oban, :job, :stop],
     [:oban, :job, :exception]
   ]
@@ -52,6 +51,12 @@ defmodule Honeybadger.Insights.Oban do
   end
 
   ## Overridable Telemetry Handlers (Internal)
+  #
+  def get_telemetry_events() do
+    events = get_insights_config(:telemetry_events, @telemetry_events)
+
+    [[:oban, :job, :start]] ++ events
+  end
 
   @doc false
   def extract_metadata(%{conf: conf, job: job, state: state}, _event) do
@@ -62,9 +67,13 @@ defmodule Honeybadger.Insights.Oban do
   end
 
   @doc false
-  def handle_telemetry([:oban, :job, :start], _measurements, %{job: job}, _config) do
-    if request_id = job.meta["hb_request_id"] do
+  def handle_telemetry([:oban, :job, :start] = event, measurements, metadata, opts) do
+    if request_id = metadata.job.meta["hb_request_id"] do
       Honeybadger.set_request_id(request_id)
+    end
+
+    if event in get_insights_config(:telemetry_events, @telemetry_events) do
+      handle_event_impl(event, measurements, metadata, opts)
     end
   end
 end
