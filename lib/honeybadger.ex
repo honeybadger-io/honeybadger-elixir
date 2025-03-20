@@ -299,15 +299,16 @@ defmodule Honeybadger do
       |> Collector.put(notice_breadcrumb(exception))
       |> Collector.output()
 
-    metadata_with_breadcrumbs =
+    metadata =
       metadata
       |> Map.delete(:breadcrumbs)
       |> contextual_metadata()
       |> Map.put(:breadcrumbs, breadcrumbs)
+      |> maybe_add_request_id()
 
     notice =
       exception
-      |> Notice.new(metadata_with_breadcrumbs, stacktrace, fingerprint)
+      |> Notice.new(metadata, stacktrace, fingerprint)
       |> put_notice_fingerprint()
 
     exclude_error_value = Application.get_env(:honeybadger, :exclude_errors)
@@ -362,6 +363,7 @@ defmodule Honeybadger do
 
     event_data
     |> Map.put_new(:ts, ts)
+    |> maybe_add_request_id()
     |> Client.send_event()
   end
 
@@ -433,6 +435,25 @@ defmodule Honeybadger do
     Logger.reset_metadata()
 
     :ok
+  end
+
+  def set_request_id(request_id) do
+    Process.put(:hb_request_id, request_id)
+  end
+
+  def get_request_id do
+    Process.get(:hb_request_id)
+  end
+
+  def clear_request_id do
+    set_request_id(nil)
+  end
+
+  def maybe_add_request_id(data) when is_map(data) do
+    case get_request_id() do
+      nil -> data
+      request_id -> Map.put(data, :request_id, request_id)
+    end
   end
 
   @doc """

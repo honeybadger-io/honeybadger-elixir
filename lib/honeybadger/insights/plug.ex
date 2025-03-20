@@ -32,6 +32,28 @@ defmodule Honeybadger.Insights.Plug do
     [:phoenix, :endpoint, :stop]
   ]
 
+  def get_telemetry_events() do
+    events = get_insights_config(:telemetry_events, @telemetry_events)
+
+    Enum.reduce(events, events, fn init, acc ->
+      if List.last(init) == :stop do
+        acc ++ [Enum.drop(init, -1) ++ [:start]]
+      else
+        acc
+      end
+    end)
+  end
+
+  def handle_telemetry([_, _, :start] = event, measurements, metadata, opts) do
+    metadata.conn
+    |> get_request_id()
+    |> Honeybadger.set_request_id()
+
+    if event in get_insights_config(:telemetry_events, @telemetry_events) do
+      handle_event_impl(event, measurements, metadata, opts)
+    end
+  end
+
   def extract_metadata(meta, _) do
     conn = meta.conn
 
@@ -39,7 +61,6 @@ defmodule Honeybadger.Insights.Plug do
       params: conn.params,
       method: conn.method,
       request_path: conn.request_path,
-      request_id: get_request_id(conn),
       status: conn.status
     }
   end
