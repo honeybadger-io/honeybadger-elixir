@@ -84,7 +84,8 @@ defmodule Honeybadger.Mixfile do
         events_max_batch_retries: 3,
         events_batch_size: 1000,
         events_max_queue_size: 10000,
-        events_timeout: 30000
+        events_timeout: 30000,
+        events_throttle_wait: 60000
       ],
       mod: {Honeybadger, []}
     ]

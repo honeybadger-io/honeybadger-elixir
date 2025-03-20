@@ -89,7 +89,8 @@ defmodule Honeybadger.EventsWorker do
       send_events_fn: Keyword.get(opts, :send_events_fn, &Honeybadger.Client.send_events/1),
       batch_size: Keyword.get(opts, :batch_size, Honeybadger.get_env(:events_batch_size)),
       timeout: Keyword.get(opts, :timeout, Honeybadger.get_env(:events_timeout)),
-      throttle_wait: Keyword.get(opts, :throttle_wait),
+      throttle_wait:
+        Keyword.get(opts, :throttle_wait, Honeybadger.get_env(:events_throttle_wait)),
       max_queue_size:
         Keyword.get(opts, :max_queue_size, Honeybadger.get_env(:events_max_queue_size)),
       max_batch_retries:
