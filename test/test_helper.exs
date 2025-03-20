@@ -8,7 +8,8 @@ Application.put_all_env(
   honeybadger: [
     environment_name: :test,
     api_key: "abc123",
-    origin: "http://localhost:4444"
+    origin: "http://localhost:4444",
+    insights_enabled: true
   ]
 )
 
@@ -16,6 +17,8 @@ Application.put_all_env(
 {:ok, _} = Application.ensure_all_started(:hackney)
 
 ExUnit.start(assert_receive_timeout: 1000, refute_receive_timeout: 1000)
+
+_ = ~w(live_component live_view live_socket phoenix operation)a
 
 defmodule Honeybadger.Case do
   use ExUnit.CaseTemplate
