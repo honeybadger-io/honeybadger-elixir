@@ -59,6 +59,15 @@ defmodule Honeybadger.NoticeTest do
     assert breadcrumbs == to_breadcrumbs
   end
 
+  test "with request_id", _ do
+    request_id = "1234"
+
+    %Notice{correlation_context: correlation_context} =
+      Notice.new(%RuntimeError{message: "Oops"}, %{request_id: request_id}, [])
+
+    assert correlation_context == %{request_id: request_id}
+  end
+
   test "error information", %{notice: %Notice{error: error}} do
     assert "RuntimeError" == error[:class]
     assert "Oops" == error[:message]

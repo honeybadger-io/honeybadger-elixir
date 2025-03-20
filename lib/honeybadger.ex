@@ -297,15 +297,16 @@ defmodule Honeybadger do
       |> Collector.put(notice_breadcrumb(exception))
       |> Collector.output()
 
-    metadata_with_breadcrumbs =
+    metadata =
       metadata
       |> Map.delete(:breadcrumbs)
       |> contextual_metadata()
       |> Map.put(:breadcrumbs, breadcrumbs)
+      |> maybe_add_request_id()
 
     notice =
       exception
-      |> Notice.new(metadata_with_breadcrumbs, stacktrace, fingerprint)
+      |> Notice.new(metadata, stacktrace, fingerprint)
       |> put_notice_fingerprint()
 
     exclude_error_value = Application.get_env(:honeybadger, :exclude_errors)
