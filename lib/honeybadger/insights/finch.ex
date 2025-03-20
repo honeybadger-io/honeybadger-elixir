@@ -61,6 +61,13 @@ defmodule Honeybadger.Insights.Finch do
     end
   end
 
+  def ignore?(%{request: %{headers: headers}}) when is_list(headers) do
+    Enum.any?(headers, fn
+      {"user-agent", value} -> String.contains?(value, "Honeybadger Elixir")
+      _ -> false
+    end)
+  end
+
   defp reconstruct_url(request) do
     # Exclude query parameters for security reasons
     port_string = get_port_string(request.scheme, request.port)
