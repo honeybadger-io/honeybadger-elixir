@@ -1,10 +1,3 @@
-# Define a mock Finch module just for testing
-defmodule Finch do
-  defmodule Response do
-    defstruct [:status]
-  end
-end
-
 defmodule Honeybadger.Insights.FinchTest do
   use Honeybadger.Case, async: false
   use Honeybadger.InsightsCase
