@@ -185,6 +185,38 @@ defmodule Honeybadger.EventsWorkerTest do
       GenServer.stop(pid)
     end
 
+    test "does not reset flush timer on subsequent pushes", %{config: config} do
+      {:ok, pid} =
+        start_worker(Keyword.merge(config, timeout: 100, batch_size: 1000))
+
+      EventsWorker.push(%{id: 1}, pid)
+      :timer.sleep(60)
+      EventsWorker.push(%{id: 2}, pid)
+      :timer.sleep(60)
+      EventsWorker.push(%{id: 3}, pid)
+
+      assert_receive {:events_sent, [%{id: 1}, %{id: 2}]}
+      assert_receive {:events_sent, [%{id: 3}]}, 100
+
+      GenServer.stop(pid)
+    end
+
+    test "works with pushes after a flush", %{config: config} do
+      {:ok, pid} =
+        start_worker(Keyword.merge(config, timeout: 50, batch_size: 1000))
+
+      EventsWorker.push(%{id: 1}, pid)
+      :timer.sleep(300)
+      EventsWorker.push(%{id: 2}, pid)
+
+      assert_receive {:events_sent, [%{id: 1}]}, 0
+      # Make sure we don't get the second event before the timeout
+      refute_receive {:events_sent, [%{id: 2}]}, 0
+      assert_receive {:events_sent, [%{id: 2}]}, 100
+
+      GenServer.stop(pid)
+    end
+
     test "handles throttling and resumes after wait period", %{
       config: config,
       change_behavior: change_behavior

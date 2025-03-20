@@ -32,6 +32,7 @@ defmodule Honeybadger.EventsWorker do
             throttle_wait: pos_integer(),
 
             # Internal state
+            timeout_started_at: non_neg_integer(),
             throttling: boolean(),
             dropped_events: non_neg_integer(),
             last_dropped_log: non_neg_integer(),
@@ -53,6 +54,7 @@ defmodule Honeybadger.EventsWorker do
       :timeout,
       :max_batch_retries,
       :last_dropped_log,
+      timeout_started_at: 0,
       throttle_wait: 60000,
       throttling: false,
       dropped_events: 0,
@@ -96,7 +98,7 @@ defmodule Honeybadger.EventsWorker do
     }
 
     state = struct!(State, config)
-    {:ok, state, state.timeout}
+    {:ok, state}
   end
 
   @impl true
@@ -105,6 +107,10 @@ defmodule Honeybadger.EventsWorker do
   end
 
   @impl true
+  def handle_cast({:push, event}, %State{timeout_started_at: 0} = state) do
+    handle_cast({:push, event}, reset_timeout(state))
+  end
+
   def handle_cast({:push, event}, %State{} = state) do
     if total_event_count(state) >= state.max_queue_size do
       {:noreply, %{state | dropped_events: state.dropped_events + 1}, current_timeout(state)}
@@ -133,7 +139,9 @@ defmodule Honeybadger.EventsWorker do
   defp flush(state) do
     cond do
       state.queue == [] and :queue.is_empty(state.batches) ->
-        {:noreply, state, current_timeout(state)}
+        # It's all empty so we stop the timeout and reset the
+        # timeout_started_at which will restart on the next push
+        {:noreply, %{state | timeout_started_at: 0}}
 
       state.queue == [] ->
         attempt_send(state)
@@ -144,7 +152,7 @@ defmodule Honeybadger.EventsWorker do
     end
   end
 
-  @spec attempt_send(State.t()) :: State.t()
+  @spec attempt_send(State.t()) :: {:noreply, State.t(), pos_integer()}
   # Sends pending batches, handling retries and throttling
   defp attempt_send(%State{} = state) do
     {new_batches_list, throttling} =
@@ -198,7 +206,9 @@ defmodule Honeybadger.EventsWorker do
         state
       end
 
-    new_state = %{state | batches: :queue.from_list(new_batches_list), throttling: throttling}
+    new_state =
+      %{state | batches: :queue.from_list(new_batches_list), throttling: throttling}
+      |> reset_timeout()
 
     {:noreply, new_state, current_timeout(new_state)}
   end
@@ -213,7 +223,19 @@ defmodule Honeybadger.EventsWorker do
     events_count + batch_count
   end
 
-  @spec current_timeout(State.t()) :: pos_integer()
-  defp current_timeout(%State{throttling: true, throttle_wait: wait}), do: wait
-  defp current_timeout(%State{timeout: timeout}), do: timeout
+  # Returns the time remaining until the next flush
+  defp current_timeout(%State{
+         throttling: throttling,
+         timeout: timeout,
+         throttle_wait: throttle_wait,
+         timeout_started_at: timeout_started_at
+       }) do
+    elapsed = System.monotonic_time(:millisecond) - timeout_started_at
+    timeout = if throttling, do: throttle_wait, else: timeout
+    max(1, timeout - elapsed)
+  end
+
+  defp reset_timeout(state) do
+    %{state | timeout_started_at: System.monotonic_time(:millisecond)}
+  end
 end
