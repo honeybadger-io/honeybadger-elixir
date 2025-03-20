@@ -7,3 +7,4 @@ erl_crash.dump
 /doc
 RELEASE.md
 .idea
+.tool-versions

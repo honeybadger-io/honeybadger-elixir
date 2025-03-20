@@ -6,6 +6,11 @@ adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- %% CHANGELOG_ENTRIES %% -->
 
+## 0.23.0 - 2025-03-18
+
+Added support for multiple HTTP client libraries (thanks @fastjames!)
+
+
 ## 0.22.1 - 2024-12-19
 
 Bugfix for Elixir 1.17
