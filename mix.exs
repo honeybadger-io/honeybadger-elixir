@@ -2,7 +2,7 @@ defmodule Honeybadger.Mixfile do
   use Mix.Project
 
   @source_url "https://github.com/honeybadger-io/honeybadger-elixir"
-  @version "0.22.1"
+  @version "0.23.0"
 
   def project do
     [
@@ -53,7 +53,7 @@ defmodule Honeybadger.Mixfile do
 
   def application do
     [
-      extra_applications: [:logger],
+      extra_applications: [:logger, :public_key],
       env: [
         api_key: {:system, "HONEYBADGER_API_KEY"},
         app: nil,
@@ -92,7 +92,8 @@ defmodule Honeybadger.Mixfile do
 
   defp deps do
     [
-      {:hackney, "~> 1.1"},
+      {:hackney, "~> 1.1", optional: true},
+      {:req, "~> 0.5.0", optional: true},
       {:jason, "~> 1.0"},
       {:plug, ">= 1.0.0 and < 2.0.0", optional: true},
       {:ecto, ">= 2.0.0", optional: true},
@@ -105,7 +106,8 @@ defmodule Honeybadger.Mixfile do
       {:expublish, "~> 2.5", only: [:dev], runtime: false},
 
       # Test dependencies
-      {:plug_cowboy, ">= 2.0.0 and < 3.0.0", only: :test}
+      {:plug_cowboy, ">= 2.0.0 and < 3.0.0", only: :test},
+      {:test_server, "~> 0.1.18", only: [:test]}
     ]
   end
 

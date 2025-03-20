@@ -26,7 +26,7 @@ jobs:
       HEX_API_KEY: ${{ secrets.HEX_API_KEY }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           token: ${{ secrets.GH_PUBLISH_PAT }}
           fetch-depth: 0
@@ -40,11 +40,11 @@ jobs:
       - name: Setup Elixir
         uses: erlef/setup-elixir@v1
         with:
-          otp-version: '24.0'
-          elixir-version: '1.12'
+          otp-version: '24.3'
+          elixir-version: '1.15'
 
       - name: Restore dependencies cache
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: deps
           key: ${{ runner.os }}-publish-mix-${{ hashFiles('**/mix.lock') }}

@@ -14,9 +14,9 @@ Elixir Plug, Logger and client for the :zap: [Honeybadger error notifier](https:
 
 ### Version Requirements
 
-- Erlang >= 21.0
-- Elixir >= 1.11
-- Plug >= 1.0
+- Erlang >= 24.0
+- Elixir >= 1.15
+- Plug >= 1.10
 - Phoenix >= 1.0 (This is an optional dependency and the version requirement applies only if you are using Phoenix)
 
 ### 1. Install the package
@@ -331,6 +331,25 @@ Here are all of the options you can pass in the keyword list:
 | `ignored_domains`        | Add domains to ignore Error events in `Honeybadger.Logger`.                                   | `[:cowboy]`                              |
 | `breadcrumbs_enabled`    | Enable breadcrumb event tracking                                                              | `false`                                  |
 | `ecto_repos`             | Modules with implemented Ecto.Repo behaviour for tracking SQL breadcrumb events               | `[]`                                     |
+| `http_adapter`           | Module implementing `Honeybadger.HttpAdapter` to send data to Honeybadger.io                  | Any available adapter (`Req`, `hackney`) |
+
+### HTTP Adapters
+
+The HTTP client used to send data to Honeybadger can be customized. We will use
+either `Req` or `hackney` (in that order) by default if they are loaded. If you
+want to use a different HTTP client, you can set the `http_adapter` configuration
+option to any of our pre-built adapter modules.
+
+```elixir
+config :honeybadger,
+  # Without options
+  http_adapter: Honeybadger.HTTPAdapter.Hackney
+  # With options
+  http_adapter: {Honeybadger.HTTPAdapter.Hackney, [...]}
+```
+
+You can also implement your own HTTP adapter to send data to Honeybadger. The
+adapter must implement the `Honeybadger.HttpAdapter` behaviour.
 
 ## Public Interface
 
