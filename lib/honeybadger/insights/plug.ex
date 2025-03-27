@@ -47,7 +47,10 @@ defmodule Honeybadger.Insights.Plug do
   def handle_telemetry([_, _, :start] = event, measurements, metadata, opts) do
     metadata.conn
     |> get_request_id()
-    |> Honeybadger.set_request_id()
+    |> then(fn
+      nil -> :ok
+      request_id -> Honeybadger.put_request_id(request_id)
+    end)
 
     if event in get_insights_config(:telemetry_events, @telemetry_events) do
       handle_event_impl(event, measurements, metadata, opts)

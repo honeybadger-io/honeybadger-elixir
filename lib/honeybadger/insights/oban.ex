@@ -72,7 +72,9 @@ defmodule Honeybadger.Insights.Oban do
   @doc false
   def handle_telemetry([:oban, :job, :start] = event, measurements, metadata, opts) do
     if request_id = metadata.job.meta["hb_request_id"] do
-      Honeybadger.set_request_id(request_id)
+      Honeybadger.put_request_id(request_id)
+    else
+      Honeybadger.RequestId.inherit_or_initialize()
     end
 
     if event in get_insights_config(:telemetry_events, @telemetry_events) do

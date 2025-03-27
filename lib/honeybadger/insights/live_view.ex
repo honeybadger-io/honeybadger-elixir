@@ -34,10 +34,21 @@ defmodule Honeybadger.Insights.LiveView do
     [:phoenix, :live_component, :handle_event, :stop],
     [:phoenix, :live_view, :handle_event, :stop],
     [:phoenix, :live_view, :mount, :stop],
-    [:phoenix, :live_view, :update, :stop]
+    [:phoenix, :live_view, :handle_params, :stop],
+    [:phoenix, :live_view, :handle_event, :stop],
+
+    # LiveComponent events (if you're using LiveView)
+    [:phoenix, :live_component, :handle_event, :stop],
+    [:phoenix, :live_component, :update, :stop]
   ]
 
-  def extract_metadata(meta, _) do
+  def get_telemetry_events() do
+    events = get_insights_config(:telemetry_events, @telemetry_events)
+
+    [[:phoenix, :live_view, :mount, :start]] ++ events
+  end
+
+  def extract_metadata(meta, _event) do
     %{
       url: Map.get(meta, :uri),
       socket_id: Map.get(meta, :socket_id),
@@ -48,19 +59,13 @@ defmodule Honeybadger.Insights.LiveView do
     }
   end
 
-  def get_telemetry_events do
-    events = get_insights_config(:telemetry_events, @telemetry_events)
-
-    # Since these are internal subscriptions, we want to make sure they are
-    # there, even if the events are customized
-    [
-      [:phoenix, :live_component, :handle_event, :start],
-      [:phoenix, :live_view, :handle_event, :start]
-    ] ++ events
-  end
-
-  def handle_telemetry([_, _, :handle_event, :start] = event, measurements, metadata, opts) do
-    Honeybadger.set_request_id(Honeybadger.Utils.rand_id())
+  def handle_telemetry(
+        [:phoenix, :live_view, :mount, :start] = event,
+        measurements,
+        metadata,
+        opts
+      ) do
+    Honeybadger.RequestId.inherit_or_initialize()
 
     if event in get_insights_config(:telemetry_events, @telemetry_events) do
       handle_event_impl(event, measurements, metadata, opts)

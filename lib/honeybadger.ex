@@ -445,20 +445,20 @@ defmodule Honeybadger do
     :ok
   end
 
-  def set_request_id(request_id) do
-    Process.put(:hb_request_id, request_id)
+  def put_request_id(request_id) do
+    Honeybadger.RequestId.put(request_id)
   end
 
   def get_request_id do
-    Process.get(:hb_request_id)
+    Honeybadger.RequestId.get()
   end
 
   def clear_request_id do
-    set_request_id(nil)
+    Honeybadger.RequestId.put(nil)
   end
 
   def maybe_add_request_id(data) when is_map(data) do
-    case get_request_id() do
+    case Honeybadger.RequestId.get() do
       nil -> data
       request_id -> Map.put(data, :request_id, request_id)
     end
