@@ -44,7 +44,7 @@ defmodule Honeybadger.Insights.Oban do
       |> Honeybadger.Insights.Oban.add_request_id()
       |> Oban.insert()
   """
-  def add_request_id(%Ecto.Changeset{} = changeset) do
+  def add_request_id(changeset) do
     meta = Ecto.Changeset.get_field(changeset, :meta) || %{}
     updated_meta = Map.put(meta, "hb_request_id", Honeybadger.get_request_id())
     Ecto.Changeset.change(changeset, meta: updated_meta)
