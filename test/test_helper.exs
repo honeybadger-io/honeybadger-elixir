@@ -9,8 +9,7 @@ Application.put_all_env(
     environment_name: :test,
     api_key: "abc123",
     origin: "http://localhost:4444",
-    insights_enabled: true,
-    events_worker_enabled: true
+    insights_enabled: true
   ]
 )
 
