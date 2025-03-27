@@ -16,6 +16,7 @@ defmodule Honeybadger.InsightsCase do
 
         restart_with_config(
           insights_enabled: true,
+          events_worker_enabled: false,
           exclude_envs: []
         )
 

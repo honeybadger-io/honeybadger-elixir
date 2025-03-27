@@ -92,8 +92,7 @@ defmodule Honeybadger.HTTPAdapter do
 
     with {:ok, response} <- http_adapter.request(method, url, body, headers, http_adapter_opts),
          {:ok, decoded_response} <- http_adapter.decode_response_body(response, opts) do
-      {request_result(decoded_response),
-       %{decoded_response | http_adapter: http_adapter, request_url: url}}
+      {:ok, %{decoded_response | http_adapter: http_adapter, request_url: url}}
     else
       {:error, %Honeybadger.InvalidResponseError{} = error} ->
         {:error, error}
@@ -107,9 +106,6 @@ defmodule Honeybadger.HTTPAdapter do
          )}
     end
   end
-
-  defp request_result(%{status: status}) when status in 200..399, do: :ok
-  defp request_result(%{status: status}) when status in 400..599, do: :error
 
   defp get_adapter(opts) do
     default_http_adapter = Application.get_env(:honeybadger, :http_adapter, installed_adapter())

@@ -69,6 +69,9 @@ defmodule Honeybadger.Mixfile do
         hackney_opts: [],
         use_logger: true,
         ignored_domains: [:cowboy],
+        exclude_errors: [],
+
+        # Filters
         notice_filter: Honeybadger.NoticeFilter.Default,
         event_filter: Honeybadger.EventFilter.Default,
         filter: Honeybadger.Filter.Default,
@@ -78,9 +81,16 @@ defmodule Honeybadger.Mixfile do
         filter_disable_params: false,
         filter_disable_assigns: false,
         filter_disable_session: false,
-        exclude_errors: [],
         insights_enabled: false,
-        insights_config: %{}
+        insights_config: %{},
+
+        # Events
+        events_worker_enabled: true,
+        events_max_batch_retries: 3,
+        events_batch_size: 1000,
+        events_max_queue_size: 10000,
+        events_timeout: 30000,
+        events_throttle_wait: 60000
       ],
       mod: {Honeybadger, []}
     ]

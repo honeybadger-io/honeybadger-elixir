@@ -171,7 +171,7 @@ defmodule Honeybadger do
 
   require Logger
 
-  alias Honeybadger.{Client, Notice}
+  alias Honeybadger.{Client, Notice, EventsWorker}
   alias Honeybadger.Breadcrumbs.{Collector, Breadcrumb}
 
   @type notify_options ::
@@ -221,7 +221,9 @@ defmodule Honeybadger do
       |> Enum.each(& &1.attach())
     end
 
-    Supervisor.start_link([{Client, [config]}], strategy: :one_for_one)
+    children = [{Client, [config]}, EventsWorker]
+
+    Supervisor.start_link(children, strategy: :one_for_one)
   end
 
   @doc """
@@ -361,10 +363,16 @@ defmodule Honeybadger do
   def event(event_data) do
     ts = DateTime.utc_now() |> DateTime.to_string()
 
-    event_data
-    |> Map.put_new(:ts, ts)
-    |> maybe_add_request_id()
-    |> Client.send_event()
+    data =
+      event_data
+      |> Map.put_new(:ts, ts)
+      |> maybe_add_request_id()
+
+    if get_env(:events_worker_enabled) do
+      EventsWorker.push(data)
+    else
+      Client.send_event(data)
+    end
   end
 
   @doc """

@@ -91,6 +91,23 @@ defmodule Honeybadger.Client do
   end
 
   @doc """
+  Send events in batches
+  """
+  @spec send_events(list) :: :ok | {:error, reason :: atom()}
+  def send_events(events) when is_list(events) do
+    if pid = Process.whereis(__MODULE__) do
+      # 30 second timeout
+      GenServer.call(pid, {:events, events}, 30_000)
+    else
+      Logger.warning(fn ->
+        "[Honeybadger] Unable to post events, the :honeybadger client isn't running"
+      end)
+
+      {:error, :client_not_running}
+    end
+  end
+
+  @doc """
   Check whether reporting is enabled for the current environment.
 
   ## Example
@@ -148,7 +165,7 @@ defmodule Honeybadger.Client do
           |> Map.get(:hackney_opts)
           |> Keyword.merge(opts)
 
-        post_notice(url, headers, payload, hackney_opts)
+        post_payload(url, headers, payload, hackney_opts)
 
       {:error, %Jason.EncodeError{message: message}} ->
         Logger.warning(fn -> "[Honeybadger] Notice encoding failed: #{message}" end)
@@ -186,7 +203,7 @@ defmodule Honeybadger.Client do
           |> Keyword.merge(opts)
 
         # post logic for events is the same as notices
-        post_notice(event_url, headers, payload, hackney_opts)
+        post_payload(event_url, headers, payload, hackney_opts)
 
       {:error, %Jason.EncodeError{message: message}} ->
         Logger.warning(fn -> "[Honeybadger] Event encoding failed: #{message}" end)
@@ -205,13 +222,72 @@ defmodule Honeybadger.Client do
     {:noreply, state}
   end
 
+  # Events
+  #
+  @impl GenServer
+  def handle_call({:events, _}, _from, %{enabled: false} = state) do
+    {:reply, :ok, state}
+  end
+
+  def handle_call({:events, _}, _from, %{api_key: nil} = state) do
+    {:reply, {:error, :no_api_key}, state}
+  end
+
+  def handle_call({:events, events}, _from, state) do
+    %{event_url: event_url, headers: headers} = state
+    # Convert each event to JSON and join with newlines
+    encoded_events = Enum.map(events, &Honeybadger.JSON.encode/1)
+
+    # Check if any encoding failed
+    if Enum.any?(encoded_events, &match?({:error, _}, &1)) do
+      {:reply, {:error, :encoding_error}, state}
+    else
+      payload = Enum.map_join(encoded_events, "\n", &elem(&1, 1))
+
+      opts =
+        state
+        |> Map.take([:proxy, :proxy_auth])
+        |> Map.put(:pool, __MODULE__)
+        |> Keyword.new()
+
+      hackney_opts =
+        state
+        |> Map.get(:hackney_opts)
+        |> Keyword.merge(opts)
+
+      headers =
+        List.keyreplace(headers, "Content-Type", 0, {"Content-Type", "application/x-ndjson"})
+
+      response =
+        case HTTPAdapter.request(:post, event_url, payload, headers, hackney_opts) do
+          {:ok, %HTTPResponse{body: body, status: status}} when status in 200..399 ->
+            Logger.debug(fn -> "[Honeybadger] API success: #{inspect(body)}" end)
+            :ok
+
+          {:ok, %HTTPResponse{status: status}} when status == 429 ->
+            Logger.warning("[Honeybadger] API rate limited:")
+            {:error, :throttled}
+
+          {:ok, %HTTPResponse{status: status}} when status in 400..599 ->
+            Logger.warning("[Honeybadger] API failure")
+            {:error, :api_error}
+
+          {:error, reason} ->
+            Logger.warning(fn -> "[Honeybadger] connection error: #{inspect(reason)}" end)
+            {:error, :connection_error}
+        end
+
+      {:reply, response, state}
+    end
+  end
+
   # API Integration
 
   defp build_headers(opts) do
     [{"X-API-Key", get_env(opts, :api_key)}] ++ @headers
   end
 
-  defp post_notice(url, headers, payload, hackney_opts) do
+  defp post_payload(url, headers, payload, hackney_opts) do
     case HTTPAdapter.request(:post, url, payload, headers, hackney_opts) do
       {:ok, %HTTPResponse{body: body, status: status}} when status in 200..399 ->
         Logger.debug(fn -> "[Honeybadger] API success: #{inspect(body)}" end)
