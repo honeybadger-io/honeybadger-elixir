@@ -45,9 +45,12 @@ defmodule Honeybadger.Insights.Oban do
       |> Oban.insert()
   """
   def add_request_id(changeset) do
-    meta = Ecto.Changeset.get_field(changeset, :meta) || %{}
-    updated_meta = Map.put(meta, "hb_request_id", Honeybadger.get_request_id())
-    Ecto.Changeset.change(changeset, meta: updated_meta)
+    meta =
+      changeset
+      |> Ecto.Changeset.get_field(changeset, :meta, %{})
+      |> Map.put("hb_request_id", Honeybadger.get_request_id())
+
+    Ecto.Changeset.put_change(changeset, :meta, meta)
   end
 
   ## Overridable Telemetry Handlers (Internal)

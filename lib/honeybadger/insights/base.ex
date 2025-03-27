@@ -71,7 +71,7 @@ defmodule Honeybadger.Insights.Base do
       Attaches telemetry handlers if all required dependencies are available.
       """
       def attach do
-        if dependencies_available?() && !get_insights_config(:disabled, false) do
+        if dependencies_available?() and !get_insights_config(:disabled, false) do
           Enum.each(get_telemetry_events(), &attach_event/1)
 
           :ok

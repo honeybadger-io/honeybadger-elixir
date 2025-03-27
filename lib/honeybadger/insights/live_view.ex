@@ -48,7 +48,7 @@ defmodule Honeybadger.Insights.LiveView do
     }
   end
 
-  def get_telemetry_events() do
+  def get_telemetry_events do
     events = get_insights_config(:telemetry_events, @telemetry_events)
 
     # Since these are internal subscriptions, we want to make sure they are

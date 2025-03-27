@@ -32,7 +32,7 @@ defmodule Honeybadger.Insights.Plug do
     [:phoenix, :endpoint, :stop]
   ]
 
-  def get_telemetry_events() do
+  def get_telemetry_events do
     events = get_insights_config(:telemetry_events, @telemetry_events)
 
     Enum.reduce(events, events, fn init, acc ->
