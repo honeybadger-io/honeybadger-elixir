@@ -45,7 +45,7 @@ defmodule Honeybadger.Utils do
     |> String.downcase()
   end
 
-  def uuid(size \\ 16) do
+  def rand_id(size \\ 16) do
     size
     |> :crypto.strong_rand_bytes()
     |> Base.encode16(case: :lower)

@@ -60,7 +60,7 @@ defmodule Honeybadger.Insights.LiveView do
   end
 
   def handle_telemetry([_, _, :handle_event, :start] = event, measurements, metadata, opts) do
-    Honeybadger.set_request_id(Honeybadger.Utils.uuid())
+    Honeybadger.set_request_id(Honeybadger.Utils.rand_id())
 
     if event in get_insights_config(:telemetry_events, @telemetry_events) do
       handle_event_impl(event, measurements, metadata, opts)
