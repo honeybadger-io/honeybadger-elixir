@@ -18,10 +18,7 @@ defmodule Honeybadger.Insights.LiveView do
        live_view: %{
          telemetry_events: [
            [:phoenix, :live_component, :handle_event, :stop],
-  <<<<<<< HEAD
            [:phoenix, :live_view, :handle_event, :stop],
-  =======
-  >>>>>>> master
            [:phoenix, :live_view, :mount, :stop],
            [:phoenix, :live_view, :update, :stop]
          ]
