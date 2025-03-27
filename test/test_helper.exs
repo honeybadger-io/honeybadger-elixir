@@ -9,7 +9,8 @@ Application.put_all_env(
     environment_name: :test,
     api_key: "abc123",
     origin: "http://localhost:4444",
-    insights_enabled: true
+    insights_enabled: true,
+    events_worker_enabled: true
   ]
 )
 
@@ -101,13 +102,18 @@ defmodule Honeybadger.API do
 
   def call(%Conn{method: "POST"} = conn, test) do
     {:ok, body, conn} = read_body(conn)
-
-    send(test, {:api_request, Jason.decode!(body)})
-
+    content_type = List.first(get_req_header(conn, "content-type")) || "application/json"
+    send(test, {:api_request, decode_payload(body, content_type)})
     send_resp(conn, 200, "{}")
   end
 
-  def call(conn, _test) do
-    send_resp(conn, 404, "Not Found")
+  def call(conn, _test), do: send_resp(conn, 404, "Not Found")
+
+  defp decode_payload(body, "application/x-ndjson") do
+    body
+    |> String.split("\n", trim: true)
+    |> Enum.map(&Jason.decode!/1)
   end
+
+  defp decode_payload(body, _), do: Jason.decode!(body)
 end
