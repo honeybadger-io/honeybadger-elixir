@@ -49,6 +49,7 @@ defmodule Honeybadger.Mixfile do
   # into the host apps mix tasks. This way our release task is shown only in
   # our mix tasks
   defp elixirc_paths(:dev), do: ["lib", "mix"]
+  defp elixirc_paths(:test), do: ["lib", "test/support"]
   defp elixirc_paths(_), do: ["lib"]
 
   def application do
@@ -72,12 +73,16 @@ defmodule Honeybadger.Mixfile do
 
         # Filters
         notice_filter: Honeybadger.NoticeFilter.Default,
+        event_filter: Honeybadger.EventFilter.Default,
         filter: Honeybadger.Filter.Default,
-        filter_keys: [:password, :credit_card],
+        filter_keys: [:password, :credit_card, :__changed__, :flash, :_csrf_token],
         filter_args: false,
         filter_disable_url: false,
         filter_disable_params: false,
+        filter_disable_assigns: false,
         filter_disable_session: false,
+        insights_enabled: false,
+        insights_config: %{},
 
         # Events
         events_worker_enabled: true,
