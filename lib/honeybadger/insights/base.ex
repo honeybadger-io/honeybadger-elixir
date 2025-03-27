@@ -143,6 +143,14 @@ defmodule Honeybadger.Insights.Base do
         :ok
       end
 
+      defp maybe_put(map, key, value) do
+        if value != nil do
+          Map.put(map, key, value)
+        else
+          map
+        end
+      end
+
       @doc """
       Determines if an event should be ignored based on its metadata.
       Child modules should override this for specific filtering logic.

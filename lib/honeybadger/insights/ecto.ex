@@ -21,6 +21,14 @@ defmodule Honeybadger.Insights.Ecto do
             ~r/schema_migrations/
           ],
 
+          # Format & include the stacktrace with each query. You must also
+          # update your repo config to enable:
+          #
+          #   config :my_app, MyApp.Repo,
+          #     stacktrace: true
+          #
+          include_stacktrace: true,
+
           # A list of table/source names to exclude
           excluded_sources: [
             "schema_migrations",
@@ -62,6 +70,37 @@ defmodule Honeybadger.Insights.Ecto do
     meta
     |> Map.take([:query, :decode_time, :query_time, :queue_time, :source])
     |> Map.update!(:query, &obfuscate(&1, meta.repo.__adapter__()))
+    |> include_stacktrace(meta)
+  end
+
+  defp include_stacktrace(data, %{stacktrace: stacktrace}) do
+    if get_insights_config(:include_stacktrace, false) do
+      Map.put(data, :stacktrace, format_stacktrace(stacktrace))
+    else
+      data
+    end
+  end
+
+  defp include_stacktrace(data, _), do: data
+
+  defp format_stacktrace(stacktrace) do
+    stacktrace
+    |> Enum.map(&format_frame/1)
+  end
+
+  defp format_frame({module, function, arity, location}) do
+    if is_list(location) do
+      file = location[:file]
+      line = location[:line]
+
+      if file && line do
+        ["#{file}:#{line}", "#{inspect(module)}.#{function}/#{arity}"]
+      else
+        [nil, "#{inspect(module)}.#{function}/#{arity}"]
+      end
+    else
+      [nil, "#{inspect(module)}.#{function}/#{arity}"]
+    end
   end
 
   def ignore?(%{query: query, source: source}) do
