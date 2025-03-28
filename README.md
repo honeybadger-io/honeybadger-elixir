@@ -419,35 +419,41 @@ _NOTE: This works only for the string options, and `environment_name`._
 
 Here are all of the options you can pass in the keyword list:
 
-| Name                     | Description                                                                                   | Default                                  |
-| ------------------------ | --------------------------------------------------------------------------------------------- | ---------------------------------------- |
-| `app`                    | Name of your app's OTP Application as an atom                                                 | `Mix.Project.config[:app]`               |
-| `api_key`                | Your application's Honeybadger API key                                                        | `System.get_env("HONEYBADGER_API_KEY"))` |
-| `environment_name`       | (required) The name of the environment your app is running in.                                | `:prod`                                  |
-| `exclude_errors`         | Filters out errors from being sent to Honeybadger                                             | `[]`                                     |
-| `exclude_envs`           | Environments that you want to disable Honeybadger notifications                               | `[:dev, :test]`                          |
-| `hostname`               | Hostname of the system your application is running on                                         | `:inet.gethostname`                      |
-| `origin`                 | URL for the Honeybadger API                                                                   | `"https://api.honeybadger.io"`           |
-| `project_root`           | Directory root for where your application is running                                          | `System.cwd/0`                           |
-| `revision`               | The project's git revision                                                                    | `nil`                                    |
-| `filter`                 | Module implementing `Honeybadger.Filter` to filter data before sending to Honeybadger.io      | `Honeybadger.Filter.Default`             |
-| `filter_keys`            | A list of keywords (atoms) to filter.  Only valid if `filter` is `Honeybadger.Filter.Default` | `[:password, :credit_card, :__changed__, :flash, :_csrf_token]` |
-| `filter_args`            | If true, will remove function arguments in backtraces                                         | `true`                                   |
-| `filter_disable_url`     | If true, will remove the request url                                                          | `false`                                  |
-| `filter_disable_session` | If true, will remove the request session                                                      | `false`                                  |
-| `filter_disable_params`  | If true, will remove the request params                                                       | `false`                                  |
-| `filter_disable_assigns` | If true, will remove the live_view event assigns                                              | `false`                                  |
-| `fingerprint_adapter`    | Implementation of FingerprintAdapter behaviour                                                |                                          |
-| `notice_filter`          | Module implementing `Honeybadger.NoticeFilter`. If `nil`, no filtering is done.               | `Honeybadger.NoticeFilter.Default`       |
-| `sasl_logging_only`      | If true, will notifiy for SASL errors but not Logger calls                                    | `true`                                   |
-| `use_logger`             | Enable the Honeybadger Logger for handling errors outside of web requests                     | `true`                                   |
-| `ignored_domains`        | Add domains to ignore Error events in `Honeybadger.Logger`.                                   | `[:cowboy]`                              |
-| `breadcrumbs_enabled`    | Enable breadcrumb event tracking                                                              | `false`                                  |
-| `ecto_repos`             | Modules with implemented Ecto.Repo behaviour for tracking SQL breadcrumb events               | `[]`                                     |
-| `event_filter`           | Module implementing `Honeybadger.EventFilter`. If `nil`, no filtering is done.                | `Honeybadger.EventFilter.Default`        |
-| `insights_enabled`       | Enable sending automatic events to Honeybadger Insights                                       | `false`                                  |
-| `insights_config`        | Specific library Configuration for Honeybadger Insights.                                      | `%{}`                                    |
-| `http_adapter`           | Module implementing `Honeybadger.HttpAdapter` to send data to Honeybadger.io                  | Any available adapter (`Req`, `hackney`) |
+| Name                      | Description                                                                                   | Default                                  |
+| ------------------------- | --------------------------------------------------------------------------------------------- | ---------------------------------------- |
+| `app`                     | Name of your app's OTP Application as an atom                                                 | `Mix.Project.config[:app]`               |
+| `api_key`                 | Your application's Honeybadger API key                                                        | `System.get_env("HONEYBADGER_API_KEY"))` |
+| `environment_name`        | (required) The name of the environment your app is running in.                                | `:prod`                                  |
+| `exclude_errors`          | Filters out errors from being sent to Honeybadger                                             | `[]`                                     |
+| `exclude_envs`            | Environments that you want to disable Honeybadger notifications                               | `[:dev, :test]`                          |
+| `hostname`                | Hostname of the system your application is running on                                         | `:inet.gethostname`                      |
+| `origin`                  | URL for the Honeybadger API                                                                   | `"https://api.honeybadger.io"`           |
+| `project_root`            | Directory root for where your application is running                                          | `System.cwd/0`                           |
+| `revision`                | The project's git revision                                                                    | `nil`                                    |
+| `filter`                  | Module implementing `Honeybadger.Filter` to filter data before sending to Honeybadger.io      | `Honeybadger.Filter.Default`             |
+| `filter_keys`             | A list of keywords (atoms) to filter.  Only valid if `filter` is `Honeybadger.Filter.Default` | `[:password, :credit_card, :__changed__, :flash, :_csrf_token]` |
+| `filter_args`             | If true, will remove function arguments in backtraces                                         | `true`                                   |
+| `filter_disable_url`      | If true, will remove the request url                                                          | `false`                                  |
+| `filter_disable_session`  | If true, will remove the request session                                                      | `false`                                  |
+| `filter_disable_params`   | If true, will remove the request params                                                       | `false`                                  |
+| `filter_disable_assigns`  | If true, will remove the live_view event assigns                                              | `false`                                  |
+| `fingerprint_adapter`     | Implementation of FingerprintAdapter behaviour                                                |                                          |
+| `notice_filter`           | Module implementing `Honeybadger.NoticeFilter`. If `nil`, no filtering is done.               | `Honeybadger.NoticeFilter.Default`       |
+| `sasl_logging_only`       | If true, will notifiy for SASL errors but not Logger calls                                    | `true`                                   |
+| `use_logger`              | Enable the Honeybadger Logger for handling errors outside of web requests                     | `true`                                   |
+| `ignored_domains`         | Add domains to ignore Error events in `Honeybadger.Logger`.                                   | `[:cowboy]`                              |
+| `breadcrumbs_enabled`     | Enable breadcrumb event tracking                                                              | `false`                                  |
+| `ecto_repos`              | Modules with implemented Ecto.Repo behaviour for tracking SQL breadcrumb events               | `[]`                                     |
+| `event_filter`            | Module implementing `Honeybadger.EventFilter`. If `nil`, no filtering is done.                | `Honeybadger.EventFilter.Default`        |
+| `insights_enabled`        | Enable sending automatic events to Honeybadger Insights                                       | `false`                                  |
+| `insights_config`         | Specific library Configuration for Honeybadger Insights.                                      | `%{}`                                    |
+| `http_adapter`            | Module implementing `Honeybadger.HttpAdapter` to send data to Honeybadger.io                  | Any available adapter (`Req`, `hackney`) |
+| `events_worker_enabled`   | Enable sending events in a separate process                                                   | `true`                                   |
+| `events_max_batch_retries`| Maximum number of retries for sending events                                                  | `3`                                      |
+| `events_batch_size`       | Maximum number of events to send in a single batch                                            | `1000`                                   |
+| `events_max_queue_size`   | Maximum number of events to queue before dropping                                             | `10000`                                  |
+| `events_timeout`          | Timeout in milliseconds for sending events                                                    | `5000`                                   |
+| `events_throttle_wait`    | Time in milliseconds to wait before retrying a failed batch                                   | `60000`                                  |
 
 ### HTTP Adapters
 
