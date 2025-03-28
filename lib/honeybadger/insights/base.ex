@@ -143,6 +143,7 @@ defmodule Honeybadger.Insights.Base do
         :ok
       end
 
+      @doc false
       defp maybe_put(map, key, value) do
         if value != nil do
           Map.put(map, key, value)
@@ -150,6 +151,11 @@ defmodule Honeybadger.Insights.Base do
           map
         end
       end
+
+      @doc false
+      defp get_module_name(module) when is_atom(module), do: inspect(module)
+      defp get_module_name(module) when is_binary(module), do: module
+      defp get_module_name(_), do: nil
 
       @doc """
       Determines if an event should be ignored based on its metadata.

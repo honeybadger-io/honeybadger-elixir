@@ -84,7 +84,7 @@ defmodule Honeybadger.Insights.Plug do
       {module, opts, _extra} ->
         metadata
         |> Map.put(:route_type, :live)
-        |> Map.put(:live_view, module)
+        |> Map.put(:live_view, get_module_name(module))
         |> maybe_put(:live_action, get_in(opts, [:action]))
     end
   end
@@ -97,7 +97,7 @@ defmodule Honeybadger.Insights.Plug do
       controller ->
         metadata
         |> Map.put(:route_type, :controller)
-        |> Map.put(:controller, controller)
+        |> Map.put(:controller, get_module_name(controller))
         |> maybe_put(:action, conn.private[:phoenix_action])
     end
   end
@@ -121,7 +121,7 @@ defmodule Honeybadger.Insights.Plug do
       {:phoenix_view, key}, acc ->
         case conn.private[:phoenix_view] do
           %{_: view} ->
-            maybe_put(acc, key, view)
+            maybe_put(acc, key, get_module_name(view))
 
           view when is_binary(view) ->
             maybe_put(acc, key, view)

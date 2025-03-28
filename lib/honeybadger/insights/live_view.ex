@@ -6,8 +6,8 @@ defmodule Honeybadger.Insights.LiveView do
 
   By default, this module listens for the following LiveView telemetry events:
 
-     "phoenix.live_component.handle_event.stop"
      "phoenix.live_view.mount.stop"
+     "phoenix.live_component.handle_event.stop"
      "phoenix.live_view.update.stop"
 
   ## Custom Configuration
@@ -49,18 +49,6 @@ defmodule Honeybadger.Insights.LiveView do
     [[:phoenix, :live_view, :mount, :start]] ++ events
   end
 
-  def extract_metadata(meta, _event) do
-    %{
-      url: Map.get(meta, :uri),
-      socket_id: extract_socket_id(meta),
-      view: extract_view(meta),
-      component: extract_component(meta),
-      assigns: extract_assigns(meta),
-      params: Map.get(meta, :params),
-      event: Map.get(meta, :event)
-    }
-  end
-
   def handle_telemetry(
         [:phoenix, :live_view, :mount, :start] = event,
         measurements,
@@ -74,6 +62,19 @@ defmodule Honeybadger.Insights.LiveView do
     end
   end
 
+  def extract_metadata(meta, _event) do
+    %{
+      url: Map.get(meta, :uri),
+      socket_id: extract_socket_id(meta),
+      view: extract_view(meta),
+      component: extract_component(meta),
+      assigns: extract_assigns(meta),
+      params: Map.get(meta, :params),
+      event: Map.get(meta, :event)
+    }
+  end
+
+  defp extract_component(%{component: component}), do: get_module_name(component)
   defp extract_component(%{socket: %{live_component: component}}), do: get_module_name(component)
   defp extract_component(_), do: nil
 
@@ -84,15 +85,6 @@ defmodule Honeybadger.Insights.LiveView do
   defp extract_view(%{socket: %{view: view}}), do: get_module_name(view)
   defp extract_view(_), do: nil
 
-  defp extract_assigns(%{socket: socket}) do
-    socket.assigns
-  rescue
-    _ -> nil
-  end
-
+  defp extract_assigns(%{socket: %{assigns: assigns}}), do: assigns
   defp extract_assigns(_), do: nil
-
-  # Helper to get module name as string
-  defp get_module_name(module) when is_atom(module), do: inspect(module)
-  defp get_module_name(_), do: nil
 end
