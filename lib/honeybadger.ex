@@ -301,15 +301,16 @@ defmodule Honeybadger do
       |> Collector.put(notice_breadcrumb(exception))
       |> Collector.output()
 
-    metadata_with_breadcrumbs =
+    metadata =
       metadata
       |> Map.delete(:breadcrumbs)
       |> contextual_metadata()
       |> Map.put(:breadcrumbs, breadcrumbs)
+      |> maybe_add_request_id()
 
     notice =
       exception
-      |> Notice.new(metadata_with_breadcrumbs, stacktrace, fingerprint)
+      |> Notice.new(metadata, stacktrace, fingerprint)
       |> put_notice_fingerprint()
 
     exclude_error_value = Application.get_env(:honeybadger, :exclude_errors)
@@ -362,7 +363,10 @@ defmodule Honeybadger do
   def event(event_data) do
     ts = DateTime.utc_now() |> DateTime.to_string()
 
-    data = Map.put_new(event_data, :ts, ts)
+    data =
+      event_data
+      |> Map.put_new(:ts, ts)
+      |> maybe_add_request_id()
 
     if get_env(:events_worker_enabled) do
       EventsWorker.push(data)
@@ -439,6 +443,33 @@ defmodule Honeybadger do
     Logger.reset_metadata()
 
     :ok
+  end
+
+  @doc """
+  Sets the request ID for the current process.
+  """
+  def put_request_id(request_id) do
+    Honeybadger.RequestId.put(request_id)
+  end
+
+  @doc """
+  Retrieves the request ID for the current process.
+  """
+  def get_request_id do
+    Honeybadger.RequestId.get()
+  end
+
+  @doc false
+  def clear_request_id do
+    Honeybadger.RequestId.put(nil)
+  end
+
+  @doc false
+  def maybe_add_request_id(data) when is_map(data) do
+    case Honeybadger.RequestId.get() do
+      nil -> data
+      request_id -> Map.put(data, :request_id, request_id)
+    end
   end
 
   @doc """
