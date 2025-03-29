@@ -445,18 +445,26 @@ defmodule Honeybadger do
     :ok
   end
 
+  @doc """
+  Sets the request ID for the current process.
+  """
   def put_request_id(request_id) do
     Honeybadger.RequestId.put(request_id)
   end
 
+  @doc """
+  Retrieves the request ID for the current process.
+  """
   def get_request_id do
     Honeybadger.RequestId.get()
   end
 
+  @doc false
   def clear_request_id do
     Honeybadger.RequestId.put(nil)
   end
 
+  @doc false
   def maybe_add_request_id(data) when is_map(data) do
     case Honeybadger.RequestId.get() do
       nil -> data
