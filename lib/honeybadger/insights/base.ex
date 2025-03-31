@@ -114,7 +114,6 @@ defmodule Honeybadger.Insights.Base do
 
       @doc """
       Handles telemetry events and processes the data.
-      <<<<<<< HEAD
       This implementation forwards to handle_event_impl which can be overridden
       by child modules to customize behavior while still calling the parent implementation.
       """

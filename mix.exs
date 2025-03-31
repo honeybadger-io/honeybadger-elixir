@@ -33,7 +33,7 @@ defmodule Honeybadger.Mixfile do
       ],
 
       # Xref
-      xref: [exclude: [Plug.Conn]],
+      xref: [exclude: [Plug.Conn, Ecto.Changeset]],
 
       # Docs
       docs: [
