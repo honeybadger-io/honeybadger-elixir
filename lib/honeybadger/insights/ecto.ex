@@ -84,23 +84,18 @@ defmodule Honeybadger.Insights.Ecto do
   defp include_stacktrace(data, _), do: data
 
   defp format_stacktrace(stacktrace) do
-    stacktrace
-    |> Enum.map(&format_frame/1)
+    Enum.map(stacktrace, &format_frame/1)
   end
 
   defp format_frame({module, function, arity, location}) do
-    if is_list(location) do
-      file = location[:file]
-      line = location[:line]
-
-      if file && line do
-        ["#{file}:#{line}", "#{inspect(module)}.#{function}/#{arity}"]
+    position =
+      if is_list(location) and Keyword.has_key?(location, :file) do
+        "#{location[:file]}:#{location[:line]}"
       else
-        [nil, "#{inspect(module)}.#{function}/#{arity}"]
+        nil
       end
-    else
-      [nil, "#{inspect(module)}.#{function}/#{arity}"]
-    end
+
+    [position, Exception.format_mfa(module, function, arity)]
   end
 
   def ignore?(%{query: query, source: source}) do

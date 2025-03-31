@@ -1,4 +1,6 @@
 defmodule Honeybadger.RequestId do
+  @moduledoc false
+  
   @key __MODULE__
 
   alias Honeybadger.Utils
