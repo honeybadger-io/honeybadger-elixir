@@ -361,7 +361,7 @@ defmodule Honeybadger do
 
   @spec event(map()) :: :ok
   def event(event_data) do
-    ts = DateTime.utc_now() |> DateTime.to_string()
+    ts = DateTime.utc_now(:millisecond) |> DateTime.to_iso8601()
 
     data =
       event_data
