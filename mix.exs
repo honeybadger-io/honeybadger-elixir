@@ -33,7 +33,7 @@ defmodule Honeybadger.Mixfile do
       ],
 
       # Xref
-      xref: [exclude: [Plug.Conn]],
+      xref: [exclude: [Plug.Conn, Ecto.Changeset]],
 
       # Docs
       docs: [
@@ -79,8 +79,10 @@ defmodule Honeybadger.Mixfile do
         filter_args: false,
         filter_disable_url: false,
         filter_disable_params: false,
-        filter_disable_assigns: false,
+        filter_disable_assigns: true,
         filter_disable_session: false,
+
+        # Insights
         insights_enabled: false,
         insights_config: %{},
 
@@ -89,7 +91,7 @@ defmodule Honeybadger.Mixfile do
         events_max_batch_retries: 3,
         events_batch_size: 1000,
         events_max_queue_size: 10000,
-        events_timeout: 30000,
+        events_timeout: 5000,
         events_throttle_wait: 60000
       ],
       mod: {Honeybadger, []}
@@ -105,6 +107,7 @@ defmodule Honeybadger.Mixfile do
       {:ecto, ">= 2.0.0", optional: true},
       {:phoenix, ">= 1.0.0 and < 2.0.0", optional: true},
       {:telemetry, "~> 0.4 or ~> 1.0"},
+      {:process_tree, "~> 0.2.1"},
 
       # Dev dependencies
       {:ex_doc, ">= 0.0.0", only: :dev, runtime: false},

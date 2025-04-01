@@ -8,14 +8,16 @@ defmodule Honeybadger.Insights.LiveViewTest do
 
   describe "LiveView instrumentation" do
     test "extracts metadata from mount event" do
+      restart_with_config(filter_disable_assigns: false)
+
       event =
         send_and_receive(
           [:phoenix, :live_view, :mount, :stop],
           %{duration: System.convert_time_unit(15, :millisecond, :native)},
           %{
             uri: "/dashboard",
-            socket_id: "phx-Fxyz123",
             socket: %{
+              id: "phx-Fxyz123",
               view: MyApp.DashboardLive,
               assigns: %{
                 page_title: "Dashboard",
