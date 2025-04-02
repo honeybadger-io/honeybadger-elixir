@@ -228,31 +228,41 @@ config :honeybadger, insights_config: %{
 
 ### Event Filtering
 
-You can filter out or customize automatic events sent to Honeybadger Insights
-by implementing the `Honeybadger.EventFilter` behaviour:
+You can filter out or customize events sent to Honeybadger Insights by
+using the `Honeybadger.EventFilter.Mixin` module. You can customize both
+the event built from telemetry data (`filter_telemetry_event/3`) and the event
+right before it is sent to Honeybadger (`filter_event/1`):
 
 ```elixir
-defmodule MyApp.EventFilter do
-  @behaviour Honeybadger.EventFilter
+defmodule MyApp.MyFilter do
+  use Honeybadger.EventFilter.Mixin
 
-  @default_filter &Honeybadger.EventFilter.Default.filter/3
+  # Drop analytics events by returning nil
+  def filter_event(%{event_type: "analytics"} = _event), do: nil
 
-  @impl Honeybadger.EventFilter
-  # Pattern match on the event type name
-  def filter_telemetry_event(data, raw, [:phoenix, :live_view, :update, :stop] = event) do
-    if data.duration < 100 do
-      data
-      |> Map.put(:slow, true)
-      # You might want to run the event through the default filter to remove
-      # any sensitive data
-      |> @default_filter.(raw, event)
-    else
-      # Ignore events that are fast
-      nil
+  # Anonymize user data in login events
+  def filter_event(%{event_type: "login"} = event) do
+    event
+    |> update_in([:data, :user_email], fn _ -> "[REDACTED]" end)
+    |> put_in([:metadata, :filtered], true)
+  end
+
+  # For telemetry events, you can customize while still applying default filtering
+  def filter_telemetry_event(data, raw, event) do
+    # First apply default filtering
+    filtered_data = apply_default_telemetry_filtering(data)
+
+    # Then apply custom logic
+    case event do
+      [:auth, :login, :start] ->
+        Map.put(filtered_data, :security_filtered, true)
+      _ ->
+        filtered_data
     end
   end
 
-  def filter(data, raw, event), do: @default_filter.(data, raw, event)
+  # Keep all other events as they are
+  def filter_event(event), do: event
 end
 ```
 

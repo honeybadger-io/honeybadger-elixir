@@ -448,6 +448,36 @@ defmodule HoneybadgerTest do
       # Verify timestamp format matches DateTime.to_string() format
       assert {:ok, _, _} = DateTime.from_iso8601(ts)
     end
+
+    defmodule TestEventFilter do
+      use Honeybadger.EventFilter.Mixin
+
+      def filter_event(%{event_type: "test_event"} = event) do
+        Map.put(event, :filtered, true)
+      end
+
+      def filter_event(%{event_type: "remove_me"}), do: nil
+      def filter_event(event), do: event
+      def filter_telemetry_event(a, _b, _c), do: a
+    end
+
+    test "can be modified by filter" do
+      with_config([event_filter: TestEventFilter], fn ->
+        Honeybadger.event("test_event", %{key: "value"})
+
+        assert_receive {:api_request, [data]}
+        assert data["event_type"] == "test_event"
+        assert data["filtered"] == true
+      end)
+    end
+
+    test "can be removed by filter" do
+      with_config([event_filter: TestEventFilter], fn ->
+        Honeybadger.event("remove_me", %{key: "value"})
+
+        refute_receive {:api_request, _}
+      end)
+    end
   end
 
   describe "Honeybadger.event/1" do

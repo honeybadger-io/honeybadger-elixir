@@ -361,17 +361,28 @@ defmodule Honeybadger do
 
   @spec event(map()) :: :ok
   def event(event_data) do
-    ts = DateTime.utc_now(:millisecond) |> DateTime.to_iso8601()
+    event_data
+    |> Map.put_new(:ts, DateTime.utc_now(:millisecond) |> DateTime.to_iso8601())
+    |> maybe_add_request_id()
+    |> event_filter()
+    |> send_event()
+  end
 
-    data =
-      event_data
-      |> Map.put_new(:ts, ts)
-      |> maybe_add_request_id()
+  defp send_event(nil), do: :ok
 
+  defp send_event(data) do
     if get_env(:events_worker_enabled) do
       EventsWorker.push(data)
     else
       Client.send_event(data)
+    end
+  end
+
+  defp event_filter(map) do
+    if get_env(:event_filter) do
+      get_env(:event_filter).filter_event(map)
+    else
+      map
     end
   end
 
