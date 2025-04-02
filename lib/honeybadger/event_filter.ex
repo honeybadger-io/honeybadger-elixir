@@ -25,4 +25,18 @@ defmodule Honeybadger.EventFilter do
   """
   @callback filter_telemetry_event(data :: map(), raw_event :: map(), event :: [atom(), ...]) ::
               map() | nil
+
+  @doc """
+  Filters all Insights events.
+
+  ## Parameters
+
+    * `event` - The current event map
+
+  ## Returns
+
+    The filtered metadata map that will be sent to Honeybadger or `nil` to skip
+    the event.
+  """
+  @callback filter_event(event :: map()) :: map() | nil
 end

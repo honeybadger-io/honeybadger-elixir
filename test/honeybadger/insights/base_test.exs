@@ -2,6 +2,8 @@ defmodule Honeybadger.Insights.BaseTest do
   use Honeybadger.Case, async: false
 
   defmodule TestEventFilter do
+    use Honeybadger.EventFilter.Mixin
+
     def filter_telemetry_event(data, _raw, _name) do
       Map.put(data, :was_filtered, true)
     end
