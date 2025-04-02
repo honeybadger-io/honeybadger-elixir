@@ -229,7 +229,7 @@ config :honeybadger, insights_config: %{
 ### Event Filtering
 
 You can filter out or customize events sent to Honeybadger Insights by
-implementing the `Honeybadger.EventFilter` behaviour. You can customize both
+using the `Honeybadger.EventFilter.Mixin` module. You can customize both
 the event built from telemetry data (`filter_telemetry_event/3`) and the event
 right before it is sent to Honeybadger (`filter_event/1`):
 
