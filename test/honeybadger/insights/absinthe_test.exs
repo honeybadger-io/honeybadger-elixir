@@ -29,7 +29,7 @@ defmodule Honeybadger.Insights.AbsintheTest do
       event =
         send_and_receive(
           [:absinthe, :execute, :operation, :stop],
-          %{duration: System.convert_time_unit(25, :millisecond, :native)},
+          %{duration: System.convert_time_unit(25, :microsecond, :native)},
           %{blueprint: blueprint}
         )
 
@@ -64,7 +64,7 @@ defmodule Honeybadger.Insights.AbsintheTest do
       event =
         send_and_receive(
           [:absinthe, :execute, :operation, :exception],
-          %{duration: System.convert_time_unit(15, :millisecond, :native)},
+          %{duration: System.convert_time_unit(15, :microsecond, :native)},
           %{blueprint: blueprint}
         )
 
@@ -95,7 +95,7 @@ defmodule Honeybadger.Insights.AbsintheTest do
       event =
         send_and_receive(
           [:absinthe, :resolve, :field, :stop],
-          %{duration: System.convert_time_unit(5, :millisecond, :native)},
+          %{duration: System.convert_time_unit(5, :microsecond, :native)},
           %{resolution: resolution}
         )
 
@@ -110,7 +110,7 @@ defmodule Honeybadger.Insights.AbsintheTest do
       event =
         send_and_receive(
           [:absinthe, :execute, :operation, :stop],
-          %{duration: System.convert_time_unit(10, :millisecond, :native)},
+          %{duration: System.convert_time_unit(10, :microsecond, :native)},
           # No blueprint data
           %{}
         )
@@ -140,7 +140,7 @@ defmodule Honeybadger.Insights.AbsintheTest do
       event =
         send_and_receive(
           [:absinthe, :execute, :operation, :stop],
-          %{duration: System.convert_time_unit(8, :millisecond, :native)},
+          %{duration: System.convert_time_unit(8, :microsecond, :native)},
           %{blueprint: blueprint}
         )
 

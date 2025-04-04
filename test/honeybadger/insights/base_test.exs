@@ -75,14 +75,14 @@ defmodule Honeybadger.Insights.BaseTest do
 
     assert_received {:event_processed, event}, 50
 
-    # Hardcoded expected values after converting native to milliseconds
-    # Assuming 1000 native time units equal 1 millisecond:
-    assert event.duration == 1
-    assert event.total_time == 2
-    assert event.decode_time == 3
-    assert event.query_time == 4
-    assert event.queue_time == 5
-    assert event.idle_time == 6
+    # Hardcoded expected values after converting native to microseconds
+    # Assuming 1000 native time units equal 1 microsecond:
+    assert event[:duration] == 1000
+    assert event[:total_time] == 2000
+    assert event[:decode_time] == 3000
+    assert event[:query_time] == 4000
+    assert event[:queue_time] == 5000
+    assert event[:idle_time] == 6000
 
     refute Map.has_key?(event, :monotonic_time)
 

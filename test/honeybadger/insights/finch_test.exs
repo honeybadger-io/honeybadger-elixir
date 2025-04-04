@@ -7,7 +7,7 @@ defmodule Honeybadger.Insights.FinchTest do
       event =
         send_and_receive(
           [:finch, :request, :stop],
-          %{duration: System.convert_time_unit(10, :millisecond, :native)},
+          %{duration: System.convert_time_unit(10, :microsecond, :native)},
           %{
             name: :my_client,
             request: %{
@@ -36,7 +36,7 @@ defmodule Honeybadger.Insights.FinchTest do
       event =
         send_and_receive(
           [:finch, :request, :stop],
-          %{duration: System.convert_time_unit(25, :millisecond, :native)},
+          %{duration: System.convert_time_unit(25, :microsecond, :native)},
           %{
             name: :my_client,
             request: %{
@@ -61,7 +61,7 @@ defmodule Honeybadger.Insights.FinchTest do
       event =
         send_and_receive(
           [:finch, :request, :stop],
-          %{duration: System.convert_time_unit(15, :millisecond, :native)},
+          %{duration: System.convert_time_unit(15, :microsecond, :native)},
           %{
             name: :my_client,
             request: %{
@@ -88,7 +88,7 @@ defmodule Honeybadger.Insights.FinchTest do
         event =
           send_and_receive(
             [:finch, :request, :stop],
-            %{duration: System.convert_time_unit(8, :millisecond, :native)},
+            %{duration: System.convert_time_unit(8, :microsecond, :native)},
             %{
               name: :my_client,
               request: %{
@@ -115,7 +115,7 @@ defmodule Honeybadger.Insights.FinchTest do
       event =
         send_and_receive(
           [:finch, :request, :stop],
-          %{duration: System.convert_time_unit(12, :millisecond, :native)},
+          %{duration: System.convert_time_unit(12, :microsecond, :native)},
           %{
             name: :my_client,
             request: %{
@@ -140,7 +140,7 @@ defmodule Honeybadger.Insights.FinchTest do
         event =
           send_and_receive(
             [:finch, :request, :stop],
-            %{duration: System.convert_time_unit(12, :millisecond, :native)},
+            %{duration: System.convert_time_unit(12, :microsecond, :native)},
             %{
               name: :my_client,
               request: %{

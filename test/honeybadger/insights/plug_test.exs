@@ -32,7 +32,7 @@ defmodule Honeybadger.Insights.PlugTest do
       event =
         send_and_receive(
           [:phoenix, :endpoint, :stop],
-          %{duration: System.convert_time_unit(15, :millisecond, :native)},
+          %{duration: System.convert_time_unit(15, :microsecond, :native)},
           %{
             conn:
               mock_conn(%{
@@ -52,7 +52,7 @@ defmodule Honeybadger.Insights.PlugTest do
       event =
         send_and_receive(
           [:phoenix, :endpoint, :stop],
-          %{duration: System.convert_time_unit(10, :millisecond, :native)},
+          %{duration: System.convert_time_unit(10, :microsecond, :native)},
           %{
             conn:
               mock_conn(%{
@@ -77,7 +77,7 @@ defmodule Honeybadger.Insights.PlugTest do
       event =
         send_and_receive(
           [:phoenix, :endpoint, :stop],
-          %{duration: System.convert_time_unit(5, :millisecond, :native)},
+          %{duration: System.convert_time_unit(5, :microsecond, :native)},
           %{
             conn:
               mock_conn(%{
