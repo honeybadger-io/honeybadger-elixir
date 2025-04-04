@@ -15,7 +15,7 @@ defmodule Honeybadger.Insights.TeslaTest do
       event =
         send_and_receive(
           [:tesla, :request, :stop],
-          %{duration: System.convert_time_unit(5, :millisecond, :native)},
+          %{duration: System.convert_time_unit(5, :microsecond, :native)},
           %{
             env: %{
               method: :get,
@@ -38,7 +38,7 @@ defmodule Honeybadger.Insights.TeslaTest do
       event =
         send_and_receive(
           [:tesla, :request, :exception],
-          %{duration: System.convert_time_unit(30, :millisecond, :native)},
+          %{duration: System.convert_time_unit(30, :microsecond, :native)},
           %{
             env: %{
               method: :post,
@@ -78,7 +78,7 @@ defmodule Honeybadger.Insights.TeslaTest do
         event =
           send_and_receive(
             [:tesla, :request, :stop],
-            %{duration: System.convert_time_unit(5, :millisecond, :native)},
+            %{duration: System.convert_time_unit(5, :microsecond, :native)},
             %{
               env: %{
                 method: :get,

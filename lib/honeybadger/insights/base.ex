@@ -105,7 +105,7 @@ defmodule Honeybadger.Insights.Base do
             acc
 
           {key, val}, acc when key in @time_keys ->
-            Map.put(acc, key, System.convert_time_unit(val, :native, :millisecond))
+            Map.put(acc, key, System.convert_time_unit(val, :native, :microsecond))
 
           {key, val}, acc ->
             Map.put(acc, key, val)

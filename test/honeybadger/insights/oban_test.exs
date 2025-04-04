@@ -11,7 +11,7 @@ defmodule Honeybadger.Insights.ObanTest do
       event =
         send_and_receive(
           [:oban, :job, :stop],
-          %{duration: System.convert_time_unit(150, :millisecond, :native)},
+          %{duration: System.convert_time_unit(150, :microsecond, :native)},
           %{
             conf: %{prefix: "oban_jobs"},
             job: %{
@@ -42,7 +42,7 @@ defmodule Honeybadger.Insights.ObanTest do
       event =
         send_and_receive(
           [:oban, :job, :exception],
-          %{duration: System.convert_time_unit(75, :millisecond, :native)},
+          %{duration: System.convert_time_unit(75, :microsecond, :native)},
           %{
             conf: %{prefix: "oban_jobs"},
             job: %{

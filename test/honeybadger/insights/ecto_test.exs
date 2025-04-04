@@ -26,9 +26,9 @@ defmodule Honeybadger.Insights.EctoTest do
         send_and_receive(
           [:a, :b, :query],
           %{
-            total_time: System.convert_time_unit(25, :millisecond, :native),
-            decode_time: System.convert_time_unit(5, :millisecond, :native),
-            query_time: System.convert_time_unit(15, :millisecond, :native),
+            total_time: System.convert_time_unit(25, :microsecond, :native),
+            decode_time: System.convert_time_unit(4, :microsecond, :native),
+            query_time: System.convert_time_unit(15, :microsecond, :native),
             queue_time: System.convert_time_unit(5, :millisecond, :native)
           },
           %{
@@ -41,9 +41,9 @@ defmodule Honeybadger.Insights.EctoTest do
       assert event["query"] =~ "SELECT u0.id, u0.name FROM users u0 WHERE u0.id = ?"
       assert event["source"] == "users"
       assert event["total_time"] == 25
-      assert event["decode_time"] == 5
+      assert event["decode_time"] == 4
       assert event["query_time"] == 15
-      assert event["queue_time"] == 5
+      assert event["queue_time"] == 5000
     end
 
     test "ignores excluded sources" do

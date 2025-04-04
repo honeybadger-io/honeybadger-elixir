@@ -13,7 +13,7 @@ defmodule Honeybadger.Insights.LiveViewTest do
       event =
         send_and_receive(
           [:phoenix, :live_view, :mount, :stop],
-          %{duration: System.convert_time_unit(15, :millisecond, :native)},
+          %{duration: System.convert_time_unit(15, :microsecond, :native)},
           %{
             uri: "/dashboard",
             socket: %{
@@ -40,7 +40,7 @@ defmodule Honeybadger.Insights.LiveViewTest do
       event =
         send_and_receive(
           [:phoenix, :live_view, :mount, :stop],
-          %{duration: System.convert_time_unit(10, :millisecond, :native)},
+          %{duration: System.convert_time_unit(10, :microsecond, :native)},
           %{
             uri: "/dashboard",
             socket_id: "phx-Ghi012",
