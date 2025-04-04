@@ -143,6 +143,15 @@ defmodule HoneybadgerTest do
 
       refute_receive {:api_request, _}
     end
+
+    test "includes request_id if within EventContext" do
+      restart_with_config(exclude_envs: [])
+      Honeybadger.event_context(%{request_id: "12345"})
+      err = %RuntimeError{message: "test error"}
+      Honeybadger.notify(err)
+      assert_receive {:api_request, notice}
+      assert notice["correlation_context"]["request_id"] == "12345"
+    end
   end
 
   describe "deprecated Honeybadger.notify works" do
@@ -530,6 +539,38 @@ defmodule HoneybadgerTest do
         end)
 
       assert request_events == stringified_events
+    end
+
+    test "includes event_context if present" do
+      restart_with_config(
+        exclude_envs: [],
+        events_worker_enabled: false
+      )
+
+      event_data = %{event_type: "test_event", key: "value"}
+      Honeybadger.event_context(%{user_id: 123})
+      Honeybadger.event(event_data)
+
+      assert_receive {:api_request, data}
+      assert data["event_type"] == "test_event"
+      assert data["key"] == "value"
+      assert data["user_id"] == 123
+    end
+
+    test "overrides event_context with event data" do
+      restart_with_config(
+        exclude_envs: [],
+        events_worker_enabled: false
+      )
+
+      event_data = %{event_type: "test_event", key: "value", user_id: 456}
+      Honeybadger.event_context(%{user_id: 123})
+      Honeybadger.event(event_data)
+
+      assert_receive {:api_request, data}
+      assert data["event_type"] == "test_event"
+      assert data["key"] == "value"
+      assert data["user_id"] == 456
     end
   end
 end
