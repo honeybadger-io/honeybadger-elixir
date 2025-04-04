@@ -88,6 +88,11 @@ defmodule Honeybadger.Utils do
     @depth_token
   end
 
+  defp sanitize_val(%DateTime{} = datetime, _), do: DateTime.to_iso8601(datetime)
+  defp sanitize_val(%NaiveDateTime{} = naive, _), do: NaiveDateTime.to_iso8601(naive)
+  defp sanitize_val(%Date{} = date, _), do: Date.to_iso8601(date)
+  defp sanitize_val(%Time{} = time, _), do: Time.to_iso8601(time)
+
   defp sanitize_val(%{__struct__: _} = struct, opts) do
     sanitize_val(Map.from_struct(struct), opts)
   end
@@ -105,7 +110,18 @@ defmodule Honeybadger.Utils do
           Map.put(acc, key, @filtered_token)
         end
       else
-        Map.put(acc, key, sanitize_val(val, Map.put(opts, :depth, depth + 1)))
+        # If the sanitized value is empty after removal, we don't want to
+        # include it in the sanitized map.
+        case sanitize_val(val, Map.put(opts, :depth, depth + 1)) do
+          v when is_map(v) and map_size(v) == 0 and v != val ->
+            acc
+
+          v when is_list(v) and length(v) == 0 and v != val ->
+            acc
+
+          v ->
+            Map.put(acc, key, v)
+        end
       end
     end)
   end
