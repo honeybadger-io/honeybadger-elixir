@@ -55,7 +55,11 @@ defmodule Honeybadger.Insights.LiveView do
         metadata,
         opts
       ) do
-    Honeybadger.RequestId.inherit_or_initialize()
+    Honeybadger.EventContext.inherit()
+
+    Honeybadger.EventContext.put_new(:request_id, fn ->
+      Honeybadger.Utils.rand_id()
+    end)
 
     if event in get_insights_config(:telemetry_events, @telemetry_events) do
       handle_event_impl(event, measurements, metadata, opts)
