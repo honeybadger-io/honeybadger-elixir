@@ -77,6 +77,103 @@ defmodule Honeybadger.Insights.EctoTest do
         refute_receive {:api_request, _}
       end)
     end
+
+    test "includes stacktrace" do
+      with_config([insights_config: %{ecto: %{include_stacktrace: true}}], fn ->
+        :telemetry.execute(
+          [:a, :b, :query],
+          %{},
+          %{
+            query: "SELECT u0.id, u0.name FROM users u0 WHERE u0.id = ?",
+            source: "users",
+            stacktrace: [
+              {Test.MockEctoConfig, :query, 1, [file: "test.ex", line: 1]}
+            ],
+            repo: %{__adapter__: Adapter.Postgres}
+          }
+        )
+
+        assert_receive {:api_request, event}
+
+        assert event["stacktrace"] == [
+                 ["test.ex:1", "Honeybadger.Insights.EctoTest.Test.MockEctoConfig.query/1"]
+               ]
+      end)
+    end
+
+    test "excludes stacktrace for other sources" do
+      with_config([insights_config: %{ecto: %{include_stacktrace: ["orders"]}}], fn ->
+        :telemetry.execute(
+          [:a, :b, :query],
+          %{},
+          %{
+            query: "SELECT u0.id, u0.name FROM users u0 WHERE u0.id = ?",
+            source: "users",
+            stacktrace: [
+              {Test.MockEctoConfig, :query, 1, [file: "test.ex", line: 1]}
+            ],
+            repo: %{__adapter__: Adapter.Postgres}
+          }
+        )
+
+        assert_receive {:api_request, event}
+        refute event["stacktrace"]
+      end)
+    end
+
+    test "includes all params" do
+      with_config([insights_config: %{ecto: %{include_params: true}}], fn ->
+        :telemetry.execute(
+          [:a, :b, :query],
+          %{},
+          %{
+            query: "SELECT u0.id, u0.name FROM users u0 WHERE u0.id = ?",
+            source: "users",
+            params: [1],
+            repo: %{__adapter__: Adapter.Postgres}
+          }
+        )
+
+        assert_receive {:api_request, event}
+        assert event["params"] == [1]
+      end)
+    end
+
+    test "includes params for specific sources" do
+      with_config([insights_config: %{ecto: %{include_params: ["users"]}}], fn ->
+        :telemetry.execute(
+          [:a, :b, :query],
+          %{},
+          %{
+            query: "SELECT u0.id, u0.name FROM users u0 WHERE u0.id = ?",
+            source: "users",
+            params: [1],
+            repo: %{__adapter__: Adapter.Postgres}
+          }
+        )
+
+        assert_receive {:api_request, event}
+        assert event["params"] == [1]
+      end)
+    end
+
+    test "excludes params for other sources" do
+      with_config([insights_config: %{ecto: %{include_params: ["orders"]}}], fn ->
+        :telemetry.execute(
+          [:a, :b, :query],
+          %{},
+          %{
+            query: "SELECT u0.id, u0.name FROM users u0 WHERE u0.id = ?",
+            source: "users",
+            params: [1],
+            repo: %{__adapter__: Adapter.Postgres}
+          }
+        )
+
+        assert_receive {:api_request, event}
+        refute event["params"]
+      end)
+    end
   end
 
   describe "obfuscate/2" do

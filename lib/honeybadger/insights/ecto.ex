@@ -27,7 +27,18 @@ defmodule Honeybadger.Insights.Ecto do
           #   config :my_app, MyApp.Repo,
           #     stacktrace: true
           #
-          include_stacktrace: true,
+          # Can be a boolean to enable for all or a list of sources to enable.
+          include_stacktrace: true
+
+          # Alternative source whitelist example:
+          # include_stacktrace: ["source_a", "source_b"],
+
+          # Format & include the query parameters with each query. Can be a
+          # boolean to enable for all or a list of sources to enable.
+          include_params: true
+
+          # Alternative source whitelist example:
+          # include_params:["source_a", "source_b"],
 
           # A list of table/source names to exclude
           excluded_sources: [
@@ -71,13 +82,42 @@ defmodule Honeybadger.Insights.Ecto do
     |> Map.take([:query, :decode_time, :query_time, :queue_time, :source])
     |> Map.update!(:query, &obfuscate(&1, meta.repo.__adapter__()))
     |> include_stacktrace(meta)
+    |> include_params(meta)
   end
 
-  defp include_stacktrace(data, %{stacktrace: stacktrace}) do
-    if get_insights_config(:include_stacktrace, false) do
-      Map.put(data, :stacktrace, format_stacktrace(stacktrace))
-    else
-      data
+  defp include_params(data, %{params: params, source: source}) do
+    case get_insights_config(:include_params, false) do
+      false ->
+        data
+
+      true ->
+        Map.put(data, :params, params)
+
+      sources when is_list(sources) ->
+        if source in sources do
+          Map.put(data, :params, params)
+        else
+          data
+        end
+    end
+  end
+
+  defp include_params(data, _), do: data
+
+  defp include_stacktrace(data, %{stacktrace: stacktrace, source: source}) do
+    case get_insights_config(:include_stacktrace, false) do
+      false ->
+        data
+
+      true ->
+        Map.put(data, :stacktrace, format_stacktrace(stacktrace))
+
+      sources when is_list(sources) ->
+        if source in sources do
+          Map.put(data, :stacktrace, format_stacktrace(stacktrace))
+        else
+          data
+        end
     end
   end
 
