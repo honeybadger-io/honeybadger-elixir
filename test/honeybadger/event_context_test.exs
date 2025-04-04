@@ -144,9 +144,10 @@ defmodule Honeybadger.EventContextTest do
       parent_context = Honeybadger.EventContext.merge(%{user_id: 123, action: "test"})
       test_pid = self()
 
-      spawn(fn ->
-        Honeybadger.EventContext.inherit()
-        send(test_pid, {:context, Honeybadger.EventContext.get()})
+      Task.async(fn ->
+        # Simulate a child process inheriting the context
+        EventContext.inherit()
+        send(test_pid, {:context, EventContext.get()})
       end)
 
       receive do

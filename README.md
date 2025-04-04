@@ -321,7 +321,7 @@ end
 
 If you know the parent process is alive and part of the process tree, you can
 use `Honeybadger.inherit_event_context/0` to inherit the context from the
-parent process.
+parent process. This method works best if you are running OTP 25+.
 
 ```elixir
 Task.async(fn ->
