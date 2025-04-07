@@ -361,9 +361,9 @@ defmodule Honeybadger do
 
   @spec event(map()) :: :ok
   def event(event_data) do
-    event_data
+    event_context()
+    |> Map.merge(event_data)
     |> Map.put_new(:ts, DateTime.utc_now(:millisecond) |> DateTime.to_iso8601())
-    |> maybe_add_request_id()
     |> event_filter()
     |> send_event()
   end
@@ -457,30 +457,49 @@ defmodule Honeybadger do
   end
 
   @doc """
-  Sets the request ID for the current process.
+  Retrieves the current event context.
   """
-  def put_request_id(request_id) do
-    Honeybadger.RequestId.put(request_id)
+  @spec event_context() :: map()
+  def event_context do
+    Honeybadger.EventContext.get()
   end
 
   @doc """
-  Retrieves the request ID for the current process.
+  Merges the given map or keyword list into the current event context.
   """
-  def get_request_id do
-    Honeybadger.RequestId.get()
+  @spec event_context(map() | keyword()) :: map()
+  def event_context(context) do
+    Honeybadger.EventContext.merge(context)
   end
 
-  @doc false
-  def clear_request_id do
-    Honeybadger.RequestId.put(nil)
+  @doc """
+  Inherits the current event context from a parent process.
+  """
+  @spec inherit_event_context() :: :already_initialized | :inherited | :not_found
+  def inherit_event_context do
+    Honeybadger.EventContext.inherit()
+  end
+
+  @doc """
+  Clears the current event context.
+  """
+  @spec clear_event_context() :: map()
+  def clear_event_context do
+    Honeybadger.EventContext.replace(%{})
   end
 
   @doc false
   def maybe_add_request_id(data) when is_map(data) do
-    case Honeybadger.RequestId.get() do
+    case Honeybadger.EventContext.get(:request_id) do
       nil -> data
       request_id -> Map.put(data, :request_id, request_id)
     end
+  end
+
+  @doc false
+  # Merges event context into the map, with the data taking precedence.
+  def merge_into_event_context(data) do
+    Map.merge(event_context(), data)
   end
 
   @doc """

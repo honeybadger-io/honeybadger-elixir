@@ -49,7 +49,7 @@ defmodule Honeybadger.Insights.Plug do
     |> get_request_id()
     |> then(fn
       nil -> :ok
-      request_id -> Honeybadger.put_request_id(request_id)
+      request_id -> Honeybadger.EventContext.put_new(:request_id, request_id)
     end)
 
     if event in get_insights_config(:telemetry_events, @telemetry_events) do

@@ -272,6 +272,77 @@ Then configure the filter in your application's configuration:
 config :honeybadger, event_filter: MyApp.EventFilter
 ```
 
+### Event Context
+
+You can add custom metadata to the events sent to Honeybadger Insights by
+using the `event_context/1` function. This metadata will be included in each
+event call within the same process.
+
+Note: This will add the metadata to all events sent, so be careful not to
+include too much data. Try to keep it to simple key/value pairs.
+
+For example, you can add user ID information to all events (via plug):
+
+```elixir
+defmodule MyAppWeb.Plug.UserContext do
+  import Plug.Conn
+
+  def init(opts), do: opts
+
+  def call(conn, _opts) do
+    user = get_session(conn, :user)
+    Honeybadger.event_context(%{user_id: user.id})
+    conn
+  end
+end
+```
+
+Event context is not automatically propagated to other processes. If you want to
+add context to events in a different process, you can use the
+`Honeybadger.event_context/0` function to get the current context and pass it
+to the `Honeybadger.event/1` function:
+
+```elixir
+defmodule MyApp.MyGenServer do
+  use GenServer
+
+  def set(value) do
+    GenServer.cast(__MODULE__, {:set, value, Honeybadger.event_context()})
+  end
+
+  def handle_cast({:set, value, hb_context}, _state) do
+    Honeybadger.event_context(hb_context)
+
+    Honeybadger.event("set_value", %{value: value})
+    {:noreply, value}
+  end
+end
+```
+
+If you know the parent process is alive and part of the process tree, you can
+use `Honeybadger.inherit_event_context/0` to inherit the context from the
+parent process. This method works best if you are running OTP 25+.
+
+```elixir
+Task.async(fn ->
+  Honeybadger.inherit_event_context()
+  # Do some work here
+  Honeybadger.event("work", %{did: "some_work"})
+end)
+```
+
+Scenarios when inheriting context is useful include:
+
+- Direct process spawning (`spawn`, `spawn_link`)
+- `Task.async/1`, `Task.await/1`, etc.
+- Other scenarios where direct parent-child relationships are maintained
+
+When explicit passing is needed:
+
+- GenServer
+- Supervised processes
+- Processes started through other OTP abstractions
+
 ## Breadcrumbs
 
 Breadcrumbs allow you to record events along a processes execution path. If

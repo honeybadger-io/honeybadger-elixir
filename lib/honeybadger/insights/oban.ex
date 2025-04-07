@@ -36,19 +36,19 @@ defmodule Honeybadger.Insights.Oban do
   ## Public API
 
   @doc """
-  Adds the current Honeybadger request ID to the job's metadata.
+  Adds the current Honeybadger event context to the Oban job's metadata.
 
   ## Example
 
       MyApp.Worker.new()
-      |> Honeybadger.Insights.Oban.add_request_id()
+      |> Honeybadger.Insights.Oban.add_event_context()
       |> Oban.insert()
   """
-  def add_request_id(changeset) do
+  def add_event_context(changeset) do
     meta =
       changeset
       |> Ecto.Changeset.get_field(:meta, %{})
-      |> Map.put("hb_request_id", Honeybadger.get_request_id())
+      |> Map.put("hb_event_context", Honeybadger.event_context())
 
     Ecto.Changeset.put_change(changeset, :meta, meta)
   end
@@ -71,11 +71,15 @@ defmodule Honeybadger.Insights.Oban do
 
   @doc false
   def handle_telemetry([:oban, :job, :start] = event, measurements, metadata, opts) do
-    if request_id = metadata.job.meta["hb_request_id"] do
-      Honeybadger.put_request_id(request_id)
+    if event_context = metadata.job.meta["hb_event_context"] do
+      Honeybadger.event_context(event_context)
     else
-      Honeybadger.RequestId.inherit_or_initialize()
+      Honeybadger.inherit_event_context()
     end
+
+    Honeybadger.EventContext.put_new(:request_id, fn ->
+      Honeybadger.Utils.rand_id()
+    end)
 
     if event in get_insights_config(:telemetry_events, @telemetry_events) do
       handle_event_impl(event, measurements, metadata, opts)
