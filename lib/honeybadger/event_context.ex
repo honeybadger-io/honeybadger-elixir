@@ -10,10 +10,9 @@ defmodule Honeybadger.EventContext do
   def merge(kw) when is_list(kw), do: merge(Map.new(kw))
 
   def merge(context) when is_map(context) do
-    new_context = Map.merge(get(), context)
-    Process.put(@key, new_context)
-
-    new_context
+    get()
+    |> Map.merge(context)
+    |> tap(&Process.put(@key, &1))
   end
 
   @doc """
@@ -35,8 +34,8 @@ defmodule Honeybadger.EventContext do
   in the current event context.
   """
   @spec put_new(atom(), (-> any()) | any()) :: map()
-  def put_new(key, f) when is_function(f, 0) do
-    new_context = Map.put_new_lazy(get(), key, f)
+  def put_new(key, fun) when is_function(fun, 0) do
+    new_context = Map.put_new_lazy(get(), key, fun)
     Process.put(@key, new_context)
     new_context
   end

@@ -334,7 +334,7 @@ end)
 Scenarios when inheriting context is useful include:
 
 - Direct process spawning (`spawn`, `spawn_link`)
-- Task.async/await
+- `Task.async/1`, `Task.await/1`, etc.
 - Other scenarios where direct parent-child relationships are maintained
 
 When explicit passing is needed:

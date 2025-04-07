@@ -361,7 +361,8 @@ defmodule Honeybadger do
 
   @spec event(map()) :: :ok
   def event(event_data) do
-    Map.merge(event_context(), event_data)
+    event_context()
+    |> Map.merge(event_data)
     |> Map.put_new(:ts, DateTime.utc_now(:millisecond) |> DateTime.to_iso8601())
     |> event_filter()
     |> send_event()
