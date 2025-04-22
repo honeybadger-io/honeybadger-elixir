@@ -165,7 +165,6 @@ defmodule Honeybadger.EventsWorker do
         %{batch: batch, attempts: attempts} = b, {acc, false} ->
           case state.send_events_fn.(batch) do
             :ok ->
-              Logger.debug("[Honeybadger] Sent batch of #{length(batch)} events.")
               {acc, false}
 
             {:error, reason} ->

@@ -261,25 +261,45 @@ defmodule Honeybadger.Client do
       response =
         case HTTPAdapter.request(:post, event_url, payload, headers, hackney_opts) do
           {:ok, %HTTPResponse{body: body, status: status}} when status in 200..399 ->
-            Logger.debug(fn -> "[Honeybadger] API success: #{inspect(body)}" end)
+            process_and_log_events_response(events, body)
             :ok
 
           {:ok, %HTTPResponse{status: status}} when status == 429 ->
-            Logger.warning("[Honeybadger] API rate limited:")
+            Logger.warning("[Honeybadger] Events API rate limited")
             {:error, :throttled}
 
           {:ok, %HTTPResponse{status: status}} when status in 400..599 ->
-            Logger.warning("[Honeybadger] API failure")
+            Logger.warning("[Honeybadger] Events API failure with status: #{status}")
             {:error, :api_error}
 
           {:error, reason} ->
-            Logger.warning(fn -> "[Honeybadger] connection error: #{inspect(reason)}" end)
+            Logger.warning(fn -> "[Honeybadger] Events connection error: #{inspect(reason)}" end)
             {:error, :connection_error}
         end
 
       {:reply, response, state}
     end
   end
+
+  defp process_and_log_events_response(events, %{"errors" => true, "events" => res_events}) do
+    Logger.debug("[Honeybadger] Events API (#{length(events)} events sent) with errors:")
+
+    res_events
+    |> Enum.with_index()
+    |> Enum.each(fn {%{"status" => status}, index} when status != 200 ->
+      event_str = events |> Enum.at(index) |> inspect()
+
+      Logger.warning(fn ->
+        "[Honeybadger] Event error: #{status}\nEvent: #{event_str}"
+      end)
+    end)
+  end
+
+  defp process_and_log_events_response(events, %{"errors" => false}) do
+    Logger.debug("[Honeybadger] Events API success (#{length(events)} events sent)")
+  end
+
+  defp process_and_log_events_response(_, _), do: nil
 
   # API Integration
 
