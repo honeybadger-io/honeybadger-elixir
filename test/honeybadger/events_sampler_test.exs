@@ -23,7 +23,7 @@ defmodule Honeybadger.EventsSamplerTest do
 
   test "samples for hashed values" do
     with_config([insights_sample_rate: 0.5], fn ->
-      {:ok, sampler} = start_sampler(sampled_log_interval: 200)
+      {:ok, sampler} = start_sampler(sampled_log_interval: 100)
 
       log =
         capture_log(fn ->
@@ -38,7 +38,7 @@ defmodule Honeybadger.EventsSamplerTest do
 
   test "samples for nil hash values" do
     with_config([insights_sample_rate: 0.5], fn ->
-      {:ok, sampler} = start_sampler(sampled_log_interval: 200)
+      {:ok, sampler} = start_sampler(sampled_log_interval: 100)
 
       log =
         capture_log(fn ->

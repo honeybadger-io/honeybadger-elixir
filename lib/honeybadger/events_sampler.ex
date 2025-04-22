@@ -44,14 +44,9 @@ defmodule Honeybadger.EventsSampler do
   @impl true
   def handle_call({:sample?, hash_value}, _from, state) do
     decision = do_sample?(hash_value, state.sample_rate)
-
-    state =
-      if decision do
-        update_in(state, [:sample_count], &(&1 + 1))
-      else
-        update_in(state, [:ignore_count], &(&1 + 1))
-      end
-
+    # Increment the count of sampled or ignored events
+    count_key = if decision, do: :sample_count, else: :ignore_count
+    state = update_in(state, [count_key], &(&1 + 1))
     {:reply, decision, state}
   end
 
