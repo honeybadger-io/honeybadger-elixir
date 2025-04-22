@@ -171,7 +171,7 @@ defmodule Honeybadger do
 
   require Logger
 
-  alias Honeybadger.{Client, Notice, EventsWorker}
+  alias Honeybadger.{Client, Notice, EventsWorker, EventsSampler}
   alias Honeybadger.Breadcrumbs.{Collector, Breadcrumb}
 
   @type notify_options ::
@@ -221,7 +221,7 @@ defmodule Honeybadger do
       |> Enum.each(& &1.attach())
     end
 
-    children = [{Client, [config]}, EventsWorker]
+    children = [{Client, [config]}, EventsWorker, EventsSampler]
 
     Supervisor.start_link(children, strategy: :one_for_one)
   end
@@ -363,7 +363,8 @@ defmodule Honeybadger do
   def event(event_data) do
     event_context()
     |> Map.merge(event_data)
-    |> Map.put_new(:ts, DateTime.utc_now(:millisecond) |> DateTime.to_iso8601())
+    |> maybe_sample()
+    |> put_ts()
     |> event_filter()
     |> send_event()
   end
@@ -378,11 +379,27 @@ defmodule Honeybadger do
     end
   end
 
+  defp event_filter(nil), do: nil
+
   defp event_filter(map) do
     if get_env(:event_filter) do
       get_env(:event_filter).filter_event(map)
     else
       map
+    end
+  end
+
+  defp put_ts(nil), do: nil
+
+  defp put_ts(data) do
+    Map.put_new(data, :ts, DateTime.utc_now(:millisecond) |> DateTime.to_iso8601())
+  end
+
+  defp maybe_sample(data) do
+    if EventsSampler.sample?(data[:request_id]) do
+      data
+    else
+      nil
     end
   end
 

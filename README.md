@@ -343,6 +343,25 @@ When explicit passing is needed:
 - Supervised processes
 - Processes started through other OTP abstractions
 
+### Event Sampling
+
+You can enable event sampling to reduce the number of events sent to
+Honeybadger. This is especially useful if you are hitting your daily event
+quota limit:
+
+```elixir
+config :honeybadger,
+  # Sample 50% of events
+  insights_sample_rate: 0.5
+```
+
+The `insights_sample_rate` option accepts a float between 0.0 and 1.0, where
+0.0 means no events will be sent and 1.0 means all events will be sent. The
+default value is 1.0.
+
+Events are sampled by hashing the request_id if available in the event payload,
+otherwise random sampling is used.
+
 ## Breadcrumbs
 
 Breadcrumbs allow you to record events along a processes execution path. If

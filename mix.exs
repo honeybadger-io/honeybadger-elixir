@@ -84,6 +84,7 @@ defmodule Honeybadger.Mixfile do
 
         # Insights
         insights_enabled: false,
+        insights_sample_rate: 1.0,
         insights_config: %{},
 
         # Events
