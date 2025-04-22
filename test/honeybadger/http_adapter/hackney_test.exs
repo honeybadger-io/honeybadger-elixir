@@ -84,6 +84,17 @@ defmodule Honeybadger.HTTPAdapter.HackneyTest do
              Hackney.decode_response_body(
                %HTTPResponse{
                  body: @json_encoded_body,
+                 headers: [{"Content-Type", "application/json"}]
+               },
+               []
+             )
+
+    assert response.body == @body
+
+    assert {:ok, response} =
+             Hackney.decode_response_body(
+               %HTTPResponse{
+                 body: @json_encoded_body,
                  headers: [{"content-type", "text/javascript"}]
                },
                []

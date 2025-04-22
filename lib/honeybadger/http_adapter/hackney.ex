@@ -33,14 +33,23 @@ defmodule Honeybadger.HTTPAdapter.Hackney do
   end
 
   defp decode(headers, body, opts) when is_binary(body) do
-    case List.keyfind(headers, "content-type", 0) do
-      {"content-type", "application/json" <> _rest} ->
+    content_type =
+      headers
+      |> Enum.find_value(fn {k, v} ->
+        if String.downcase(k) == "content-type", do: String.downcase(v)
+      end)
+
+    case content_type do
+      nil ->
+        {:ok, body}
+
+      "application/json" <> _rest ->
         Jason.decode(body, opts)
 
-      {"content-type", "text/javascript" <> _rest} ->
+      "text/javascript" <> _rest ->
         Jason.decode(body, opts)
 
-      {"content-type", "application/x-www-form-urlencoded" <> _rest} ->
+      "application/x-www-form-urlencoded" <> _rest ->
         {:ok, URI.decode_query(body)}
 
       _any ->
