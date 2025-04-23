@@ -12,17 +12,17 @@ defmodule Honeybadger.EventsSamplerTest do
     EventsSampler.start_link(config ++ [name: name])
   end
 
-  test "start_link returns :ignore if rate is 1.0" do
+  test "start_link returns :ignore if rate is 100" do
     assert :ignore == start_sampler()
   end
 
-  test "returns true immediately if sample rate is 1" do
+  test "returns true immediately if sample rate is 100" do
     assert EventsSampler.sample?(:foo, nil)
     assert EventsSampler.sample?(nil, nil)
   end
 
   test "samples for hashed values" do
-    with_config([insights_sample_rate: 0.5], fn ->
+    with_config([insights_sample_rate: 50], fn ->
       {:ok, sampler} = start_sampler(sampled_log_interval: 100)
 
       log =
@@ -37,7 +37,7 @@ defmodule Honeybadger.EventsSamplerTest do
   end
 
   test "samples for nil hash values" do
-    with_config([insights_sample_rate: 0.5], fn ->
+    with_config([insights_sample_rate: 50], fn ->
       {:ok, sampler} = start_sampler(sampled_log_interval: 100)
 
       log =

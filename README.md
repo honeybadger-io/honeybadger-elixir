@@ -352,12 +352,12 @@ quota limit:
 ```elixir
 config :honeybadger,
   # Sample 50% of events
-  insights_sample_rate: 0.5
+  insights_sample_rate: 50
 ```
 
-The `insights_sample_rate` option accepts a float between 0.0 and 1.0, where
-0.0 means no events will be sent and 1.0 means all events will be sent. The
-default value is 1.0.
+The `insights_sample_rate` option accepts a whole percentage value between 0
+and 100, where 0 means no events will be sent and 100 means all events will be
+sent. The default is no sampling (100%).
 
 Events are sampled by hashing the request_id if available in the event payload,
 otherwise random sampling is used.

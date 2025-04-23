@@ -7,9 +7,10 @@ defmodule Honeybadger.EventsSampler do
   # Every 5 minutes, we log the number of sampled events
   @sampled_log_interval 5 * 60 * 1000
   @hash_max 1_000_000
+  @fully_sampled_rate 100
 
   def start_link(opts \\ []) do
-    if Honeybadger.get_env(:insights_sample_rate) == 1 do
+    if Honeybadger.get_env(:insights_sample_rate) == @fully_sampled_rate do
       :ignore
     else
       {name, opts} = Keyword.pop(opts, :name, __MODULE__)
@@ -34,7 +35,7 @@ defmodule Honeybadger.EventsSampler do
   end
 
   def sample?(hash_value \\ nil, server \\ __MODULE__) do
-    if Honeybadger.get_env(:insights_sample_rate) == 1 do
+    if Honeybadger.get_env(:insights_sample_rate) == @fully_sampled_rate do
       true
     else
       GenServer.call(server, {:sample?, hash_value})
@@ -65,12 +66,12 @@ defmodule Honeybadger.EventsSampler do
 
   # Use random sampling when no hash value is provided
   defp do_sample?(nil, sample_rate) do
-    :rand.uniform() < sample_rate
+    :rand.uniform() * @fully_sampled_rate < sample_rate
   end
 
   # Use hash sampling when a hash value is provided
   defp do_sample?(hash_value, sample_rate) when is_binary(hash_value) or is_atom(hash_value) do
-    :erlang.phash2(hash_value, @hash_max) / @hash_max < sample_rate
+    :erlang.phash2(hash_value, @hash_max) / @hash_max * @fully_sampled_rate < sample_rate
   end
 
   defp schedule_report(interval) do
