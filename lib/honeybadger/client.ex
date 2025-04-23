@@ -284,14 +284,14 @@ defmodule Honeybadger.Client do
   defp process_and_log_events_response(events, %{"errors" => true, "events" => res_events}) do
     Logger.debug("[Honeybadger] Events API (#{length(events)} events sent) with errors:")
 
-    res_events
-    |> Enum.with_index()
-    |> Enum.each(fn {%{"status" => status}, index} when status != 200 ->
-      event_str = events |> Enum.at(index) |> inspect()
-
-      Logger.warning(fn ->
-        "[Honeybadger] Event error: #{status}\nEvent: #{event_str}"
-      end)
+    events
+    |> Enum.zip(res_events)
+    |> Enum.each(fn {event, %{"status" => status}} ->
+      if status != 200 && status != 201 do
+        Logger.warning(fn ->
+          "[Honeybadger] Event error: #{status}\nEvent: #{inspect(event)}"
+        end)
+      end
     end)
   end
 
