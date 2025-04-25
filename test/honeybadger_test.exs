@@ -572,5 +572,42 @@ defmodule HoneybadgerTest do
       assert data["key"] == "value"
       assert data["user_id"] == 456
     end
+
+    test "samples with custom rate" do
+      restart_with_config(
+        exclude_envs: [],
+        events_worker_enabled: false,
+        insights_sample_rate: 100
+      )
+
+      Honeybadger.event(%{event_type: "test_event", key: "value", _hb: %{sample_rate: 0}})
+
+      refute_receive {:api_request, _data}
+    end
+
+    test "samples with custom overriding global lower rate" do
+      restart_with_config(
+        exclude_envs: [],
+        events_worker_enabled: false,
+        insights_sample_rate: 0
+      )
+
+      Honeybadger.event(%{event_type: "test_event", key: "value", _hb: %{sample_rate: 100}})
+
+      assert_receive {:api_request, _data}
+    end
+
+    test "samples with custom rate in context" do
+      restart_with_config(
+        exclude_envs: [],
+        events_worker_enabled: false,
+        insights_sample_rate: 100
+      )
+
+      Honeybadger.event_context(%{_hb: %{sample_rate: 0}})
+      Honeybadger.event(%{event_type: "test_event", key: "value"})
+
+      refute_receive {:api_request, _data}
+    end
   end
 end

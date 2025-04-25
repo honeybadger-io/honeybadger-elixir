@@ -363,9 +363,10 @@ defmodule Honeybadger do
   def event(event_data) do
     event_context()
     |> Map.merge(event_data)
-    |> maybe_sample()
-    |> put_ts()
+    |> Map.put_new(:ts, DateTime.utc_now(:millisecond) |> DateTime.to_iso8601())
     |> event_filter()
+    |> maybe_sample()
+    |> maybe_strip_metadata()
     |> send_event()
   end
 
@@ -379,8 +380,6 @@ defmodule Honeybadger do
     end
   end
 
-  defp event_filter(nil), do: nil
-
   defp event_filter(map) do
     if get_env(:event_filter) do
       get_env(:event_filter).filter_event(map)
@@ -389,18 +388,19 @@ defmodule Honeybadger do
     end
   end
 
-  defp put_ts(nil), do: nil
+  defp maybe_strip_metadata(nil), do: nil
+  defp maybe_strip_metadata(data), do: Map.drop(data, [:_hb])
 
-  defp put_ts(data) do
-    Map.put_new(data, :ts, DateTime.utc_now(:millisecond) |> DateTime.to_iso8601())
-  end
+  defp maybe_sample(nil), do: nil
 
   defp maybe_sample(data) do
-    if EventsSampler.sample?(data[:request_id]) do
-      data
-    else
-      nil
-    end
+    sampled? =
+      EventsSampler.sample?(
+        hash_value: data[:request_id],
+        sample_rate: get_in(data, [:_hb, :sample_rate])
+      )
+
+    if sampled?, do: data, else: nil
   end
 
   @doc """
