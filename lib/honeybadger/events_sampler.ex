@@ -31,11 +31,11 @@ defmodule Honeybadger.EventsSampler do
   end
 
   @doc """
-  Determines if an event should be sampled based on its hash value.
+  Determines if an event should be sampled
 
   ## Options
     * `:sample_rate` - Override the default sample rate from the server state
-    * `:hash_value` - The hash value to use for sampling. If not provided, a random value is used.
+    * `:hash_value` - The hash value to use for sampling. If not provided, random sampling is used.
     * `:server` - Specify the GenServer to use (default: `__MODULE__`)
 
   ## Examples
