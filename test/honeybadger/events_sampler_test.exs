@@ -54,6 +54,14 @@ defmodule Honeybadger.EventsSamplerTest do
     end)
   end
 
+  test "handles nil sample_rate" do
+    with_config([insights_sample_rate: 0], fn ->
+      {:ok, sampler} = start_sampler()
+      refute EventsSampler.sample?(sample_rate: nil, server: sampler)
+      refute EventsSampler.sample?(hash_value: "asdf", sample_rate: nil, server: sampler)
+    end)
+  end
+
   test "respects custom sample rate in opts" do
     with_config([insights_sample_rate: 50], fn ->
       {:ok, sampler} = start_sampler()

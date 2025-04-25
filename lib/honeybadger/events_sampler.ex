@@ -50,7 +50,9 @@ defmodule Honeybadger.EventsSampler do
   """
   @spec sample?(Keyword.t()) :: boolean()
   def sample?(opts \\ []) do
-    server = Keyword.get(opts, :server, __MODULE__)
+    {server, opts} = Keyword.pop(opts, :server, __MODULE__)
+    # Remove nil values from options
+    opts = Keyword.filter(opts, fn {_k, v} -> not is_nil(v) end)
 
     if sampling_at_full_rate?(opts) do
       true
