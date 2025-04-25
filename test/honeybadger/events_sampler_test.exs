@@ -31,7 +31,7 @@ defmodule Honeybadger.EventsSamplerTest do
         capture_log(fn ->
           EventsSampler.sample?(hash_value: "trace-1", server: sampler)
           EventsSampler.sample?(hash_value: "trace-2", server: sampler)
-          Process.sleep(500)
+          Process.sleep(1000)
         end)
 
       assert log =~ ~r/\[Honeybadger\] Sampled \d events \(of 2 total events\)/
@@ -47,7 +47,7 @@ defmodule Honeybadger.EventsSamplerTest do
           EventsSampler.sample?(server: sampler)
           EventsSampler.sample?(server: sampler)
           EventsSampler.sample?(server: sampler)
-          Process.sleep(500)
+          Process.sleep(1000)
         end)
 
       assert log =~ ~r/\[Honeybadger\] Sampled \d events \(of 3 total events\)/
