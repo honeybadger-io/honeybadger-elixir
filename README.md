@@ -359,8 +359,50 @@ The `insights_sample_rate` option accepts a whole percentage value between 0
 and 100, where 0 means no events will be sent and 100 means all events will be
 sent. The default is no sampling (100%).
 
-Events are sampled by hashing the request_id if available in the event payload,
-otherwise random sampling is used.
+Events are sampled by hashing the `request_id` if available in the event payload,
+otherwise random sampling is used. This deterministic approach ensures that
+related events from the same request are consistently sampled together.
+
+The sample rate is applied to all events sent to Honeybadger Insights, including
+automatic instrumentation events. You can also set the sample rate per event
+by adding the `sample_rate` key to the event metadata map:
+
+```elixir
+Honeybadger.event("user_created", %{
+  user_id: user.id,
+  _hb: %{sample_rate: 100}
+})
+```
+
+The event sample rate can also be set within the `event_context/1` function.
+This can be handy if you want to set an overall sample rate for a process or
+ensure that specific instrumented events get sent:
+
+```elixir
+# Set a higher sampling rate for this entire process
+Honeybadger.event_context(%{_hb: %{sample_rate: 100}})
+
+# Now all events from this process, including automatic instrumentation,
+# will use the 100% sample rate
+Ecto.Repo.insert!(%MyApp.User{}) # This instrumented event will be sent
+```
+
+Remember that context is process-bound and applies to all events sent from the
+same process after the `event_context/1` call, until it's changed or the process
+terminates.
+
+When setting sample rates below the global setting, be aware that this affects
+how events with the same `request_id` are sampled. Since sampling is
+deterministic based on the `request_id` hash, all events sharing the same
+`request_id` will either all be sampled or all be skipped together. This
+ensures consistency across related events.
+
+With that in mind, it's recommended to default to the global sample rate and
+use per-event sampling for specific cases where you want to ensure events are
+sent regardless of the global setting, or you are setting the sample rate in
+the context where all events with the same `request_id` will also share the
+same sampling rate.
+
 
 ## Breadcrumbs
 

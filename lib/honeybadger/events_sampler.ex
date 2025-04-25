@@ -10,12 +10,8 @@ defmodule Honeybadger.EventsSampler do
   @fully_sampled_rate 100
 
   def start_link(opts \\ []) do
-    if Honeybadger.get_env(:insights_sample_rate) == @fully_sampled_rate do
-      :ignore
-    else
-      {name, opts} = Keyword.pop(opts, :name, __MODULE__)
-      GenServer.start_link(__MODULE__, opts, name: name)
-    end
+    {name, opts} = Keyword.pop(opts, :name, __MODULE__)
+    GenServer.start_link(__MODULE__, opts, name: name)
   end
 
   @impl true
@@ -34,17 +30,45 @@ defmodule Honeybadger.EventsSampler do
     {:ok, state}
   end
 
-  def sample?(hash_value \\ nil, server \\ __MODULE__) do
-    if Honeybadger.get_env(:insights_sample_rate) == @fully_sampled_rate do
+  @doc """
+  Determines if an event should be sampled
+
+  ## Options
+    * `:sample_rate` - Override the default sample rate from the server state
+    * `:hash_value` - The hash value to use for sampling. If not provided, random sampling is used.
+    * `:server` - Specify the GenServer to use (default: `__MODULE__`)
+
+  ## Examples
+      iex> Sampler.sample?()
+      true
+
+      iex> Sampler.sample?(sample_rate: 1)
+      false
+
+      iex> Sampler.sample?(hash_value: "abc-123")
+      false
+  """
+  @spec sample?(Keyword.t()) :: boolean()
+  def sample?(opts \\ []) do
+    {server, opts} = Keyword.pop(opts, :server, __MODULE__)
+    # Remove nil values from options
+    opts = Keyword.filter(opts, fn {_k, v} -> not is_nil(v) end)
+
+    if sampling_at_full_rate?(opts) do
       true
     else
-      GenServer.call(server, {:sample?, hash_value})
+      GenServer.call(server, {:sample?, opts})
     end
   end
 
   @impl true
-  def handle_call({:sample?, hash_value}, _from, state) do
-    decision = do_sample?(hash_value, state.sample_rate)
+  def handle_call({:sample?, opts}, _from, state) do
+    decision =
+      do_sample?(
+        Keyword.get(opts, :hash_value),
+        Keyword.get(opts, :sample_rate, state.sample_rate)
+      )
+
     # Increment the count of sampled or ignored events
     count_key = if decision, do: :sample_count, else: :ignore_count
     state = update_in(state, [count_key], &(&1 + 1))
@@ -62,6 +86,11 @@ defmodule Honeybadger.EventsSampler do
     schedule_report(state.sampled_log_interval)
 
     {:noreply, %{state | sample_count: 0, ignore_count: 0}}
+  end
+
+  defp sampling_at_full_rate?(opts) when is_list(opts) do
+    sample_rate = Keyword.get(opts, :sample_rate, Honeybadger.get_env(:insights_sample_rate))
+    sample_rate == @fully_sampled_rate
   end
 
   # Use random sampling when no hash value is provided

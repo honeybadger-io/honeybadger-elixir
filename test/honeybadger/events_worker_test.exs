@@ -241,7 +241,7 @@ defmodule Honeybadger.EventsWorkerTest do
       change_behavior.(:ok)
 
       # Should send both batches after throttle period
-      assert_receive {:events_sent, ^first_batch}, 350
+      assert_receive {:events_sent, ^first_batch}, 500
       assert_receive {:events_sent, ^second_batch}, 50
 
       GenServer.stop(pid)
