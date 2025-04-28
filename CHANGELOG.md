@@ -8,7 +8,21 @@ adheres to [Semantic Versioning](http://semver.org/).
 
 ## 0.24.0 - 2025-04-28
 
-Insights instrumentation
+This release focuses on comprehensive Insights instrumentation enhancements, featuring automatic instrumentation for the most popular libraries, event batching, configurable sampling rates, and event context tracking for improved performance monitoring.
+
+### Added
+- Added Insights instrumentation for detailed monitoring (#591)
+- Added Insights event batching for optimized performance (#578)
+- Added event sampling capabilities with configurable sample rates (#613, #608)
+- Added `Honeybadger.EventContext` for enhanced context tracking (#606)
+- Added `event_filter/1` function for custom event filtering (#602)
+- Added Request ID to Insights events and notices (#597)
+- Added support for Ecto params with source whitelisting (#605)
+
+### Changed
+- Revised event logging system for better performance (#609)
+- Upgraded to microsecond precision for measurements (#603)
+- Enhanced sanitizer functionality (#604)
 
 
 ## 0.23.0 - 2025-03-18
@@ -23,7 +37,7 @@ Bugfix for Elixir 1.17
 
 ## 0.22.0 - 2024-08-29
 
-### Added 
+### Added
 - Add Honeybadger.event to send events to Insights
 
 
