@@ -6,6 +6,11 @@ adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- %% CHANGELOG_ENTRIES %% -->
 
+## 0.24.1 - 2025-07-02
+
+Bug fix for OTP 28: Move regex constants to functions (#635)
+
+
 ## 0.24.0 - 2025-04-28
 
 This release focuses on comprehensive Insights instrumentation enhancements, featuring automatic instrumentation for the most popular libraries, event batching, configurable sampling rates, and event context tracking for improved performance monitoring.
