@@ -58,13 +58,6 @@ defmodule Honeybadger.Insights.Ecto do
   @required_dependencies [Ecto.Repo]
   @telemetry_events []
 
-  @excluded_queries [
-    ~r/^(begin|commit)( immediate)?( transaction)?$/i,
-    # Also exclude pg_notify which is often used with Oban
-    ~r/SELECT pg_notify/,
-    ~r/schema_migrations/
-  ]
-
   @excluded_sources [
     "schema_migrations",
     "oban_jobs",
@@ -143,7 +136,7 @@ defmodule Honeybadger.Insights.Ecto do
       true
     else
       :excluded_queries
-      |> get_insights_config(@excluded_queries)
+      |> get_insights_config(excluded_queries())
       |> Enum.any?(fn
         pattern when is_binary(pattern) -> query == pattern
         %Regex{} = pattern -> Regex.match?(pattern, query)
@@ -156,27 +149,35 @@ defmodule Honeybadger.Insights.Ecto do
     Keyword.get(repo.config(), :telemetry_prefix, []) ++ [:query]
   end
 
-  @escape_quotes ~r/(\\\"|\\')/
-  @squote_data ~r/'(?:[^']|'')*'/
-  @dquote_data ~r/"(?:[^"]|"")*"/
-  @number_data ~r/\b\d+\b/
-  @double_quoters ~r/(postgres|sqlite3|postgis)/i
+  defp escape_quotes(), do: ~r/(\\\"|\\')/
+  defp squote_data(), do: ~r/'(?:[^']|'')*'/
+  defp dquote_data(), do: ~r/"(?:[^"]|"")*"/
+  defp number_data(), do: ~r/\b\d+\b/
+  defp double_quoters(), do: ~r/(postgres|sqlite3|postgis)/i
+
+  defp excluded_queries(),
+    do: [
+      ~r/^(begin|commit)( immediate)?( transaction)?$/i,
+      # Also exclude pg_notify which is often used with Oban
+      ~r/SELECT pg_notify/,
+      ~r/schema_migrations/
+    ]
 
   def obfuscate(sql, adapter) when is_binary(sql) do
     sql
     |> String.replace(~r/\s+/, " ")
-    |> String.replace(@escape_quotes, "")
-    |> String.replace(@squote_data, "'?'")
+    |> String.replace(escape_quotes(), "")
+    |> String.replace(squote_data(), "'?'")
     |> maybe_replace_dquote(adapter)
-    |> String.replace(@number_data, "?")
+    |> String.replace(number_data(), "?")
     |> String.trim()
   end
 
   defp maybe_replace_dquote(sql, adapter) do
-    if Regex.match?(@double_quoters, to_string(adapter)) do
+    if Regex.match?(double_quoters(), to_string(adapter)) do
       sql
     else
-      String.replace(sql, @dquote_data, "\"?\"")
+      String.replace(sql, dquote_data(), "\"?\"")
     end
   end
 end
