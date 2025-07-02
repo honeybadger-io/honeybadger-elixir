@@ -155,12 +155,13 @@ defmodule Honeybadger.Insights.Ecto do
   defp number_data(), do: ~r/\b\d+\b/
   defp double_quoters(), do: ~r/(postgres|sqlite3|postgis)/i
 
-  defp excluded_queries(), do: [
-    ~r/^(begin|commit)( immediate)?( transaction)?$/i,
-    # Also exclude pg_notify which is often used with Oban
-    ~r/SELECT pg_notify/,
-    ~r/schema_migrations/
-  ]
+  defp excluded_queries(),
+    do: [
+      ~r/^(begin|commit)( immediate)?( transaction)?$/i,
+      # Also exclude pg_notify which is often used with Oban
+      ~r/SELECT pg_notify/,
+      ~r/schema_migrations/
+    ]
 
   def obfuscate(sql, adapter) when is_binary(sql) do
     sql
