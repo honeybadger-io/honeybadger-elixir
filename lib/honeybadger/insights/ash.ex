@@ -64,7 +64,6 @@ defmodule Honeybadger.Insights.Ash do
 
   @required_dependencies [Ash]
   @telemetry_events []
-  require IEx
 
   def get_telemetry_events do
     custom_events = get_insights_config(:telemetry_events, [])
@@ -133,13 +132,11 @@ defmodule Honeybadger.Insights.Ash do
   end
 
   def extract_metadata(meta, _event) do
-    IEx.pry()
-    # %{
-    #   resource_short_name: Map.get(meta, :resource_short_name),
-    #   action: Map.get(meta, :action),
-    #   system_time: nil
-    # }
-    meta
+    %{
+      resource_short_name: Map.get(meta, :resource_short_name),
+      action: Map.get(meta, :action),
+      system_time: nil
+    }
   end
 
   defmodule AshOban do
