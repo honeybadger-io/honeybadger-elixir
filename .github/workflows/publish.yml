@@ -8,6 +8,11 @@ permissions:
   contents: write
   issues: write
   pull-requests: write
+  repository-projects: read # this is required by release-please-action to set the auto-release tags
+
+# Note for release-please-action: 
+# The action will set the auto-release tags for the release PR. If these tags do not already exist, the action will fail to create them.
+# Therefore, make sure that the tags are created in the repository before running the release workflow: `autorelease: pending`, `autorelease: tagged`
 
 jobs:
   ci:
