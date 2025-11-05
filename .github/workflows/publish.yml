@@ -24,25 +24,24 @@ jobs:
     needs: [ci]
     steps:
       - uses: googleapis/release-please-action@v4
+        id: release
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           release-type: elixir
 
-  publish-hex:
-    name: Publish to hex.pm
-    runs-on: ubuntu-latest
-    needs: [release-please]
-    if: ${{ needs.release-please.outputs.release_created }}
-    steps:
+      # The logic below handles Hex.pm publishing.
       - uses: actions/checkout@v5
+        if: ${{ steps.release.outputs.release_created }}
 
       - name: Set up Elixir
+        if: ${{ steps.release.outputs.release_created }}
         uses: erlef/setup-beam@v1
         with:
           elixir-version: '1.15'
           otp-version: '26'
 
       - name: Restore dependencies cache
+        if: ${{ steps.release.outputs.release_created }}
         uses: actions/cache@v4
         with:
           path: deps
@@ -50,11 +49,11 @@ jobs:
           restore-keys: ${{ runner.os }}-publish-mix-
 
       - name: Install dependencies
+        if: ${{ steps.release.outputs.release_created }}
         run: mix deps.get
 
       - name: Publish to Hex.pm
+        if: ${{ steps.release.outputs.release_created }}
         run: mix hex.publish --yes
         env:
           HEX_API_KEY: ${{ secrets.HEX_API_KEY }}
-
-
