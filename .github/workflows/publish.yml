@@ -1,62 +1,59 @@
 name: Publish New Release
 on:
-  workflow_dispatch:
-    inputs:
-      version:
-        type: choice
-        description: What version to publish?
-        options:
-          - patch
-          - minor
-          - major
-      changes:
-        description: Specify an entry for the changelog
-        required: true
+  push:
+    branches:
+      - master
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+  repository-projects: read # this is required by release-please-action to set the auto-release tags
+
+# Note for release-please-action: 
+# The action will set the auto-release tags for the release PR. If these tags do not already exist, the action will fail to create them.
+# Therefore, make sure that the tags are created in the repository before running the release workflow: `autorelease: pending`, `autorelease: tagged`
 
 jobs:
   ci:
     uses: ./.github/workflows/elixir.yml
     secrets: inherit
 
-  publish:
+  release-please:
+    runs-on: ubuntu-latest
     needs: [ci]
-    name: Build and publish to hex.pm
-    runs-on: ubuntu-22.04
-    env:
-      HEX_API_KEY: ${{ secrets.HEX_API_KEY }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v5
+      - uses: googleapis/release-please-action@v4
+        id: release
         with:
-          token: ${{ secrets.GH_PUBLISH_PAT }}
-          fetch-depth: 0
-          ref: master
+          token: ${{ secrets.GITHUB_TOKEN }}
+          release-type: elixir
 
-      - name: Git Config
-        run: |
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git config --global user.name "github-actions[bot]"
+      # The logic below handles Hex.pm publishing.
+      - uses: actions/checkout@v5
+        if: ${{ steps.release.outputs.release_created }}
 
-      - name: Setup Elixir
-        uses: erlef/setup-elixir@v1
+      - name: Set up Elixir
+        if: ${{ steps.release.outputs.release_created }}
+        uses: erlef/setup-beam@v1
         with:
-          otp-version: '24.3'
           elixir-version: '1.15'
+          otp-version: '26'
 
       - name: Restore dependencies cache
+        if: ${{ steps.release.outputs.release_created }}
         uses: actions/cache@v4
         with:
           path: deps
           key: ${{ runner.os }}-publish-mix-${{ hashFiles('**/mix.lock') }}
           restore-keys: ${{ runner.os }}-publish-mix-
 
-      - name: Install deps
+      - name: Install dependencies
+        if: ${{ steps.release.outputs.release_created }}
         run: mix deps.get
 
-      - name: Add changelog entry
-        run: echo "${{ inputs.changes }}" > RELEASE.md
-
-      - name: Bump version, generate changelog, push to git, publish on hex.pm
-        run: mix expublish.${{ inputs.version }} --disable-test
-
-
+      - name: Publish to Hex.pm
+        if: ${{ steps.release.outputs.release_created }}
+        run: mix hex.publish --yes
+        env:
+          HEX_API_KEY: ${{ secrets.HEX_API_KEY }}
