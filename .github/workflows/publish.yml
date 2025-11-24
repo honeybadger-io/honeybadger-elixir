@@ -30,7 +30,7 @@ jobs:
           release-type: elixir
 
       # The logic below handles Hex.pm publishing.
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         if: ${{ steps.release.outputs.release_created }}
 
       - name: Set up Elixir
