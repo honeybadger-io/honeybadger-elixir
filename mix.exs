@@ -108,7 +108,7 @@ defmodule Honeybadger.Mixfile do
       {:ecto, ">= 2.0.0", optional: true},
       {:phoenix, ">= 1.0.0 and < 2.0.0", optional: true},
       {:telemetry, "~> 0.4 or ~> 1.0"},
-      {:process_tree, "~> 0.2.1"},
+      {:process_tree, "~> 0.3.0"},
 
       # Dev dependencies
       {:ex_doc, ">= 0.0.0", only: :dev, runtime: false},
