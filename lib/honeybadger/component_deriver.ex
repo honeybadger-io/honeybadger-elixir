@@ -25,13 +25,15 @@ defmodule Honeybadger.ComponentDeriver do
   You can customize which modules are skipped:
 
       config :honeybadger,
-        component_deriver_skip_modules: [
+        component_deriver_skip_patterns: [
           Ecto.Repo,
           Ecto.Changeset,
-          MyApp.CustomInfraModule
+          MyApp.CustomInfraModule,
+          ~r/^MyApp\\.Internal/
         ]
 
-  The default skip list includes common Ecto and database-related modules.
+  Patterns can be module atoms, strings, or regexes. The default skip list
+  includes common Ecto and database-related modules.
   """
 
   alias Honeybadger.Utils
