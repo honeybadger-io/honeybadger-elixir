@@ -101,7 +101,7 @@ defmodule Honeybadger.Mixfile do
 
   defp deps do
     [
-      {:hackney, "~> 1.1", optional: true},
+      {:hackney, "~> 2.0", optional: true},
       {:req, "~> 0.5.0", optional: true},
       {:jason, "~> 1.0"},
       {:plug, ">= 1.0.0 and < 2.0.0", optional: true},
