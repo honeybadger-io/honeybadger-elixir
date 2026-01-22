@@ -38,24 +38,6 @@ defmodule Honeybadger.ComponentDeriver do
 
   alias Honeybadger.Utils
 
-  @default_skip_patterns [
-    # Ecto infrastructure - these appear in most DB error stacktraces
-    ~r/^Ecto\.Repo/,
-    ~r/^Ecto\.Changeset/,
-    ~r/^Ecto\.Adapters/,
-    ~r/^Ecto\.Multi/,
-    ~r/^Ecto\.Query/,
-    # Database drivers
-    ~r/^Postgrex/,
-    ~r/^Mariaex/,
-    ~r/^MyXQL/,
-    ~r/^Exqlite/,
-    ~r/^DBConnection/,
-    # Telemetry
-    ~r/^Telemetry/,
-    ~r/^:telemetry/
-  ]
-
   @doc """
   Derives a component name from a stacktrace.
 
@@ -104,7 +86,27 @@ defmodule Honeybadger.ComponentDeriver do
       Application.get_env(:honeybadger, :component_deriver_skip_patterns, [])
       |> Enum.map(&pattern_to_regex/1)
 
-    @default_skip_patterns ++ user_patterns
+    default_skip_patterns() ++ user_patterns
+  end
+
+  defp default_skip_patterns do
+    [
+      # Ecto infrastructure - these appear in most DB error stacktraces
+      ~r/^Ecto\.Repo/,
+      ~r/^Ecto\.Changeset/,
+      ~r/^Ecto\.Adapters/,
+      ~r/^Ecto\.Multi/,
+      ~r/^Ecto\.Query/,
+      # Database drivers
+      ~r/^Postgrex/,
+      ~r/^Mariaex/,
+      ~r/^MyXQL/,
+      ~r/^Exqlite/,
+      ~r/^DBConnection/,
+      # Telemetry
+      ~r/^Telemetry/,
+      ~r/^:telemetry/
+    ]
   end
 
   # Convert user-provided patterns to regex
