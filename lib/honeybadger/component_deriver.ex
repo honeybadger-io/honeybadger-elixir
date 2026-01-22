@@ -110,7 +110,9 @@ defmodule Honeybadger.ComponentDeriver do
   # Convert user-provided patterns to regex
   defp pattern_to_regex(%Regex{} = regex), do: regex
   defp pattern_to_regex(module) when is_atom(module), do: module_to_regex(module)
-  defp pattern_to_regex(string) when is_binary(string), do: Regex.compile!("^#{Regex.escape(string)}")
+
+  defp pattern_to_regex(string) when is_binary(string),
+    do: Regex.compile!("^#{Regex.escape(string)}")
 
   defp module_to_regex(module) do
     module

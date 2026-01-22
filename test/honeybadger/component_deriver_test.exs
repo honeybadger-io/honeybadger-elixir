@@ -16,7 +16,8 @@ defmodule Honeybadger.ComponentDeriverTest do
       # Use real Honeybadger modules which are part of the :honeybadger app
       stacktrace = [
         {Honeybadger.Notice, :new, 4, [file: ~c"lib/honeybadger/notice.ex", line: 42]},
-        {Honeybadger.Backtrace, :from_stacktrace, 1, [file: ~c"lib/honeybadger/backtrace.ex", line: 10]}
+        {Honeybadger.Backtrace, :from_stacktrace, 1,
+         [file: ~c"lib/honeybadger/backtrace.ex", line: 10]}
       ]
 
       with_config([app: :honeybadger], fn ->
