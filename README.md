@@ -563,7 +563,7 @@ Here are all of the options you can pass in the keyword list:
 
 | Name                      | Description                                                                                   | Default                                  |
 | ------------------------- | --------------------------------------------------------------------------------------------- | ---------------------------------------- |
-| `app`                     | Name of your app's OTP Application as an atom                                                 | `Mix.Project.config[:app]`               |
+| `app`                     | Name of your app's OTP Application as an atom                                                 | `nil`                                    |
 | `api_key`                 | Your application's Honeybadger API key                                                        | `System.get_env("HONEYBADGER_API_KEY"))` |
 | `environment_name`        | (required) The name of the environment your app is running in.                                | `:prod`                                  |
 | `exclude_errors`          | Filters out errors from being sent to Honeybadger                                             | `[]`                                     |
