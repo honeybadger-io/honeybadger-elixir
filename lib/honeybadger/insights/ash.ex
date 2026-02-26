@@ -59,18 +59,20 @@ if Code.ensure_loaded?(Ash.Tracer) do
 
     @impl Ash.Tracer
     def start_span(type, name) do
-      parent_span = get_current_span()
+      if insights_enabled?() do
+        parent_span = get_current_span()
 
-      span = %__MODULE__{
-        id: generate_span_id(),
-        name: name,
-        type: type,
-        start_time: System.monotonic_time(:microsecond),
-        parent_span_id: parent_span && parent_span.id,
-        metadata: %{}
-      }
+        span = %__MODULE__{
+          id: generate_span_id(),
+          name: name,
+          type: type,
+          start_time: System.monotonic_time(:microsecond),
+          parent_span_id: parent_span && parent_span.id,
+          metadata: %{}
+        }
 
-      push_span(span)
+        push_span(span)
+      end
 
       :ok
     end
@@ -143,23 +145,29 @@ if Code.ensure_loaded?(Ash.Tracer) do
 
     @impl Ash.Tracer
     def set_error(error, _opts \\ []) do
-      needs_span? = is_nil(get_current_span())
+      if insights_enabled?() do
+        needs_span? = is_nil(get_current_span())
 
-      if needs_span? do
-        start_span(:custom, "error")
-      end
+        if needs_span? do
+          start_span(:custom, "error")
+        end
 
-      span = get_current_span()
-      replace_current_span(%{span | error: error})
+        span = get_current_span()
+        replace_current_span(%{span | error: error})
 
-      if needs_span? do
-        stop_span()
+        if needs_span? do
+          stop_span()
+        end
       end
 
       :ok
     end
 
     # Configuration
+
+    defp insights_enabled? do
+      Application.get_env(:honeybadger, :insights_enabled, false)
+    end
 
     defp trace_types do
       insights_config = Application.get_env(:honeybadger, :insights_config, %{})

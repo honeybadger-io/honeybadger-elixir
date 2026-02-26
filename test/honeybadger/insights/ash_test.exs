@@ -165,6 +165,31 @@ defmodule Honeybadger.Insights.AshTest do
     end
   end
 
+  describe "insights_enabled" do
+    test "does not emit events when insights_enabled is false" do
+      with_config(
+        [insights_enabled: false],
+        fn ->
+          AshTracer.start_span(:action, "User.create")
+          AshTracer.stop_span()
+
+          refute_receive {:api_request, _}, 100
+        end
+      )
+    end
+
+    test "does not emit error events when insights_enabled is false" do
+      with_config(
+        [insights_enabled: false],
+        fn ->
+          AshTracer.set_error(%RuntimeError{message: "oops"})
+
+          refute_receive {:api_request, _}, 100
+        end
+      )
+    end
+  end
+
   describe "trace_type?/1" do
     test "allows default types" do
       assert AshTracer.trace_type?(:custom)
