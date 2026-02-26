@@ -87,13 +87,13 @@ defmodule Honeybadger.Insights.Ash do
   def stop_span do
     case pop_span() do
       %__MODULE__{} = span ->
-        duration_microseconds = System.monotonic_time(:microsecond) - span.start_time
+        duration = System.monotonic_time(:microsecond) - span.start_time
 
         event = %{
           span_id: span.id,
           name: span.name,
           parent_span_id: span.parent_span_id,
-          duration_microseconds: duration_microseconds,
+          duration: duration,
           timestamp: System.system_time(:microsecond),
           metadata: span.metadata
         }

@@ -19,8 +19,8 @@ defmodule Honeybadger.Insights.AshTest do
       assert event["event_type"] == "ash.action.stop"
       assert event["name"] == "User.create"
       assert is_binary(event["span_id"])
-      assert is_integer(event["duration_microseconds"])
-      assert event["duration_microseconds"] >= 0
+      assert is_integer(event["duration"])
+      assert event["duration"] >= 0
       assert is_integer(event["timestamp"])
       assert event["parent_span_id"] == nil
     end
