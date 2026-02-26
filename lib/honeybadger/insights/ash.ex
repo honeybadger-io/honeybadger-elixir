@@ -95,7 +95,6 @@ if Code.ensure_loaded?(Ash.Tracer) do
             name: span.name,
             parent_span_id: span.parent_span_id,
             duration: duration,
-            timestamp: System.system_time(:microsecond),
             metadata: span.metadata
           }
 

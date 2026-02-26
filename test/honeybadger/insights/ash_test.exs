@@ -21,7 +21,6 @@ defmodule Honeybadger.Insights.AshTest do
       assert is_binary(event["span_id"])
       assert is_integer(event["duration"])
       assert event["duration"] >= 0
-      assert is_integer(event["timestamp"])
       assert event["parent_span_id"] == nil
     end
 
