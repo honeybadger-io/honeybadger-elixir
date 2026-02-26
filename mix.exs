@@ -106,6 +106,7 @@ defmodule Honeybadger.Mixfile do
       {:jason, "~> 1.0"},
       {:plug, ">= 1.0.0 and < 2.0.0", optional: true},
       {:ecto, ">= 2.0.0", optional: true},
+      {:ash, "~> 3.0", optional: true},
       {:phoenix, ">= 1.0.0 and < 2.0.0", optional: true},
       {:telemetry, "~> 0.4 or ~> 1.0"},
       {:process_tree, "~> 0.2.1"},
