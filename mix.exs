@@ -106,6 +106,7 @@ defmodule Honeybadger.Mixfile do
       {:jason, "~> 1.0"},
       {:plug, ">= 1.0.0 and < 2.0.0", optional: true},
       {:ecto, ">= 2.0.0", optional: true},
+      {:ash, "~> 3.0", optional: true},
       {:phoenix, ">= 1.0.0 and < 2.0.0", optional: true},
       {:telemetry, "~> 0.4 or ~> 1.0"},
       {:process_tree, "~> 0.2.1"},
@@ -115,7 +116,6 @@ defmodule Honeybadger.Mixfile do
       {:dialyxir, "~> 1.0", only: :dev, runtime: false},
 
       # Test dependencies
-      {:ash, "~> 3.0", only: :test},
       {:plug_cowboy, ">= 2.0.0 and < 3.0.0", only: :test},
       {:test_server, "~> 0.1.18", only: [:test]}
     ]
