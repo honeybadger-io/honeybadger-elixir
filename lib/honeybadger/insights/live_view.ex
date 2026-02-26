@@ -61,6 +61,10 @@ defmodule Honeybadger.Insights.LiveView do
       Honeybadger.Utils.rand_id()
     end)
 
+    Honeybadger.EventContext.put_new(:socket_id, fn ->
+      extract_socket_id(metadata)
+    end)
+
     if event in get_insights_config(:telemetry_events, @telemetry_events) do
       handle_event_impl(event, measurements, metadata, opts)
     end

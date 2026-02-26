@@ -216,7 +216,8 @@ defmodule Honeybadger do
         Honeybadger.Insights.Oban,
         Honeybadger.Insights.Absinthe,
         Honeybadger.Insights.Finch,
-        Honeybadger.Insights.Tesla
+        Honeybadger.Insights.Tesla,
+        Honeybadger.Insights.Ash
       ]
       |> Enum.each(& &1.attach())
     end
