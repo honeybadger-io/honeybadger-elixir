@@ -212,5 +212,50 @@ if Code.ensure_loaded?(Ash.Tracer) do
     defp generate_span_id do
       Honeybadger.Utils.rand_id()
     end
+
+    defmodule AshOban do
+      @moduledoc """
+      Helpers for integrating Honeybadger context with AshOban triggers.
+
+      ## Usage with AshOban Triggers
+
+      Use `capture_event_context/1` with the `extra_args` option in your AshOban
+      trigger to automatically pass the current Honeybadger event context to the
+      Oban job:
+
+          oban do
+            triggers do
+              trigger :my_trigger do
+                action :my_action
+                extra_args(&Honeybadger.Insights.Ash.AshOban.capture_event_context/1)
+              end
+            end
+          end
+
+      The Honeybadger Oban integration will automatically restore this context when
+      the job runs, ensuring request IDs and other context are preserved across
+      async boundaries.
+      """
+
+      @doc """
+      Captures the current Honeybadger event context for use with AshOban triggers.
+
+      This function is designed to be used with the `extra_args` option in AshOban
+      triggers. It returns a map containing the current Honeybadger event context,
+      which will be merged into the Oban job's arguments.
+
+      ## Parameters
+
+      - `_record_or_changeset` - The record or changeset (ignored, as we only need
+        the current process's context)
+
+      ## Returns
+
+      A map with the key `"hb_event_context"` containing the current event context.
+      """
+      def capture_event_context(_record_or_changeset) do
+        %{"hb_event_context" => Honeybadger.event_context()}
+      end
+    end
   end
 end

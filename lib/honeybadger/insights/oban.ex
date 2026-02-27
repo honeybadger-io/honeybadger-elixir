@@ -71,7 +71,7 @@ defmodule Honeybadger.Insights.Oban do
 
   @doc false
   def handle_telemetry([:oban, :job, :start] = event, measurements, metadata, opts) do
-    if event_context = metadata.job.meta["hb_event_context"] do
+    if event_context = metadata.job.meta["hb_event_context"] || metadata.args["hb_event_context"] do
       Honeybadger.event_context(event_context)
     else
       Honeybadger.inherit_event_context()

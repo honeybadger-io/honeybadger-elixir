@@ -190,6 +190,35 @@ defmodule Honeybadger.Insights.AshTest do
     end
   end
 
+  describe "AshOban.capture_event_context/1" do
+    test "returns a map with the current event context" do
+      Honeybadger.event_context(%{request_id: "abc-123", user_id: 42})
+
+      result = Honeybadger.Insights.Ash.AshOban.capture_event_context(%{})
+
+      assert %{"hb_event_context" => context} = result
+      assert context[:request_id] == "abc-123"
+      assert context[:user_id] == 42
+    end
+
+    test "returns empty context when no event context is set" do
+      result = Honeybadger.Insights.Ash.AshOban.capture_event_context(%{})
+
+      assert %{"hb_event_context" => context} = result
+      assert context == %{}
+    end
+
+    test "ignores the record_or_changeset argument" do
+      Honeybadger.event_context(%{request_id: "xyz-789"})
+
+      result1 = Honeybadger.Insights.Ash.AshOban.capture_event_context(nil)
+      result2 = Honeybadger.Insights.Ash.AshOban.capture_event_context(%{id: 1, name: "test"})
+
+      assert result1["hb_event_context"] == result2["hb_event_context"]
+      assert result1["hb_event_context"][:request_id] == "xyz-789"
+    end
+  end
+
   describe "trace_type?/1" do
     test "allows default types" do
       assert AshTracer.trace_type?(:custom)

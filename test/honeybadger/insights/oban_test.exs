@@ -69,11 +69,14 @@ defmodule Honeybadger.Insights.ObanTest do
       assert event["duration"] == 75
     end
 
-    test "sets event_context if in metadata" do
+    test "sets event_context from job meta" do
       :telemetry.execute(
         [:oban, :job, :start],
         %{},
-        %{job: %{meta: %{"hb_event_context" => %{user_id: 123, action: "generate_report"}}}}
+        %{
+          job: %{meta: %{"hb_event_context" => %{user_id: 123, action: "generate_report"}}},
+          args: %{}
+        }
       )
 
       event =
@@ -97,6 +100,39 @@ defmodule Honeybadger.Insights.ObanTest do
       assert event["event_type"] == "oban.job.stop"
       assert event["user_id"] == 123
       assert event["action"] == "generate_report"
+    end
+
+    test "sets event_context from job args (AshOban compatibility)" do
+      :telemetry.execute(
+        [:oban, :job, :start],
+        %{},
+        %{
+          job: %{meta: %{}},
+          args: %{"hb_event_context" => %{request_id: "ash-oban-456", user_id: 789}}
+        }
+      )
+
+      event =
+        send_and_receive(
+          [:oban, :job, :stop],
+          %{duration: System.convert_time_unit(100, :microsecond, :native)},
+          %{
+            conf: %{prefix: "oban_jobs"},
+            job: %{
+              id: 999,
+              args: %{"user_id" => 789},
+              attempt: 1,
+              queue: "default",
+              worker: "AshOban.MyWorker",
+              tags: []
+            },
+            state: :success
+          }
+        )
+
+      assert event["event_type"] == "oban.job.stop"
+      assert event["request_id"] == "ash-oban-456"
+      assert event["user_id"] == 789
     end
   end
 end
