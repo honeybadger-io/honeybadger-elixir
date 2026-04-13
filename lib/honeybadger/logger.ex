@@ -121,8 +121,78 @@ defmodule Honeybadger.Logger do
     %{function: fun, args: args}
   end
 
+  # Elixir >= 1.19 flattens chardata to a charlist before reaching backends.
+  # Convert to string and parse with regex.
+  defp extract_details(message) when is_list(message) do
+    case IO.chardata_to_string(message) do
+      "GenServer " <> _ = str -> extract_genserver_details(str)
+      ":gen_event handler " <> _ = str -> extract_gen_event_details(str)
+      "Task " <> _ = str -> extract_task_details(str)
+      "Process " <> _ = str -> extract_process_details(str)
+      _ -> %{}
+    end
+  end
+
   defp extract_details(_message) do
     %{}
+  end
+
+  defp extract_genserver_details(str) do
+    details = %{}
+
+    details =
+      case Regex.run(~r/Last message(?: \(from [^)]+\))?: (.+)\nState: /s, str) do
+        [_, last] -> Map.put(details, :last_message, last)
+        _ -> details
+      end
+
+    case Regex.run(~r/\nState: (.+?)(\nClient .+)?\z/s, str) do
+      [_, state | _] -> Map.put(details, :state, String.trim(state))
+      _ -> details
+    end
+  end
+
+  defp extract_gen_event_details(str) do
+    details = %{}
+
+    details =
+      case Regex.run(~r/\A:gen_event handler ([^ ]+) installed in/, str) do
+        [_, name] -> Map.put(details, :name, name)
+        _ -> details
+      end
+
+    details =
+      case Regex.run(~r/Last message: (.+)\nState: /s, str) do
+        [_, last] -> Map.put(details, :last_message, last)
+        _ -> details
+      end
+
+    case Regex.run(~r/\nState: (.+)\z/s, str) do
+      [_, state] -> Map.put(details, :state, String.trim(state))
+      _ -> details
+    end
+  end
+
+  defp extract_task_details(str) do
+    details = %{}
+
+    details =
+      case Regex.run(~r/\nFunction: (.+)\n    Args: /s, str) do
+        [_, fun] -> Map.put(details, :function, String.trim(fun))
+        _ -> details
+      end
+
+    case Regex.run(~r/\n    Args: (.+)\z/s, str) do
+      [_, args] -> Map.put(details, :args, String.trim(args))
+      _ -> details
+    end
+  end
+
+  defp extract_process_details(str) do
+    case Regex.run(~r/\AProcess (.+?) terminating/s, str) do
+      [_, name] -> %{name: name}
+      _ -> %{}
+    end
   end
 
   defp get_config(key) do
