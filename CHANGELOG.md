@@ -6,6 +6,18 @@ adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- %% CHANGELOG_ENTRIES %% -->
 
+## [0.26.0](https://github.com/honeybadger-io/honeybadger-elixir/compare/v0.25.0...v0.26.0) (2026-04-13)
+
+
+### Features
+
+* persist socket_id in EventContext during LiveView mount ([#681](https://github.com/honeybadger-io/honeybadger-elixir/issues/681)) ([f5ade64](https://github.com/honeybadger-io/honeybadger-elixir/commit/f5ade643d338d9dd596892250c046cbec209cd88))
+
+
+### Bug Fixes
+
+* refactor RingBuffer.add, fix type warnings ([#684](https://github.com/honeybadger-io/honeybadger-elixir/issues/684)) ([b7a2146](https://github.com/honeybadger-io/honeybadger-elixir/commit/b7a21468d0a33aa89f02750ef38350c326b08073)), closes [#663](https://github.com/honeybadger-io/honeybadger-elixir/issues/663)
+
 ## [0.25.0](https://github.com/honeybadger-io/honeybadger-elixir/compare/v0.24.1...v0.25.0) (2026-02-27)
 
 
