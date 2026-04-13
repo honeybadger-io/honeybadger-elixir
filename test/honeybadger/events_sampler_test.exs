@@ -44,19 +44,23 @@ defmodule Honeybadger.EventsSamplerTest do
   test "samples for un-hashed values" do
     with_config([insights_sample_rate: 50], fn ->
       {:ok, sampler} = start_sampler(sampled_log_interval: 100)
+      event_count = 50
 
       log =
         capture_log(fn ->
-          EventsSampler.sample?(server: sampler)
-          EventsSampler.sample?(server: sampler)
-          EventsSampler.sample?(server: sampler)
+          Enum.each(1..event_count, fn _ ->
+            EventsSampler.sample?(server: sampler)
+          end)
+
           # Wait for the report timer and ensure message is processed
           Process.sleep(110)
           # Make a synchronous call to ensure all prior messages are processed
           EventsSampler.sample?(server: sampler)
         end)
 
-      assert log =~ ~r/\[Honeybadger\] Sampled \d events \(of 3 total events\)/
+      assert log =~ "[Honeybadger] Sampled "
+      assert log =~ " events "
+      assert log =~ "(of #{event_count} total events)"
     end)
   end
 
