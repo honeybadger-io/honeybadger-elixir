@@ -6,6 +6,13 @@ adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- %% CHANGELOG_ENTRIES %% -->
 
+## [0.25.0](https://github.com/honeybadger-io/honeybadger-elixir/compare/v0.24.1...v0.25.0) (2026-02-27)
+
+
+### Features
+
+* **integrations:** ash tracing ([#680](https://github.com/honeybadger-io/honeybadger-elixir/issues/680)) ([1a8fde7](https://github.com/honeybadger-io/honeybadger-elixir/commit/1a8fde78b258b30409abde9afabbc7079f59a0c9))
+
 ## 0.24.1 - 2025-07-02
 
 Bug fix for OTP 28: Move regex constants to functions (#635)
