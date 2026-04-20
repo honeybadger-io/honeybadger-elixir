@@ -1,7 +1,7 @@
 defmodule Honeybadger.Notice do
   @doc false
 
-  alias Honeybadger.{Backtrace, Utils}
+  alias Honeybadger.{Backtrace, ComponentDeriver, Utils}
   alias Honeybadger.Breadcrumbs.{Collector}
 
   @type error :: %{
@@ -77,10 +77,16 @@ defmodule Honeybadger.Notice do
       fingerprint: fingerprint
     }
 
+    plug_env = Map.get(metadata, :plug_env, %{})
+    context = Map.get(metadata, :context, %{})
+
+    # Derive a component from the stacktrace if one isn't already set.
+    # This helps with error grouping for non-web errors (background jobs, etc.)
+    context = maybe_derive_component(context, plug_env, stacktrace)
+
     request =
-      metadata
-      |> Map.get(:plug_env, %{})
-      |> Map.put(:context, Map.get(metadata, :context, %{}))
+      plug_env
+      |> Map.put(:context, context)
 
     correlation_context = Map.take(metadata, [:request_id])
 
@@ -108,5 +114,26 @@ defmodule Honeybadger.Notice do
       project_root: Honeybadger.get_env(:project_root),
       revision: Honeybadger.get_env(:revision)
     }
+  end
+
+  # Derives a component from the stacktrace when one isn't already present.
+  # The component is used by Honeybadger's fingerprinting algorithm for grouping.
+  defp maybe_derive_component(context, plug_env, stacktrace) do
+    cond do
+      # User already set _component in context - don't override
+      Map.has_key?(context, :_component) or Map.has_key?(context, "_component") ->
+        context
+
+      # There's a component from plug_env (web request) - don't need to derive
+      plug_env[:component] not in [nil, ""] ->
+        context
+
+      # No component - derive one from the stacktrace
+      true ->
+        case ComponentDeriver.derive(stacktrace) do
+          nil -> context
+          component -> Map.put(context, :_component, component)
+        end
+    end
   end
 end
