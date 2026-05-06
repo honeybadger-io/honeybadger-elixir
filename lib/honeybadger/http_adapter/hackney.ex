@@ -16,7 +16,9 @@ defmodule Honeybadger.HTTPAdapter.Hackney do
 
   @impl HTTPAdapter
   def request(method, url, body, headers, opts \\ []) do
-    opts = opts || []
+    opts =
+      (opts || [])
+      |> Keyword.put(:with_body, true)
 
     body = binary_or_empty_binary(body)
 
@@ -59,16 +61,11 @@ defmodule Honeybadger.HTTPAdapter.Hackney do
 
   defp decode(_headers, body, _opts), do: {:ok, body}
 
-  defp format_response({:ok, status_code, headers, client_ref}) do
-    {:ok, %HTTPResponse{status: status_code, headers: headers, body: body_from_ref(client_ref)}}
+  defp format_response({:ok, status_code, headers, body}) when is_binary(body) do
+    {:ok, %HTTPResponse{status: status_code, headers: headers, body: body}}
   end
 
   defp format_response({:error, error}), do: {:error, error}
-
-  defp body_from_ref(ref) do
-    apply(:hackney, :body, [ref])
-    |> elem(1)
-  end
 
   defp binary_or_empty_binary(nil), do: ""
   defp binary_or_empty_binary(str), do: str
