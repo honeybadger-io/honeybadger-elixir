@@ -33,6 +33,10 @@ jobs:
               elixir: '1.19'
               otp: '28.3'
             lint: lint
+          - pair:
+              elixir: '1.19'
+              otp: '28.3'
+            hackney: '4'
 
     runs-on: ubuntu-22.04
 
@@ -53,6 +57,10 @@ jobs:
 
       - name: Run mix deps.get
         run: mix deps.ci
+
+      - name: Update hackney to 4.x
+        run: mix deps.update hackney
+        if: ${{ matrix.hackney == '4' }}
 
       - name: Run mix format
         run: mix format --check-formatted
