@@ -6,6 +6,13 @@ adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- %% CHANGELOG_ENTRIES %% -->
 
+## [0.27.0](https://github.com/honeybadger-io/honeybadger-elixir/compare/v0.26.0...v0.27.0) (2026-05-07)
+
+
+### Features
+
+* support hackney 4.0 ([#685](https://github.com/honeybadger-io/honeybadger-elixir/issues/685)) ([1b96227](https://github.com/honeybadger-io/honeybadger-elixir/commit/1b962275ef048481219a1954bda62d768e4d472e))
+
 ## [0.26.0](https://github.com/honeybadger-io/honeybadger-elixir/compare/v0.25.0...v0.26.0) (2026-04-13)
 
 
