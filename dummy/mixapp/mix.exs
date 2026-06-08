@@ -23,7 +23,7 @@ defmodule Mixapp.Mixfile do
   defp deps do
     [
       {:honeybadger, path: "../../"},
-      {:req, "~> 0.5.0", only: [:test]}
+      {:req, "~> 0.6.1", only: [:test]}
     ]
   end
 end
