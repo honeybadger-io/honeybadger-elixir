@@ -2,6 +2,10 @@ version: 2
 updates:
 - package-ecosystem: mix
   directory: "/"
+  # Bump the requirement in mix.exs (not just mix.lock) when a new version
+  # falls outside the declared constraint, e.g. req "~> 0.5.0" -> "~> 0.6.1".
+  # Without this, a tight "~>" pin silently caps a dep and no PR is ever opened.
+  versioning-strategy: increase
   schedule:
     interval: daily
     time: "09:00"
