@@ -6,6 +6,23 @@ adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- %% CHANGELOG_ENTRIES %% -->
 
+## [0.28.0](https://github.com/honeybadger-io/honeybadger-elixir/compare/v0.27.0...v0.28.0) (2026-06-08)
+
+
+### ⚠ BREAKING CHANGES
+
+* **deps:** require Elixir 1.16+ / OTP 25+ ([#689](https://github.com/honeybadger-io/honeybadger-elixir/issues/689))
+
+### Bug Fixes
+
+* **deps:** bump req to ~&gt; 0.6.1 in dummy app to match root constraint ([2636f8d](https://github.com/honeybadger-io/honeybadger-elixir/commit/2636f8dc887cce2c6c7c171cb2501d306c1e7c4d))
+
+
+### Miscellaneous Chores
+
+* **deps:** require Elixir 1.16+ / OTP 25+ ([#689](https://github.com/honeybadger-io/honeybadger-elixir/issues/689)) ([6464a54](https://github.com/honeybadger-io/honeybadger-elixir/commit/6464a544b2e327c0c4dfb232e1c6c072429baef5))
+* release 0.28.0 ([e968bae](https://github.com/honeybadger-io/honeybadger-elixir/commit/e968baeae7c1fbf401ba87a3c8c9cb8867d5e626))
+
 ## [0.27.0](https://github.com/honeybadger-io/honeybadger-elixir/compare/v0.26.0...v0.27.0) (2026-05-07)
 
 
