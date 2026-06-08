@@ -156,13 +156,13 @@ defmodule Honeybadger.HTTPAdapter do
         ensure_dependency_available!(:hackney, "~> 1.8 or ~> 4.0", adapter)
 
       Honeybadger.HTTPAdapter.Req ->
-        ensure_dependency_available!(Req, "~> 0.3", adapter)
+        ensure_dependency_available!(Req, "~> 0.5.0 or ~> 0.6.0", adapter)
 
       nil ->
         raise """
         Honeybadger requires an HTTP client but neither Req nor Hackney is available.
         Please add one of the following to your dependencies:
-          {:req, "~> 0.3"}    # Recommended
+          {:req, "~> 0.5.0 or ~> 0.6.0"}    # Recommended
           {:hackney, "~> 1.8 or ~> 4.0"}
         """
 
