@@ -8,7 +8,7 @@ defmodule Honeybadger.Mixfile do
     [
       app: :honeybadger,
       version: @version,
-      elixir: "~> 1.11",
+      elixir: "~> 1.16",
       consolidate_protocols: Mix.env() != :test,
       build_embedded: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,

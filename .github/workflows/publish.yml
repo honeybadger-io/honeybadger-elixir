@@ -37,7 +37,7 @@ jobs:
         if: ${{ steps.release.outputs.release_created }}
         uses: erlef/setup-beam@v1
         with:
-          elixir-version: '1.15'
+          elixir-version: '1.16'
           otp-version: '26'
 
       - name: Restore dependencies cache
