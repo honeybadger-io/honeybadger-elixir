@@ -29,6 +29,34 @@ defmodule Honeybadger.Case do
     end
   end
 
+  @doc """
+  Polls `fun` until it returns a truthy value or `timeout` ms elapse.
+
+  Returns the truthy value, or `false` on timeout. Use this to wait for an
+  asynchronous condition (e.g. GenServer state) instead of sleeping for a
+  guessed duration, which keeps timing-sensitive tests deterministic under load.
+  """
+  def eventually(fun, timeout \\ 1_000, interval \\ 10)
+      when is_function(fun, 0) and is_integer(timeout) and timeout >= 0 and
+             is_integer(interval) and interval > 0 do
+    deadline = System.monotonic_time(:millisecond) + timeout
+    do_eventually(fun, deadline, interval)
+  end
+
+  defp do_eventually(fun, deadline, interval) do
+    cond do
+      result = fun.() ->
+        result
+
+      System.monotonic_time(:millisecond) >= deadline ->
+        false
+
+      true ->
+        Process.sleep(interval)
+        do_eventually(fun, deadline, interval)
+    end
+  end
+
   def with_config(opts, fun) when is_function(fun) do
     original = take_original_env(opts)
 

@@ -12,6 +12,17 @@ defmodule Honeybadger.EventsWorkerTest do
     EventsWorker.start_link(config ++ [name: name])
   end
 
+  # Total events the worker is currently holding, across the pending queue and
+  # all not-yet-acknowledged batches.
+  defp queued_event_count(state) do
+    batch_events =
+      state.batches
+      |> :queue.to_list()
+      |> Enum.reduce(0, fn %{batch: batch}, acc -> acc + length(batch) end)
+
+    length(state.queue) + batch_events
+  end
+
   setup do
     {:ok, behavior_agent} = Agent.start_link(fn -> :ok end)
 
@@ -96,16 +107,22 @@ defmodule Honeybadger.EventsWorkerTest do
     end
 
     test "resets timer when batch is sent", %{config: config} do
+      # Larger flush timeout so the "before vs after the timer" windows have
+      # comfortable margins and don't race the worker under load.
+      config = Keyword.merge(config, timeout: 200)
       {:ok, pid} = start_worker(config)
 
       first_batch = [%{id: 1}, %{id: 2}, %{id: 3}]
       Enum.each(first_batch, &EventsWorker.push(&1, pid))
-      assert_receive {:events_sent, ^first_batch}, 50
+      # A full batch flushes immediately.
+      assert_receive {:events_sent, ^first_batch}, 100
 
       second_batch = [%{id: 4}, %{id: 5}]
       Enum.each(second_batch, &EventsWorker.push(&1, pid))
-      refute_receive {:events_sent, _}, 50
-      assert_receive {:events_sent, ^second_batch}, 100
+      # The timer was reset by the flush, so a partial batch must not flush early...
+      refute_receive {:events_sent, _}, div(config[:timeout], 2)
+      # ...but does flush once the full timeout elapses.
+      assert_receive {:events_sent, ^second_batch}, config[:timeout]
 
       GenServer.stop(pid)
     end
@@ -139,19 +156,16 @@ defmodule Honeybadger.EventsWorkerTest do
       events = [%{id: 1}, %{id: 2}]
       Enum.each(events, &EventsWorker.push(&1, pid))
 
-      # Wait for first attempt
-      assert_receive {:events_sent, ^events}, 50
+      # The batch is attempted exactly max_batch_retries times. Each retry waits
+      # one flush `timeout`, so give each attempt a generous window rather than a
+      # single tight cumulative deadline.
+      for _attempt <- 1..config[:max_batch_retries] do
+        assert_receive {:events_sent, ^events}, config[:timeout] + 200
+      end
 
-      # Should retry after timeout
-      assert_receive {:events_sent, ^events}, 150
-
-      # Should retry one more time and then drop
-      assert_receive {:events_sent, ^events}, 250
-
-      # Check final state
-      state = EventsWorker.state(pid)
-      # Batch should be dropped
-      assert :queue.to_list(state.batches) == []
+      # After the final failed attempt the batch is dropped and not retried again.
+      assert eventually(fn -> :queue.is_empty(EventsWorker.state(pid).batches) end)
+      refute_receive {:events_sent, ^events}, config[:timeout] + 100
 
       GenServer.stop(pid)
     end
@@ -160,59 +174,74 @@ defmodule Honeybadger.EventsWorkerTest do
       config: config,
       change_behavior: change_behavior
     } do
+      # Plenty of retry budget so the failing batch is not dropped before the
+      # backend recovers.
+      config = Keyword.merge(config, max_batch_retries: 10)
       {:ok, pid} = start_worker(config)
 
       change_behavior.(:error)
 
-      # Send first batch
+      # First batch fills batch_size and is attempted, but the backend errors, so
+      # it stays queued for retry.
       first_batch = [%{id: 1}, %{id: 2}]
       Enum.each(first_batch, &EventsWorker.push(&1, pid))
+      assert_receive {:events_sent, ^first_batch}, 200
 
-      # Wait for first attempt
-      assert_receive {:events_sent, ^first_batch}, 50
-
-      # Send new events during retry period
+      # Queue new events during the retry window. Polling on the synchronous
+      # state/1 call barriers all pushes through before we let the backend
+      # recover, removing the cast/Agent race that made this test flaky.
       second_batch = [%{id: 3}, %{id: 4}]
       Enum.each(second_batch, &EventsWorker.push(&1, pid))
+      assert eventually(fn -> queued_event_count(EventsWorker.state(pid)) == 4 end)
 
-      # Switch to success before max retries
+      # Switch to success. Both batches should drain. assert_receive does a
+      # selective receive, so we don't depend on exact ordering or on
+      # intermediate failed-retry emissions.
       change_behavior.(:ok)
 
-      # Should eventually send both batches
-      assert_receive {:events_sent, ^first_batch}, 150
-      assert_receive {:events_sent, ^second_batch}, 50
+      assert_receive {:events_sent, ^first_batch}, config[:timeout] + 500
+      assert_receive {:events_sent, ^second_batch}, config[:timeout] + 500
+
+      assert eventually(fn -> :queue.is_empty(EventsWorker.state(pid).batches) end)
 
       GenServer.stop(pid)
     end
 
     test "does not reset flush timer on subsequent pushes", %{config: config} do
-      {:ok, pid} =
-        start_worker(Keyword.merge(config, timeout: 100, batch_size: 1000))
+      # batch_size high so only the flush timer triggers sends; larger timeout
+      # for comfortable margins.
+      config = Keyword.merge(config, timeout: 200, batch_size: 1000)
+      {:ok, pid} = start_worker(config)
 
+      # Push id1 (starts the flush timer), then id2 well within the timer window.
       EventsWorker.push(%{id: 1}, pid)
-      :timer.sleep(60)
+      :timer.sleep(div(config[:timeout], 4))
       EventsWorker.push(%{id: 2}, pid)
-      :timer.sleep(60)
-      EventsWorker.push(%{id: 3}, pid)
 
-      assert_receive {:events_sent, [%{id: 1}, %{id: 2}]}
-      assert_receive {:events_sent, [%{id: 3}]}, 100
+      # The second push does not reset the timer, so both flush together when the
+      # original timer expires.
+      assert_receive {:events_sent, [%{id: 1}, %{id: 2}]}, config[:timeout]
+
+      # A push after that flush starts a fresh timer and flushes on its own.
+      EventsWorker.push(%{id: 3}, pid)
+      assert_receive {:events_sent, [%{id: 3}]}, config[:timeout] + 200
 
       GenServer.stop(pid)
     end
 
     test "works with pushes after a flush", %{config: config} do
-      {:ok, pid} =
-        start_worker(Keyword.merge(config, timeout: 50, batch_size: 1000))
+      config = Keyword.merge(config, timeout: 100, batch_size: 1000)
+      {:ok, pid} = start_worker(config)
 
+      # First event flushes on its own timer.
       EventsWorker.push(%{id: 1}, pid)
-      :timer.sleep(300)
-      EventsWorker.push(%{id: 2}, pid)
+      assert_receive {:events_sent, [%{id: 1}]}, config[:timeout] + 200
 
-      assert_receive {:events_sent, [%{id: 1}]}, 0
-      # Make sure we don't get the second event before the timeout
-      refute_receive {:events_sent, [%{id: 2}]}, 0
-      assert_receive {:events_sent, [%{id: 2}]}, 100
+      # A push after that flush starts a fresh timer: it must not flush
+      # immediately, but does once the new timeout elapses.
+      EventsWorker.push(%{id: 2}, pid)
+      refute_receive {:events_sent, [%{id: 2}]}, div(config[:timeout], 2)
+      assert_receive {:events_sent, [%{id: 2}]}, config[:timeout] + 200
 
       GenServer.stop(pid)
     end
@@ -226,23 +255,35 @@ defmodule Honeybadger.EventsWorkerTest do
       # Start with throttle behavior
       change_behavior.(:throttle)
 
-      # Send first batch
+      # First batch fills batch_size and is attempted, but the backend throttles
+      # it, so it stays queued.
       first_batch = [%{id: 1}, %{id: 2}]
       Enum.each(first_batch, &EventsWorker.push(&1, pid))
+      assert_receive {:events_sent, ^first_batch}, 200
 
-      # Should get throttled
-      assert_receive {:events_sent, ^first_batch}, 50
+      # Wait until the worker has recorded the throttle before continuing.
+      assert eventually(fn -> EventsWorker.state(pid).throttling end)
 
-      # Send second batch while throttled
+      # Queue a second batch while still throttled. state/1 is a synchronous
+      # call, so polling on it acts as a barrier: all preceding async pushes are
+      # guaranteed processed (and both batches queued) before we flip the backend
+      # to :ok. This removes the cast/Agent race that made this test flaky. The
+      # throttled batch is banked, not retried early, so the default retry budget
+      # is plenty.
       second_batch = [%{id: 3}, %{id: 4}]
       Enum.each(second_batch, &EventsWorker.push(&1, pid))
+      assert eventually(fn -> queued_event_count(EventsWorker.state(pid)) == 4 end)
 
-      # Switch to success after throttle period
+      # Backend recovers. Once throttle_wait elapses, both batches should be
+      # delivered. assert_receive does a selective receive, so we don't depend on
+      # exact ordering.
       change_behavior.(:ok)
 
-      # Should send both batches after throttle period
-      assert_receive {:events_sent, ^first_batch}, 500
-      assert_receive {:events_sent, ^second_batch}, 50
+      assert_receive {:events_sent, ^first_batch}, config[:throttle_wait] + 500
+      assert_receive {:events_sent, ^second_batch}, config[:throttle_wait] + 500
+
+      # Nothing is left queued once the backend has recovered.
+      assert eventually(fn -> :queue.is_empty(EventsWorker.state(pid).batches) end)
 
       GenServer.stop(pid)
     end
