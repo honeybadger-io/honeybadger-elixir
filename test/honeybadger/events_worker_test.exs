@@ -282,6 +282,49 @@ defmodule Honeybadger.EventsWorkerTest do
 
       GenServer.stop(pid)
     end
+
+    test "does not retry a throttled batch early when new events arrive", %{
+      config: config,
+      change_behavior: change_behavior
+    } do
+      # Large timeout so only the throttle backoff (throttle_wait) governs the
+      # retry timing during this test.
+      config = Keyword.merge(config, batch_size: 2, throttle_wait: 300, timeout: 1000)
+      {:ok, pid} = start_worker(config)
+
+      change_behavior.(:throttle)
+
+      # First batch is attempted and throttled, so it stays queued.
+      first_batch = [%{id: 1}, %{id: 2}]
+      Enum.each(first_batch, &EventsWorker.push(&1, pid))
+      assert_receive {:events_sent, ^first_batch}, 200
+      # state/1 is synchronous, so this also barriers the throttle result through.
+      assert EventsWorker.state(pid).throttling
+
+      # New events fill another batch while still throttled.
+      second_batch = [%{id: 3}, %{id: 4}]
+      Enum.each(second_batch, &EventsWorker.push(&1, pid))
+
+      # The throttled batch must NOT be retried just because new events arrived:
+      # its attempt count stays at 1 and the new batch is banked behind it. A
+      # retry here would hammer the rate-limited backend and burn the retry
+      # budget. Asserting on state is timing-independent, unlike a refute_receive
+      # window that would race the throttle_wait timer under load.
+      state = EventsWorker.state(pid)
+
+      assert :queue.to_list(state.batches) == [
+               %{batch: first_batch, attempts: 1},
+               %{batch: second_batch, attempts: 0}
+             ]
+
+      # Once the backend recovers, the timer-driven retry (after throttle_wait)
+      # drains both batches without dropping anything.
+      change_behavior.(:ok)
+      assert_receive {:events_sent, ^first_batch}, config[:throttle_wait] + 500
+      assert_receive {:events_sent, ^second_batch}, config[:throttle_wait] + 500
+
+      GenServer.stop(pid)
+    end
   end
 
   describe "termination" do
