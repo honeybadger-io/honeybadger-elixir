@@ -1,6 +1,8 @@
 defmodule Honeybadger.Breadcrumbs.Telemetry do
   @moduledoc false
 
+  alias __MODULE__
+
   @spec telemetry_events() :: [[atom()]]
   def telemetry_events do
     []
@@ -13,7 +15,7 @@ defmodule Honeybadger.Breadcrumbs.Telemetry do
     :telemetry.attach_many(
       "hb-telemetry",
       telemetry_events(),
-      &handle_telemetry/4,
+      &Telemetry.handle_telemetry/4,
       nil
     )
 
@@ -22,10 +24,7 @@ defmodule Honeybadger.Breadcrumbs.Telemetry do
 
   @spec append_phoenix_events([[atom()]]) :: [[atom()]]
   defp append_phoenix_events(events) do
-    Enum.concat(
-      events,
-      [[:phoenix, :router_dispatch, :start]]
-    )
+    Enum.concat(events, [[:phoenix, :router_dispatch, :start]])
   end
 
   @spec append_ecto_events([[atom()]]) :: [[atom()]]
@@ -47,7 +46,8 @@ defmodule Honeybadger.Breadcrumbs.Telemetry do
   end
 
   def handle_telemetry(_path, %{decode_time: _} = time, %{query: _} = meta, _) do
-    Map.merge(time, meta)
+    time
+    |> Map.merge(meta)
     |> handle_sql()
   end
 

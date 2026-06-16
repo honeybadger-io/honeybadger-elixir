@@ -1,6 +1,7 @@
 name: Elixir CI
 
 on:
+  workflow_call:
   push:
     branches: [ master ]
   pull_request:
@@ -17,17 +18,30 @@ jobs:
       matrix:
         include:
           - pair:
-              elixir: '1.8'
-              otp: '21.3'
+              elixir: '1.16'
+              otp: '25.3'
           - pair:
-              elixir: '1.11'
-              otp: '23.2'
+              elixir: '1.16'
+              otp: '26.0'
+          - pair:
+              elixir: '1.17'
+              otp: '27.0'
+          - pair:
+              elixir: '1.18'
+              otp: '28.1'
+          - pair:
+              elixir: '1.19'
+              otp: '28.3'
             lint: lint
+          - pair:
+              elixir: '1.19'
+              otp: '28.3'
+            hackney: '4'
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v6
 
       - uses: erlef/setup-elixir@v1
         with:
@@ -35,14 +49,18 @@ jobs:
           elixir-version: ${{matrix.pair.elixir}}
 
       - name: Restore dependencies cache
-        uses: actions/cache@v2
+        uses: actions/cache@v5
         with:
           path: deps
           key: ${{ runner.os }}-${{ matrix.pair.otp }}-${{ matrix.pair.elixir }}-mix-${{ hashFiles('**/mix.lock') }}
           restore-keys: ${{ runner.os }}-${{ matrix.pair.otp }}-${{ matrix.pair.elixir }}-mix-
 
       - name: Run mix deps.get
-        run: mix deps.get --only test
+        run: mix deps.ci
+
+      - name: Update hackney to 4.x
+        run: mix deps.update hackney
+        if: ${{ matrix.hackney == '4' }}
 
       - name: Run mix format
         run: mix format --check-formatted
@@ -56,4 +74,4 @@ jobs:
         if: ${{ matrix.lint }}
 
       - name: Run tests
-        run: mix test
+        run: mix test.ci

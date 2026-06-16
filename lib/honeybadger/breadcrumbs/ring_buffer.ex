@@ -17,12 +17,12 @@ defmodule Honeybadger.Breadcrumbs.RingBuffer do
   end
 
   @spec add(t(), any()) :: t()
-  def add(ring = %{ct: ct, size: ct, buffer: [_head | rest]}, item) do
-    %__MODULE__{ring | buffer: rest ++ [item]}
+  def add(ring = %__MODULE__{ct: ct, size: ct, buffer: [_head | rest]}, item) do
+    %{ring | buffer: rest ++ [item]}
   end
 
-  def add(ring = %{ct: ct, buffer: buffer}, item) do
-    %__MODULE__{ring | buffer: buffer ++ [item], ct: ct + 1}
+  def add(ring = %__MODULE__{ct: ct, buffer: buffer}, item) do
+    %{ring | buffer: buffer ++ [item], ct: ct + 1}
   end
 
   @spec to_list(t()) :: [any()]

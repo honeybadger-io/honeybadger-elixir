@@ -7,7 +7,7 @@ defmodule Honeybadger.Filter.Mixin do
   in the config.  E.g., if you wanted to filter the error message string, but
   keep all of the other default filtering, you could do:
 
-      defmoudle MyApp.MyFilter do
+      defmodule MyApp.MyFilter do
         use Honeybadger.Filter.Mixin
 
         def filter_error_message(message) do

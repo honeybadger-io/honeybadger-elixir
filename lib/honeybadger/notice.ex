@@ -28,7 +28,8 @@ defmodule Honeybadger.Notice do
           server: server(),
           error: error(),
           breadcrumbs: Collector.t(),
-          request: map()
+          request: map(),
+          correlation_context: map()
         }
 
   @url get_in(Honeybadger.Mixfile.project(), [:package, :links, "GitHub"])
@@ -36,8 +37,8 @@ defmodule Honeybadger.Notice do
   @notifier %{name: "honeybadger-elixir", language: "elixir", url: @url, version: @version}
 
   @derive Jason.Encoder
-  @enforce_keys [:breadcrumbs, :notifier, :server, :error, :request]
-  defstruct [:breadcrumbs, :notifier, :server, :error, :request]
+  @enforce_keys [:breadcrumbs, :notifier, :server, :error, :request, :correlation_context]
+  defstruct [:breadcrumbs, :notifier, :server, :error, :request, :correlation_context]
 
   @spec new(noticeable(), map(), list(), String.t()) :: t()
   def new(error, metadata, stacktrace, fingerprint \\ "")
@@ -81,12 +82,15 @@ defmodule Honeybadger.Notice do
       |> Map.get(:plug_env, %{})
       |> Map.put(:context, Map.get(metadata, :context, %{}))
 
+    correlation_context = Map.take(metadata, [:request_id])
+
     filter(%__MODULE__{
       breadcrumbs: Map.get(metadata, :breadcrumbs, %{}),
       error: error,
       request: request,
       notifier: @notifier,
-      server: server()
+      server: server(),
+      correlation_context: correlation_context
     })
   end
 

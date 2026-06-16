@@ -20,6 +20,7 @@ defmodule Honeybadger do
         ecto_repos: [MyAppName.Ecto.Repo],
         hostname: "myserver.domain.com",
         origin: "https://api.honeybadger.io",
+        sasl_logging_only: false,
         proxy: "http://proxy.net:PORT",
         proxy_auth: {"Username", "Password"},
         project_root: "/home/skynet",
@@ -27,7 +28,8 @@ defmodule Honeybadger do
         use_logger: true,
         notice_filter: Honeybadger.NoticeFilter.Default,
         filter: Honeybadger.Filter.Default,
-        filter_keys: [:password, :credit_card]
+        filter_keys: [:password, :credit_card],
+        exclude_errors: []
 
   ### Notifying
 
@@ -61,7 +63,7 @@ defmodule Honeybadger do
   structures in the context.
 
       Honeybadger.context(user_id: 1, account: "My Favorite Customer")
-      Honeybadger.context(%{user_id: 2, account: "That Needy Customer")
+      Honeybadger.context(%{user_id: 2, account: "That Needy Customer"})
 
   ### Using the Plug
 
@@ -161,13 +163,15 @@ defmodule Honeybadger do
 
       config :honeybadger,
         ecto_repos: [MyApp.Repo]
+
+  #### Insights
   """
 
   use Application
 
   require Logger
 
-  alias Honeybadger.{Client, Notice}
+  alias Honeybadger.{Client, Notice, EventsWorker, EventsSampler}
   alias Honeybadger.Breadcrumbs.{Collector, Breadcrumb}
 
   @type notify_options ::
@@ -188,6 +192,8 @@ defmodule Honeybadger do
 
   @doc false
   def start(_type, _opts) do
+    Honeybadger.HTTPAdapter.validate_adapter_availability!()
+
     config =
       get_all_env()
       |> put_dynamic_env()
@@ -202,7 +208,22 @@ defmodule Honeybadger do
       Honeybadger.Breadcrumbs.Telemetry.attach()
     end
 
-    Supervisor.start_link([{Client, [config]}], strategy: :one_for_one)
+    if config[:insights_enabled] do
+      [
+        Honeybadger.Insights.Plug,
+        Honeybadger.Insights.Ecto,
+        Honeybadger.Insights.LiveView,
+        Honeybadger.Insights.Oban,
+        Honeybadger.Insights.Absinthe,
+        Honeybadger.Insights.Finch,
+        Honeybadger.Insights.Tesla
+      ]
+      |> Enum.each(& &1.attach())
+    end
+
+    children = [{Client, [config]}, EventsWorker, EventsSampler]
+
+    Supervisor.start_link(children, strategy: :one_for_one)
   end
 
   @doc """
@@ -280,16 +301,30 @@ defmodule Honeybadger do
       |> Collector.put(notice_breadcrumb(exception))
       |> Collector.output()
 
-    metadata_with_breadcrumbs =
+    metadata =
       metadata
       |> Map.delete(:breadcrumbs)
       |> contextual_metadata()
       |> Map.put(:breadcrumbs, breadcrumbs)
+      |> maybe_add_request_id()
 
-    exception
-    |> Notice.new(metadata_with_breadcrumbs, stacktrace, fingerprint)
-    |> put_notice_fingerprint()
-    |> Client.send_notice()
+    notice =
+      exception
+      |> Notice.new(metadata, stacktrace, fingerprint)
+      |> put_notice_fingerprint()
+
+    exclude_error_value = Application.get_env(:honeybadger, :exclude_errors)
+
+    unless exclude_error?(exclude_error_value, notice), do: Client.send_notice(notice)
+  end
+
+  defp exclude_error?(value, notice) when is_list(value) do
+    value = Enum.map(value, &(&1 |> to_string() |> String.trim_leading("Elixir.")))
+    notice.error.class in value
+  end
+
+  defp exclude_error?(value, notice) do
+    value.exclude_error?(notice)
   end
 
   @doc deprecated: "Use Honeybadger.notify/2 instead"
@@ -315,6 +350,57 @@ defmodule Honeybadger do
       _ ->
         notice
     end
+  end
+
+  @spec event(String.t(), map()) :: :ok
+  def event(event_type, event_data) when is_map(event_data) do
+    event_data
+    |> Map.put(:event_type, event_type)
+    |> event()
+  end
+
+  @spec event(map()) :: :ok
+  def event(event_data) do
+    event_context()
+    |> Map.merge(event_data)
+    |> Map.put_new(:ts, DateTime.utc_now(:millisecond) |> DateTime.to_iso8601())
+    |> event_filter()
+    |> maybe_sample()
+    |> maybe_strip_metadata()
+    |> send_event()
+  end
+
+  defp send_event(nil), do: :ok
+
+  defp send_event(data) do
+    if get_env(:events_worker_enabled) do
+      EventsWorker.push(data)
+    else
+      Client.send_event(data)
+    end
+  end
+
+  defp event_filter(map) do
+    if get_env(:event_filter) do
+      get_env(:event_filter).filter_event(map)
+    else
+      map
+    end
+  end
+
+  defp maybe_strip_metadata(nil), do: nil
+  defp maybe_strip_metadata(data), do: Map.drop(data, [:_hb])
+
+  defp maybe_sample(nil), do: nil
+
+  defp maybe_sample(data) do
+    sampled? =
+      EventsSampler.sample?(
+        hash_value: data[:request_id],
+        sample_rate: get_in(data, [:_hb, :sample_rate])
+      )
+
+    if sampled?, do: data, else: nil
   end
 
   @doc """
@@ -354,7 +440,7 @@ defmodule Honeybadger do
   """
   @spec context() :: map()
   def context do
-    Logger.metadata() |> Map.new() |> Map.delete(Collector.metadata_key())
+    Map.new(Logger.metadata())
   end
 
   @doc """
@@ -385,6 +471,52 @@ defmodule Honeybadger do
     Logger.reset_metadata()
 
     :ok
+  end
+
+  @doc """
+  Retrieves the current event context.
+  """
+  @spec event_context() :: map()
+  def event_context do
+    Honeybadger.EventContext.get()
+  end
+
+  @doc """
+  Merges the given map or keyword list into the current event context.
+  """
+  @spec event_context(map() | keyword()) :: map()
+  def event_context(context) do
+    Honeybadger.EventContext.merge(context)
+  end
+
+  @doc """
+  Inherits the current event context from a parent process.
+  """
+  @spec inherit_event_context() :: :already_initialized | :inherited | :not_found
+  def inherit_event_context do
+    Honeybadger.EventContext.inherit()
+  end
+
+  @doc """
+  Clears the current event context.
+  """
+  @spec clear_event_context() :: map()
+  def clear_event_context do
+    Honeybadger.EventContext.replace(%{})
+  end
+
+  @doc false
+  def maybe_add_request_id(data) when is_map(data) do
+    case Honeybadger.EventContext.get(:request_id) do
+      nil -> data
+      request_id -> Map.put(data, :request_id, request_id)
+    end
+  end
+
+  @doc false
+  # Merges event context into the map, with the data taking precedence.
+  def merge_into_event_context(data) do
+    Map.merge(event_context(), data)
   end
 
   @doc """

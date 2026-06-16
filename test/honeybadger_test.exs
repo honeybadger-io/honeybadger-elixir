@@ -3,10 +3,155 @@ defmodule HoneybadgerTest do
 
   doctest Honeybadger
 
+  defmodule MockEventsWorker do
+    use GenServer
+
+    def start_link(_), do: GenServer.start_link(__MODULE__, [], name: __MODULE__)
+    def push(data), do: GenServer.cast(__MODULE__, {:push, data})
+
+    @impl true
+    def init(_), do: {:ok, []}
+
+    @impl true
+    def handle_cast({:push, data}, state) do
+      pid = Application.get_env(:honeybadger, :mock_worker_test_pid)
+      send(pid, {:worker_push, data})
+      {:noreply, state}
+    end
+  end
+
   setup do
     {:ok, _} = Honeybadger.API.start(self())
 
+    Application.put_env(:honeybadger, :mock_worker_test_pid, self())
+
     on_exit(&Honeybadger.API.stop/0)
+  end
+
+  describe "exclude_error option" do
+    test "by default, server gets notified of errors" do
+      restart_with_config(exclude_envs: [])
+
+      fun = fn :num -> nil end
+
+      try do
+        fun.(:boom)
+      rescue
+        exception ->
+          :ok = Honeybadger.notify(exception, stacktrace: __STACKTRACE__)
+      end
+
+      assert_receive {:api_request, %{"error" => error}}
+      assert error["class"] == "FunctionClauseError"
+    end
+
+    test "excludes errors sent to server when exclude_error?/1 returns true" do
+      defmodule ExcludeFunClauseErrors do
+        alias Honeybadger.ExcludeErrors
+
+        @behaviour ExcludeErrors
+
+        @impl ExcludeErrors
+        def exclude_error?(notice) do
+          notice.error.class == "FunctionClauseError"
+        end
+      end
+
+      restart_with_config(exclude_envs: [], exclude_errors: ExcludeFunClauseErrors)
+
+      fun = fn :num -> nil end
+
+      try do
+        fun.(:boom)
+      rescue
+        exception ->
+          nil = Honeybadger.notify(exception, stacktrace: __STACKTRACE__)
+      end
+
+      refute_receive {:api_request, _}
+    end
+
+    test "errors are sent to server when exclude_error?/1 returns false" do
+      defmodule ExcludeErrors do
+        alias Honeybadger.ExcludeErrors
+
+        @behaviour ExcludeErrors
+
+        @impl ExcludeErrors
+        def exclude_error?(notice) do
+          notice.error.class == "RuntimeError"
+        end
+      end
+
+      restart_with_config(exclude_envs: [], exclude_errors: ExcludeErrors)
+
+      fun = fn :num -> nil end
+
+      try do
+        fun.(:boom)
+      rescue
+        exception ->
+          :ok = Honeybadger.notify(exception, stacktrace: __STACKTRACE__)
+      end
+
+      assert_receive {:api_request, %{"error" => error}}
+      assert error["class"] == "FunctionClauseError"
+    end
+
+    test "errors are sent to server when error is missing in list of errors passed" do
+      restart_with_config(exclude_envs: [], exclude_errors: ["RuntimeError"])
+
+      fun = fn :num -> nil end
+
+      try do
+        fun.(:boom)
+      rescue
+        exception ->
+          :ok = Honeybadger.notify(exception, stacktrace: __STACKTRACE__)
+      end
+
+      assert_receive {:api_request, %{"error" => error}}
+      assert error["class"] == "FunctionClauseError"
+    end
+
+    test "excludes errors sent to server when a list of error strings are passed" do
+      restart_with_config(exclude_envs: [], exclude_errors: ["FunctionClauseError"])
+
+      fun = fn :num -> nil end
+
+      try do
+        fun.(:boom)
+      rescue
+        exception ->
+          nil = Honeybadger.notify(exception, stacktrace: __STACKTRACE__)
+      end
+
+      refute_receive {:api_request, _}
+    end
+
+    test "excludes errors sent to server when a list of errors classes are passed" do
+      restart_with_config(exclude_envs: [], exclude_errors: [FunctionClauseError])
+
+      fun = fn :num -> nil end
+
+      try do
+        fun.(:boom)
+      rescue
+        exception ->
+          nil = Honeybadger.notify(exception, stacktrace: __STACKTRACE__)
+      end
+
+      refute_receive {:api_request, _}
+    end
+
+    test "includes request_id if within EventContext" do
+      restart_with_config(exclude_envs: [])
+      Honeybadger.event_context(%{request_id: "12345"})
+      err = %RuntimeError{message: "test error"}
+      Honeybadger.notify(err)
+      assert_receive {:api_request, notice}
+      assert notice["correlation_context"]["request_id"] == "12345"
+    end
   end
 
   describe "deprecated Honeybadger.notify works" do
@@ -75,7 +220,7 @@ defmodule HoneybadgerTest do
           assert_receive {:api_request, _}
         end)
 
-      assert logged =~ ~s|[Honeybadger] API success: "{}"|
+      assert logged =~ "[Honeybadger] API success: \"{}\""
     end
 
     test "sending a notice on an inactive environment doesn't make an HTTP request" do
@@ -286,6 +431,183 @@ defmodule HoneybadgerTest do
 
     assert_raise FunctionClauseError, fn ->
       Honeybadger.context(3)
+    end
+  end
+
+  describe "Honeybadger.event/2" do
+    setup do
+      restart_with_config(exclude_envs: [], events_batch_size: 1)
+    end
+
+    test "adds event_type to event data" do
+      Honeybadger.event("test_event", %{key: "value"})
+
+      assert_receive {:api_request, [data]}
+      assert data["event_type"] == "test_event"
+      assert data["key"] == "value"
+    end
+
+    test "works with empty event data" do
+      Honeybadger.event("test_event", %{})
+
+      assert_receive {:api_request, [data]}
+      assert data["event_type"] == "test_event"
+      ts = data["ts"]
+      assert Map.has_key?(data, "ts")
+      # Verify timestamp format matches DateTime.to_string() format
+      assert {:ok, _, _} = DateTime.from_iso8601(ts)
+    end
+
+    defmodule TestEventFilter do
+      use Honeybadger.EventFilter.Mixin
+
+      def filter_event(%{event_type: "test_event"} = event) do
+        Map.put(event, :filtered, true)
+      end
+
+      def filter_event(%{event_type: "remove_me"}), do: nil
+      def filter_event(event), do: event
+      def filter_telemetry_event(a, _b, _c), do: a
+    end
+
+    test "can be modified by filter" do
+      with_config([event_filter: TestEventFilter], fn ->
+        Honeybadger.event("test_event", %{key: "value"})
+
+        assert_receive {:api_request, [data]}
+        assert data["event_type"] == "test_event"
+        assert data["filtered"] == true
+      end)
+    end
+
+    test "can be removed by filter" do
+      with_config([event_filter: TestEventFilter], fn ->
+        Honeybadger.event("remove_me", %{key: "value"})
+
+        refute_receive {:api_request, _}
+      end)
+    end
+  end
+
+  describe "Honeybadger.event/1" do
+    test "adds timestamp if not present" do
+      restart_with_config(
+        exclude_envs: [],
+        events_worker_enabled: false
+      )
+
+      event_data = %{event_type: "test_event", key: "value"}
+
+      Honeybadger.event(event_data)
+
+      assert_receive {:api_request, data}
+      assert data["event_type"] == "test_event"
+      assert data["key"] == "value"
+      assert Map.has_key?(data, "ts")
+    end
+
+    test "sends to Client events_worker is disabled" do
+      restart_with_config(
+        exclude_envs: [],
+        events_worker_enabled: false
+      )
+
+      event_data = %{event_type: "test_event"}
+      Honeybadger.event(event_data)
+      assert_receive {:api_request, _}
+    end
+
+    test "sends to events_worker when enabled" do
+      restart_with_config(
+        exclude_envs: [],
+        events_batch_size: 3,
+        events_worker_enabled: true
+      )
+
+      events = [
+        %{ts: "1", event_type: "test_event"},
+        %{ts: "2", event_type: "test_event"},
+        %{ts: "3", event_type: "test_event"}
+      ]
+
+      Enum.each(events, &Honeybadger.event/1)
+      assert_receive {:api_request, request_events}
+
+      stringified_events =
+        Enum.map(events, fn map ->
+          Map.new(map, fn {k, v} -> {to_string(k), v} end)
+        end)
+
+      assert request_events == stringified_events
+    end
+
+    test "includes event_context if present" do
+      restart_with_config(
+        exclude_envs: [],
+        events_worker_enabled: false
+      )
+
+      event_data = %{event_type: "test_event", key: "value"}
+      Honeybadger.event_context(%{user_id: 123})
+      Honeybadger.event(event_data)
+
+      assert_receive {:api_request, data}
+      assert data["event_type"] == "test_event"
+      assert data["key"] == "value"
+      assert data["user_id"] == 123
+    end
+
+    test "overrides event_context with event data" do
+      restart_with_config(
+        exclude_envs: [],
+        events_worker_enabled: false
+      )
+
+      event_data = %{event_type: "test_event", key: "value", user_id: 456}
+      Honeybadger.event_context(%{user_id: 123})
+      Honeybadger.event(event_data)
+
+      assert_receive {:api_request, data}
+      assert data["event_type"] == "test_event"
+      assert data["key"] == "value"
+      assert data["user_id"] == 456
+    end
+
+    test "samples with custom rate" do
+      restart_with_config(
+        exclude_envs: [],
+        events_worker_enabled: false,
+        insights_sample_rate: 100
+      )
+
+      Honeybadger.event(%{event_type: "test_event", key: "value", _hb: %{sample_rate: 0}})
+
+      refute_receive {:api_request, _data}
+    end
+
+    test "samples with custom overriding global lower rate" do
+      restart_with_config(
+        exclude_envs: [],
+        events_worker_enabled: false,
+        insights_sample_rate: 0
+      )
+
+      Honeybadger.event(%{event_type: "test_event", key: "value", _hb: %{sample_rate: 100}})
+
+      assert_receive {:api_request, _data}
+    end
+
+    test "samples with custom rate in context" do
+      restart_with_config(
+        exclude_envs: [],
+        events_worker_enabled: false,
+        insights_sample_rate: 100
+      )
+
+      Honeybadger.event_context(%{_hb: %{sample_rate: 0}})
+      Honeybadger.event(%{event_type: "test_event", key: "value"})
+
+      refute_receive {:api_request, _data}
     end
   end
 end

@@ -1,6 +1,24 @@
 Logger.remove_backend(:console)
 
+Application.put_all_env(
+  ex_unit: [
+    assert_receive_timeout: 400,
+    refute_receive_timeout: 200
+  ],
+  honeybadger: [
+    environment_name: :test,
+    api_key: "abc123",
+    origin: "http://localhost:4444",
+    insights_enabled: true
+  ]
+)
+
+{:ok, _} = Application.ensure_all_started(:req)
+{:ok, _} = Application.ensure_all_started(:hackney)
+
 ExUnit.start(assert_receive_timeout: 1000, refute_receive_timeout: 1000)
+
+_ = ~w(live_component live_view live_socket phoenix operation)a
 
 defmodule Honeybadger.Case do
   use ExUnit.CaseTemplate
@@ -65,7 +83,7 @@ defmodule Honeybadger.API do
   import Plug.Conn
 
   alias Plug.Conn
-  alias Plug.Adapters.Cowboy
+  alias Plug.Cowboy
 
   def start(pid) do
     Cowboy.http(__MODULE__, [test: pid], port: 4444)
@@ -83,13 +101,18 @@ defmodule Honeybadger.API do
 
   def call(%Conn{method: "POST"} = conn, test) do
     {:ok, body, conn} = read_body(conn)
-
-    send(test, {:api_request, Jason.decode!(body)})
-
+    content_type = List.first(get_req_header(conn, "content-type")) || "application/json"
+    send(test, {:api_request, decode_payload(body, content_type)})
     send_resp(conn, 200, "{}")
   end
 
-  def call(conn, _test) do
-    send_resp(conn, 404, "Not Found")
+  def call(conn, _test), do: send_resp(conn, 404, "Not Found")
+
+  defp decode_payload(body, "application/x-ndjson") do
+    body
+    |> String.split("\n", trim: true)
+    |> Enum.map(&Jason.decode!/1)
   end
+
+  defp decode_payload(body, _), do: Jason.decode!(body)
 end

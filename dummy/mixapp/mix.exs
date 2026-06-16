@@ -22,7 +22,8 @@ defmodule Mixapp.Mixfile do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:honeybadger, path: "../../"}
+      {:honeybadger, path: "../../"},
+      {:req, "~> 0.6.1", only: [:test]}
     ]
   end
 end

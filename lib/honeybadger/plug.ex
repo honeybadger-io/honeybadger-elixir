@@ -53,7 +53,7 @@ if Code.ensure_loaded?(Plug) do
         pipelines. It may be overridden to ignore additional errors or to
         customize the data that is used for notifications.
         """
-        @spec handle_errors(Plug.Conn.t(), %{kind: atom(), reason: any(), stack: any()}) :: :ok
+        @impl Plug.ErrorHandler
         def handle_errors(_conn, %{reason: %FunctionClauseError{function: :do_match}}), do: :ok
 
         def handle_errors(conn, %{reason: reason, stack: stack}) do

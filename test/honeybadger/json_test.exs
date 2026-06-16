@@ -35,7 +35,7 @@ defmodule Honeybadger.JSONTest do
         |> Notice.new(%{context: %{a: map, b: [map], c: [map, map]}}, [])
         |> Jason.encode()
 
-      assert custom_encoded == jason_encoded
+      assert Jason.decode!(custom_encoded) == Jason.decode!(jason_encoded)
     end
 
     test "handles values requring inspection" do

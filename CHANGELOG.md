@@ -4,9 +4,128 @@ All notable changes to this project will be documented in this file. See [Keep a
 CHANGELOG](http://keepachangelog.com/) for how to update this file. This project
 adheres to [Semantic Versioning](http://semver.org/).
 
-## [Unreleased]
+<!-- %% CHANGELOG_ENTRIES %% -->
+
+## [0.28.0](https://github.com/honeybadger-io/honeybadger-elixir/compare/v0.27.0...v0.28.0) (2026-06-08)
+
+
+### ⚠ BREAKING CHANGES
+
+* **deps:** require Elixir 1.16+ / OTP 25+ ([#689](https://github.com/honeybadger-io/honeybadger-elixir/issues/689))
+
+### Bug Fixes
+
+* **deps:** bump req to ~&gt; 0.6.1 in dummy app to match root constraint ([2636f8d](https://github.com/honeybadger-io/honeybadger-elixir/commit/2636f8dc887cce2c6c7c171cb2501d306c1e7c4d))
+
+
+### Miscellaneous Chores
+
+* **deps:** require Elixir 1.16+ / OTP 25+ ([#689](https://github.com/honeybadger-io/honeybadger-elixir/issues/689)) ([6464a54](https://github.com/honeybadger-io/honeybadger-elixir/commit/6464a544b2e327c0c4dfb232e1c6c072429baef5))
+* release 0.28.0 ([e968bae](https://github.com/honeybadger-io/honeybadger-elixir/commit/e968baeae7c1fbf401ba87a3c8c9cb8867d5e626))
+
+## [0.27.0](https://github.com/honeybadger-io/honeybadger-elixir/compare/v0.26.0...v0.27.0) (2026-05-07)
+
+
+### Features
+
+* support hackney 4.0 ([#685](https://github.com/honeybadger-io/honeybadger-elixir/issues/685)) ([1b96227](https://github.com/honeybadger-io/honeybadger-elixir/commit/1b962275ef048481219a1954bda62d768e4d472e))
+
+## [0.26.0](https://github.com/honeybadger-io/honeybadger-elixir/compare/v0.25.0...v0.26.0) (2026-04-13)
+
+
+### Features
+
+* persist socket_id in EventContext during LiveView mount ([#681](https://github.com/honeybadger-io/honeybadger-elixir/issues/681)) ([f5ade64](https://github.com/honeybadger-io/honeybadger-elixir/commit/f5ade643d338d9dd596892250c046cbec209cd88))
+
+
+### Bug Fixes
+
+* refactor RingBuffer.add, fix type warnings ([#684](https://github.com/honeybadger-io/honeybadger-elixir/issues/684)) ([b7a2146](https://github.com/honeybadger-io/honeybadger-elixir/commit/b7a21468d0a33aa89f02750ef38350c326b08073)), closes [#663](https://github.com/honeybadger-io/honeybadger-elixir/issues/663)
+
+## [0.25.0](https://github.com/honeybadger-io/honeybadger-elixir/compare/v0.24.1...v0.25.0) (2026-02-27)
+
+
+### Features
+
+* **integrations:** ash tracing ([#680](https://github.com/honeybadger-io/honeybadger-elixir/issues/680)) ([1a8fde7](https://github.com/honeybadger-io/honeybadger-elixir/commit/1a8fde78b258b30409abde9afabbc7079f59a0c9))
+
+## 0.24.1 - 2025-07-02
+
+Bug fix for OTP 28: Move regex constants to functions (#635)
+
+
+## 0.24.0 - 2025-04-28
+
+This release focuses on comprehensive Insights instrumentation enhancements, featuring automatic instrumentation for the most popular libraries, event batching, configurable sampling rates, and event context tracking for improved performance monitoring.
+
+### Added
+- Added Insights instrumentation for detailed monitoring (#591)
+- Added Insights event batching for optimized performance (#578)
+- Added event sampling capabilities with configurable sample rates (#613, #608)
+- Added `Honeybadger.EventContext` for enhanced context tracking (#606)
+- Added `event_filter/1` function for custom event filtering (#602)
+- Added Request ID to Insights events and notices (#597)
+- Added support for Ecto params with source whitelisting (#605)
+
+### Changed
+- Revised event logging system for better performance (#609)
+- Upgraded to microsecond precision for measurements (#603)
+- Enhanced sanitizer functionality (#604)
+
+
+## 0.23.0 - 2025-03-18
+
+Added support for multiple HTTP client libraries (thanks @fastjames!)
+
+
+## 0.22.1 - 2024-12-19
+
+Bugfix for Elixir 1.17
+
+
+## 0.22.0 - 2024-08-29
+
+### Added
+- Add Honeybadger.event to send events to Insights
+
+
+## 0.21.0 - 2023-11-02
+
+switched from Logger.warn to Logger.warning
+
+
+## 0.20.0 - 2023-05-05
+
+- stop using logger metadata for breadcrumbs
+- publish using github actions
+
+
+## [v0.19.0] - 2022-10-27
+### Added
+- Add config option `exclude_errors` that excludes errors from being sent to the Honeybadger servers.(#443)
+
+## [v0.18.1] - 2021-11-16
+### Fixed
+- Avoid local function captures in Telemetry.attrach_many/4 (#400)
+
+## [v0.18.0] - 2021-09-28
+### Changed
+- Update the minimum Elixir version to 1.10 (#390). Phoenix v1.5.11 causes a compilation error due to the new `mime` dependency, which requires Elixir 1.10+.
+
+### Fixed
+- Support latest telemetry dependency. (#397)
+
+##### NB: Due to the upgrade of phoenix from v1.5.10 to v1.5.11 you must be on Elixir 1.10+
+
+## [v0.17.0] - 2021-08-16
+### Fixed
+- fix callback spec arg type mismatch for handle_errors/2 from plugs (#384)
+
 ### Changed
 - Default `filter_args` to `false` (#375)
+
+### Added
+- Make notification for `Logger.error` configurable (#380, @yukster)
 
 ## [v0.16.4] - 2021-07-13
 ### Fixed
@@ -228,7 +347,7 @@ When upgrading to v0.11, users should be aware of a few important changes:
 
       Example:
         # config/dev.exs
-        config :honeybager, environment_name: :dev
+        config :honeybadger, environment_name: :dev
 
   Doing this will ensure you get accurate environment information for exceptions
   that happen at runtime as well as compile time. You can also set the

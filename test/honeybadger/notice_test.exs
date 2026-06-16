@@ -17,7 +17,7 @@ defmodule Honeybadger.NoticeTest do
     }
 
     metadata = %{plug_env: plug_env, tags: [:test], context: %{user_id: 1, account_id: 1}}
-    stack = [{Kernel, :+, [1], [file: 'lib/elixir/lib/kernel.ex', line: 321]}]
+    stack = [{Kernel, :+, [1], [file: ~c"lib/elixir/lib/kernel.ex", line: 321]}]
 
     notice = Notice.new(exception, metadata, stack)
 
@@ -59,6 +59,15 @@ defmodule Honeybadger.NoticeTest do
     assert breadcrumbs == to_breadcrumbs
   end
 
+  test "with request_id", _ do
+    request_id = "1234"
+
+    %Notice{correlation_context: correlation_context} =
+      Notice.new(%RuntimeError{message: "Oops"}, %{request_id: request_id}, [])
+
+    assert correlation_context == %{request_id: request_id}
+  end
+
   test "error information", %{notice: %Notice{error: error}} do
     assert "RuntimeError" == error[:class]
     assert "Oops" == error[:message]
@@ -96,7 +105,14 @@ defmodule Honeybadger.NoticeTest do
   test "default active filters", %{notice: notice} do
     assert Honeybadger.get_env(:notice_filter) == Honeybadger.NoticeFilter.Default
     assert Honeybadger.get_env(:filter) == Honeybadger.Filter.Default
-    assert Honeybadger.get_env(:filter_keys) == [:password, :credit_card]
+
+    assert Honeybadger.get_env(:filter_keys) == [
+             :password,
+             :credit_card,
+             :__changed__,
+             :flash,
+             :_csrf_token
+           ]
 
     refute get_in(notice.request, [:params, :password])
   end

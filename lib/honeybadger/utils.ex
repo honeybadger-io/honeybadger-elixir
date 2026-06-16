@@ -19,6 +19,18 @@ defmodule Honeybadger.Utils do
   end
 
   @doc """
+  Concatenate a list of items with a dot separator.
+
+  # Example
+
+      iex> Honeybadger.Utils.dotify([:Honeybadger, :Utils])
+      "Honeybadger.Utils"
+  """
+  def dotify(path) when is_list(path) do
+    Enum.map_join(path, ".", &to_string/1)
+  end
+
+  @doc """
   Transform value into a consistently cased string representation
 
   # Example
@@ -33,12 +45,21 @@ defmodule Honeybadger.Utils do
     |> String.downcase()
   end
 
+  def rand_id(size \\ 16) do
+    size
+    |> :crypto.strong_rand_bytes()
+    |> Base.encode16(case: :lower)
+  end
+
   @doc """
   Configurable data sanitization. This currently:
 
   - recursively truncates deep structures (to a depth of 20)
   - constrains large string values (to 64k)
   - filters out any map keys that might contain sensitive information.
+
+  Options:
+  - `:remove_filtered` - When `true`, filtered keys will be removed instead of replaced with "[FILTERED]". Default: `false`
   """
   @depth_token "[DEPTH]"
   @truncated_token "[TRUNCATED]"
@@ -52,7 +73,8 @@ defmodule Honeybadger.Utils do
     base = %{
       max_depth: @default_max_depth,
       max_string_size: @default_max_string_size,
-      filter_keys: Honeybadger.get_env(:filter_keys)
+      filter_keys: Honeybadger.get_env(:filter_keys),
+      remove_filtered: false
     }
 
     opts =
@@ -66,18 +88,42 @@ defmodule Honeybadger.Utils do
     @depth_token
   end
 
+  defp sanitize_val(%DateTime{} = datetime, _), do: DateTime.to_iso8601(datetime)
+  defp sanitize_val(%NaiveDateTime{} = naive, _), do: NaiveDateTime.to_iso8601(naive)
+  defp sanitize_val(%Date{} = date, _), do: Date.to_iso8601(date)
+  defp sanitize_val(%Time{} = time, _), do: Time.to_iso8601(time)
+
   defp sanitize_val(%{__struct__: _} = struct, opts) do
     sanitize_val(Map.from_struct(struct), opts)
   end
 
-  defp sanitize_val(v, %{depth: depth, filter_keys: filter_keys} = opts) when is_map(v) do
-    for {key, val} <- v, into: %{} do
+  defp sanitize_val(v, opts) when is_map(v) do
+    %{depth: depth, filter_keys: filter_keys, remove_filtered: remove_filtered} = opts
+
+    Enum.reduce(v, %{}, fn {key, val}, acc ->
       if MapSet.member?(filter_keys, canonicalize(key)) do
-        {key, @filtered_token}
+        if remove_filtered do
+          # Skip this key entirely when remove_filtered is true
+          acc
+        else
+          # Traditional behavior: replace with filtered token
+          Map.put(acc, key, @filtered_token)
+        end
       else
-        {key, sanitize_val(val, Map.put(opts, :depth, depth + 1))}
+        # If the sanitized value is empty after removal, we don't want to
+        # include it in the sanitized map.
+        case sanitize_val(val, Map.put(opts, :depth, depth + 1)) do
+          v when is_map(v) and map_size(v) == 0 and v != val ->
+            acc
+
+          v when is_list(v) and length(v) == 0 and v != val ->
+            acc
+
+          v ->
+            Map.put(acc, key, v)
+        end
       end
-    end
+    end)
   end
 
   defp sanitize_val(v, %{depth: depth} = opts) when is_list(v) do
