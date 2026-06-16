@@ -1,0 +1,19 @@
+name: Snyk Monitor
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+
+jobs:
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - name: Run Snyk to check for vulnerabilities
+        uses: snyk/actions/node@8e119fbb6c251787721d34ba683ed48eba792766 #most recent commit as of 2024-06-03
+        continue-on-error: true
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          command: monitor --all-projects --org="pr-checked"
