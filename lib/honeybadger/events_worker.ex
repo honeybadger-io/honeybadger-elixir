@@ -118,10 +118,21 @@ defmodule Honeybadger.EventsWorker do
     else
       queue = [event | state.queue]
 
-      if length(queue) >= state.batch_size do
-        flush(%{state | queue: queue})
-      else
-        {:noreply, %{state | queue: queue}, current_timeout(state)}
+      cond do
+        length(queue) < state.batch_size ->
+          {:noreply, %{state | queue: queue}, current_timeout(state)}
+
+        # While throttled, bank the full batch but don't retry the pending
+        # batches before throttle_wait elapses. Sending now would hammer a
+        # rate-limited backend and burn the batches' retry budget; the flush
+        # timer (set to throttle_wait) drives the retry instead.
+        state.throttling ->
+          batches = :queue.in(%{batch: Enum.reverse(queue), attempts: 0}, state.batches)
+          new_state = %{state | queue: [], batches: batches}
+          {:noreply, new_state, current_timeout(new_state)}
+
+        true ->
+          flush(%{state | queue: queue})
       end
     end
   end
