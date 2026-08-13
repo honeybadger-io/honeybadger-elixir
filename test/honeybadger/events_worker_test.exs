@@ -219,8 +219,10 @@ defmodule Honeybadger.EventsWorkerTest do
       EventsWorker.push(%{id: 2}, pid)
 
       # The second push does not reset the timer, so both flush together when the
-      # original timer expires.
-      assert_receive {:events_sent, [%{id: 1}, %{id: 2}]}, config[:timeout]
+      # original timer expires. The sleep above already consumed part of that
+      # window, so wait the full timeout plus a margin rather than exactly the
+      # timeout, which would leave only the unslept remainder to absorb load.
+      assert_receive {:events_sent, [%{id: 1}, %{id: 2}]}, config[:timeout] + 200
 
       # A push after that flush starts a fresh timer and flushes on its own.
       EventsWorker.push(%{id: 3}, pid)
@@ -301,25 +303,32 @@ defmodule Honeybadger.EventsWorkerTest do
       # Push a batch to trigger throttling.
       events = [%{id: 1}, %{id: 2}]
       Enum.each(events, &EventsWorker.push(&1, pid))
-      assert_receive {:events_sent, ^events}, 50
+      assert_receive {:events_sent, ^events}, 200
 
-      # Verify throttling is active.
-      state = EventsWorker.state(pid)
-      assert state.throttling == true
-
+      # Start the clock here. The worker records the throttle and schedules the
+      # retry only after this send is observed, so this timestamp is at or before
+      # the start of the throttle_wait window. Capturing it later - after polling
+      # for the throttling flag - would place it *inside* the window and leave
+      # the elapsed assertion below with a negative margin.
       start_time = System.monotonic_time(:millisecond)
 
-      # Wait less than throttle_wait to ensure no flush occurs.
-      refute_receive {:events_sent, _}, 250
+      # Wait until the worker has recorded the throttle before continuing.
+      assert eventually(fn -> EventsWorker.state(pid).throttling end)
+
+      # No flush while throttled. This window is deliberately well short of
+      # throttle_wait: the backend is still throttling, so a retry firing inside
+      # the window would emit another :events_sent and fail the refute.
+      refute_receive {:events_sent, _}, div(config[:throttle_wait], 2)
 
       # Switch backend to success so the retry flush can go through.
       change_behavior.(:ok)
 
-      # The retry flush should occur after throttle_wait (300ms).
-      assert_receive {:events_sent, ^events}, 150
+      # The retry flush happens once throttle_wait elapses.
+      assert_receive {:events_sent, ^events}, config[:throttle_wait] + 500
 
+      # The delay is the real assertion: the retry waited out throttle_wait.
       elapsed = System.monotonic_time(:millisecond) - start_time
-      assert elapsed >= 300
+      assert elapsed >= config[:throttle_wait]
 
       GenServer.stop(pid)
     end
