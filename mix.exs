@@ -15,7 +15,6 @@ defmodule Honeybadger.Mixfile do
       aliases: aliases(),
       deps: deps(),
       elixirc_paths: elixirc_paths(Mix.env()),
-      preferred_cli_env: ["test.ci": :test],
 
       # Hex
       package: package(),
@@ -42,6 +41,12 @@ defmodule Honeybadger.Mixfile do
         source_url: @source_url,
         extras: ["README.md", "CHANGELOG.md"]
       ]
+    ]
+  end
+
+  def cli do
+    [
+      preferred_envs: ["test.ci": :test]
     ]
   end
 
