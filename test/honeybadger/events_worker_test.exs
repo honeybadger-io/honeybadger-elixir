@@ -208,25 +208,40 @@ defmodule Honeybadger.EventsWorkerTest do
     end
 
     test "does not reset flush timer on subsequent pushes", %{config: config} do
-      # batch_size high so only the flush timer triggers sends; larger timeout
-      # for comfortable margins.
-      config = Keyword.merge(config, timeout: 200, batch_size: 1000)
+      # batch_size high so only the flush timer triggers sends. The regression
+      # this guards against is the flush window restarting on the second push,
+      # which would delay the flush by exactly the gap between the two pushes -
+      # so that gap is the margin the assertion below discriminates on. Keep it
+      # wide.
+      config = Keyword.merge(config, timeout: 400, batch_size: 1000)
+      inter_push_gap = 300
       {:ok, pid} = start_worker(config)
 
-      # Push id1 (starts the flush timer), then id2 well within the timer window.
+      started_at = System.monotonic_time(:millisecond)
       EventsWorker.push(%{id: 1}, pid)
-      :timer.sleep(div(config[:timeout], 4))
+
+      # push/2 is a cast and the worker anchors the flush window when it handles
+      # that cast, so wait for it to land before timing anything.
+      assert eventually(fn -> queued_event_count(EventsWorker.state(pid)) == 1 end)
+
+      :timer.sleep(inter_push_gap)
       EventsWorker.push(%{id: 2}, pid)
 
-      # The second push does not reset the timer, so both flush together when the
-      # original timer expires. The sleep above already consumed part of that
-      # window, so wait the full timeout plus a margin rather than exactly the
-      # timeout, which would leave only the unslept remainder to absorb load.
-      assert_receive {:events_sent, [%{id: 1}, %{id: 2}]}, config[:timeout] + 200
+      # Deliberately split into a generous receive and a separate timing
+      # assertion. A single tight deadline has to serve both purposes and can
+      # only do one well: wide enough to survive a loaded runner means wide
+      # enough for a restarted timer to slip through unnoticed.
+      assert_receive {:events_sent, [%{id: 1}, %{id: 2}]}, config[:timeout] + 500
+
+      # This is what actually catches the regression. Correct behaviour flushes
+      # ~timeout after the FIRST push; a restarted timer would flush a further
+      # inter_push_gap out, so anything at or beyond that boundary is a failure.
+      elapsed = System.monotonic_time(:millisecond) - started_at
+      assert elapsed < inter_push_gap + config[:timeout]
 
       # A push after that flush starts a fresh timer and flushes on its own.
       EventsWorker.push(%{id: 3}, pid)
-      assert_receive {:events_sent, [%{id: 3}]}, config[:timeout] + 200
+      assert_receive {:events_sent, [%{id: 3}]}, config[:timeout] + 500
 
       GenServer.stop(pid)
     end
@@ -240,8 +255,11 @@ defmodule Honeybadger.EventsWorkerTest do
       assert_receive {:events_sent, [%{id: 1}]}, config[:timeout] + 200
 
       # A push after that flush starts a fresh timer: it must not flush
-      # immediately, but does once the new timeout elapses.
+      # immediately, but does once the new timeout elapses. Wait for the cast to
+      # be queued first, otherwise an immediate flush could happen after the
+      # refute window had already elapsed and go undetected.
       EventsWorker.push(%{id: 2}, pid)
+      assert eventually(fn -> queued_event_count(EventsWorker.state(pid)) == 1 end)
       refute_receive {:events_sent, [%{id: 2}]}, div(config[:timeout], 2)
       assert_receive {:events_sent, [%{id: 2}]}, config[:timeout] + 200
 

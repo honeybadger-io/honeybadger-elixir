@@ -52,7 +52,11 @@ defmodule Honeybadger.Case do
         false
 
       true ->
-        Process.sleep(interval)
+        # Never sleep past the deadline, so a timeout shorter than one interval
+        # still returns close to when the caller asked rather than a full
+        # interval later.
+        remaining = max(deadline - System.monotonic_time(:millisecond), 0)
+        Process.sleep(min(interval, remaining))
         do_eventually(fun, deadline, interval)
     end
   end
