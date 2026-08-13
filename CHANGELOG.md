@@ -21,7 +21,6 @@ adheres to [Semantic Versioning](http://semver.org/).
 ### Miscellaneous Chores
 
 * **deps:** require Elixir 1.17+ / OTP 27+ ([#724](https://github.com/honeybadger-io/honeybadger-elixir/issues/724)) ([f9be370](https://github.com/honeybadger-io/honeybadger-elixir/commit/f9be370697665974e5e958af39a698055ee18458))
-* release 0.29.0 ([0b73596](https://github.com/honeybadger-io/honeybadger-elixir/commit/0b73596aa5df8073e3cc12a1cd0499224b37d4a0))
 
 ## [0.28.0](https://github.com/honeybadger-io/honeybadger-elixir/compare/v0.27.0...v0.28.0) (2026-06-08)
 
