@@ -15,25 +15,28 @@ defmodule Honeybadger.ComponentDeriver do
 
   The deriver walks through the stacktrace looking for the first frame that:
   1. Belongs to the configured application (`:app` config)
-  2. Is not in the list of skipped "infrastructure" modules
+  2. Is not in the list of skipped modules
 
-  Infrastructure modules are things like `Ecto.Repo`, `Ecto.Changeset`, etc. that
-  appear in many stacktraces but don't indicate where the error actually originated.
+  The app ownership check already excludes library frames (`Ecto.Repo`,
+  `Postgrex`, etc.), since those modules belong to their own OTP applications.
+  The skip list exists for modules that *do* belong to the app but don't
+  indicate where an error originated — most notably the app's Ecto repo
+  (e.g. `MyApp.Repo`), which appears in every database error's stacktrace.
+  Repo modules are skipped automatically by reading the app's `:ecto_repos`
+  configuration.
 
   ## Configuration
 
-  You can customize which modules are skipped:
+  You can skip additional modules:
 
       config :honeybadger,
         component_deriver_skip_patterns: [
-          Ecto.Repo,
-          Ecto.Changeset,
           MyApp.CustomInfraModule,
-          ~r/^MyApp\\.Internal/
+          ~r/^MyApp\\.Internal/,
+          "MyApp.Utilities"
         ]
 
-  Patterns can be module atoms, strings, or regexes. The default skip list
-  includes common Ecto and database-related modules.
+  Patterns can be module atoms, strings, or regexes.
   """
 
   alias Honeybadger.Utils
@@ -68,7 +71,7 @@ defmodule Honeybadger.ComponentDeriver do
 
   def derive(stacktrace, opts) when is_list(stacktrace) do
     app = Keyword.get_lazy(opts, :app, fn -> Honeybadger.get_env(:app) end)
-    skip_patterns = Keyword.get(opts, :skip_patterns, skip_patterns())
+    skip_patterns = Keyword.get_lazy(opts, :skip_patterns, fn -> skip_patterns(app) end)
 
     stacktrace
     |> Enum.find(&suitable_frame?(&1, app, skip_patterns))
@@ -78,35 +81,30 @@ defmodule Honeybadger.ComponentDeriver do
   @doc """
   Returns the list of module patterns to skip when deriving components.
 
-  This combines the default patterns with any user-configured patterns.
+  This combines the app's `:ecto_repos` modules with any user-configured
+  patterns.
   """
-  @spec skip_patterns() :: [Regex.t()]
-  def skip_patterns do
-    user_patterns =
-      Application.get_env(:honeybadger, :component_deriver_skip_patterns, [])
-      |> Enum.map(&pattern_to_regex/1)
-
-    default_skip_patterns() ++ user_patterns
+  @spec skip_patterns(atom() | nil) :: [Regex.t()]
+  def skip_patterns(app \\ Honeybadger.get_env(:app)) do
+    ecto_repo_patterns(app) ++ user_patterns()
   end
 
-  defp default_skip_patterns do
-    [
-      # Ecto infrastructure - these appear in most DB error stacktraces
-      ~r/^Ecto\.Repo/,
-      ~r/^Ecto\.Changeset/,
-      ~r/^Ecto\.Adapters/,
-      ~r/^Ecto\.Multi/,
-      ~r/^Ecto\.Query/,
-      # Database drivers
-      ~r/^Postgrex/,
-      ~r/^Mariaex/,
-      ~r/^MyXQL/,
-      ~r/^Exqlite/,
-      ~r/^DBConnection/,
-      # Telemetry
-      ~r/^Telemetry/,
-      ~r/^:telemetry/
-    ]
+  # The app's Ecto repos appear in every database error's stacktrace but don't
+  # indicate where the error originated, so they'd otherwise dominate as the
+  # derived component.
+  defp ecto_repo_patterns(nil), do: []
+
+  defp ecto_repo_patterns(app) do
+    app
+    |> Application.get_env(:ecto_repos, [])
+    |> Enum.filter(&is_atom/1)
+    |> Enum.map(&module_to_regex/1)
+  end
+
+  defp user_patterns do
+    :honeybadger
+    |> Application.get_env(:component_deriver_skip_patterns, [])
+    |> Enum.map(&pattern_to_regex/1)
   end
 
   # Convert user-provided patterns to regex

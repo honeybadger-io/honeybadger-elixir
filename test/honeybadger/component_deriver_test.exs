@@ -26,45 +26,11 @@ defmodule Honeybadger.ComponentDeriverTest do
       end)
     end
 
-    test "skips Ecto.Repo modules" do
+    test "skips library modules that don't belong to the app" do
       stacktrace = [
         {Ecto.Repo, :insert, 2, [file: ~c"lib/ecto/repo.ex", line: 100]},
-        {Ecto.Repo.Queryable, :all, 3, [file: ~c"lib/ecto/repo/queryable.ex", line: 50]},
-        {Honeybadger.Notice, :new, 4, [file: ~c"lib/honeybadger/notice.ex", line: 42]}
-      ]
-
-      with_config([app: :honeybadger], fn ->
-        result = ComponentDeriver.derive(stacktrace)
-        assert result == "Honeybadger.Notice"
-      end)
-    end
-
-    test "skips Ecto.Changeset modules" do
-      stacktrace = [
         {Ecto.Changeset, :apply_action!, 2, [file: ~c"lib/ecto/changeset.ex", line: 200]},
-        {Honeybadger.Notice, :new, 4, [file: ~c"lib/honeybadger/notice.ex", line: 42]}
-      ]
-
-      with_config([app: :honeybadger], fn ->
-        result = ComponentDeriver.derive(stacktrace)
-        assert result == "Honeybadger.Notice"
-      end)
-    end
-
-    test "skips Postgrex modules" do
-      stacktrace = [
         {Postgrex.Protocol, :recv_message, 2, [file: ~c"lib/postgrex/protocol.ex", line: 100]},
-        {Honeybadger.Notice, :new, 4, [file: ~c"lib/honeybadger/notice.ex", line: 42]}
-      ]
-
-      with_config([app: :honeybadger], fn ->
-        result = ComponentDeriver.derive(stacktrace)
-        assert result == "Honeybadger.Notice"
-      end)
-    end
-
-    test "skips DBConnection modules" do
-      stacktrace = [
         {DBConnection, :execute, 4, [file: ~c"lib/db_connection.ex", line: 100]},
         {Honeybadger.Notice, :new, 4, [file: ~c"lib/honeybadger/notice.ex", line: 42]}
       ]
@@ -72,6 +38,22 @@ defmodule Honeybadger.ComponentDeriverTest do
       with_config([app: :honeybadger], fn ->
         result = ComponentDeriver.derive(stacktrace)
         assert result == "Honeybadger.Notice"
+      end)
+    end
+
+    test "skips modules configured in :ecto_repos for the app" do
+      # Honeybadger.Notice stands in for MyApp.Repo here: a module owned by the
+      # app that appears in Ecto error stacktraces but doesn't indicate where
+      # the error originated.
+      stacktrace = [
+        {Honeybadger.Notice, :insert, 2, [file: ~c"lib/honeybadger/notice.ex", line: 100]},
+        {Honeybadger.Backtrace, :from_stacktrace, 1,
+         [file: ~c"lib/honeybadger/backtrace.ex", line: 10]}
+      ]
+
+      with_config([app: :honeybadger, ecto_repos: [Honeybadger.Notice]], fn ->
+        result = ComponentDeriver.derive(stacktrace)
+        assert result == "Honeybadger.Backtrace"
       end)
     end
 
@@ -125,14 +107,24 @@ defmodule Honeybadger.ComponentDeriverTest do
     end
   end
 
-  describe "skip_patterns/0" do
-    test "includes default patterns" do
-      patterns = ComponentDeriver.skip_patterns()
-      assert Enum.any?(patterns, &Regex.match?(&1, "Ecto.Repo"))
-      assert Enum.any?(patterns, &Regex.match?(&1, "Ecto.Repo.Queryable"))
-      assert Enum.any?(patterns, &Regex.match?(&1, "Ecto.Changeset"))
-      assert Enum.any?(patterns, &Regex.match?(&1, "Postgrex.Protocol"))
-      assert Enum.any?(patterns, &Regex.match?(&1, "DBConnection"))
+  describe "skip_patterns/1" do
+    test "has no built-in library patterns" do
+      # Library modules (Ecto, Postgrex, etc.) are already excluded by the app
+      # ownership check, so there are no default skip patterns for them.
+      with_config([app: :honeybadger], fn ->
+        patterns = ComponentDeriver.skip_patterns()
+        refute Enum.any?(patterns, &Regex.match?(&1, "Ecto.Repo"))
+        refute Enum.any?(patterns, &Regex.match?(&1, "Postgrex.Protocol"))
+        refute Enum.any?(patterns, &Regex.match?(&1, "DBConnection"))
+      end)
+    end
+
+    test "includes modules from the app's :ecto_repos config" do
+      with_config([app: :honeybadger, ecto_repos: [MyApp.Repo]], fn ->
+        patterns = ComponentDeriver.skip_patterns()
+        assert Enum.any?(patterns, &Regex.match?(&1, "MyApp.Repo"))
+        assert Enum.any?(patterns, &Regex.match?(&1, "MyApp.Repo.Preloader"))
+      end)
     end
 
     test "includes user-configured patterns" do
