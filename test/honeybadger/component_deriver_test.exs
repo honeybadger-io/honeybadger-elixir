@@ -1,5 +1,8 @@
 defmodule Honeybadger.ComponentDeriverTest do
-  use Honeybadger.Case, async: true
+  # Not async: these tests set the global :app config via with_config, which
+  # would race with async tests in other modules that read it (e.g. Backtrace's
+  # context depends on it).
+  use Honeybadger.Case, async: false
 
   alias Honeybadger.ComponentDeriver
 
@@ -124,6 +127,14 @@ defmodule Honeybadger.ComponentDeriverTest do
         patterns = ComponentDeriver.skip_patterns()
         assert Enum.any?(patterns, &Regex.match?(&1, "MyApp.Repo"))
         assert Enum.any?(patterns, &Regex.match?(&1, "MyApp.Repo.Preloader"))
+      end)
+    end
+
+    test "repo patterns do not match modules sharing the repo's name as a prefix" do
+      with_config([app: :honeybadger, ecto_repos: [MyApp.Repo]], fn ->
+        patterns = ComponentDeriver.skip_patterns()
+        refute Enum.any?(patterns, &Regex.match?(&1, "MyApp.Reports"))
+        refute Enum.any?(patterns, &Regex.match?(&1, "MyApp.Repository"))
       end)
     end
 
