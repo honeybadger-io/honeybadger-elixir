@@ -18,6 +18,7 @@ Elixir Plug, Logger and client for the :zap: [Honeybadger error notifier](https:
 - Elixir >= 1.17
 - Plug >= 1.10
 - Phoenix >= 1.0 (This is an optional dependency and the version requirement applies only if you are using Phoenix)
+- hackney >= 4.0 (This is an optional dependency and the version requirement applies only if you are using the hackney HTTP adapter)
 
 ### 1. Install the package
 
