@@ -110,17 +110,18 @@ defmodule Honeybadger.ComponentDeriver do
   # Convert user-provided patterns to regex
   defp pattern_to_regex(%Regex{} = regex), do: regex
   defp pattern_to_regex(module) when is_atom(module), do: module_to_regex(module)
+  defp pattern_to_regex(string) when is_binary(string), do: name_to_regex(string)
 
-  defp pattern_to_regex(string) when is_binary(string),
-    do: Regex.compile!("^#{Regex.escape(string)}")
-
-  # Match the module itself or its submodules, but not other modules that
-  # merely share the name as a prefix (e.g. MyApp.Repo vs MyApp.Reports).
   defp module_to_regex(module) do
     module
     |> Utils.module_to_string()
-    |> Regex.escape()
-    |> then(&Regex.compile!("^#{&1}(\\.|$)"))
+    |> name_to_regex()
+  end
+
+  # Match the named module itself or its submodules, but not other modules
+  # that merely share the name as a prefix (e.g. MyApp.Repo vs MyApp.Reports).
+  defp name_to_regex(name) do
+    Regex.compile!("^#{Regex.escape(name)}(\\.|$)")
   end
 
   # Check if a stack frame is suitable for use as a component

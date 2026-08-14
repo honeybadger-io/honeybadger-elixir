@@ -157,6 +157,8 @@ defmodule Honeybadger.ComponentDeriverTest do
       with_config([component_deriver_skip_patterns: ["MyApp.Internal"]], fn ->
         patterns = ComponentDeriver.skip_patterns()
         assert Enum.any?(patterns, &Regex.match?(&1, "MyApp.Internal"))
+        assert Enum.any?(patterns, &Regex.match?(&1, "MyApp.Internal.Cache"))
+        refute Enum.any?(patterns, &Regex.match?(&1, "MyApp.InternalStuff"))
       end)
     end
   end
