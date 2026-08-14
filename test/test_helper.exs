@@ -69,7 +69,7 @@ defmodule Honeybadger.Case do
 
       fun.()
     after
-      put_all_env(original)
+      restore_env(opts, original)
     end
   end
 
@@ -80,7 +80,7 @@ defmodule Honeybadger.Case do
     put_all_env(opts)
 
     on_exit(fn ->
-      put_all_env(original)
+      restore_env(opts, original)
     end)
 
     :ok = Application.ensure_started(:honeybadger)
@@ -102,6 +102,19 @@ defmodule Honeybadger.Case do
 
   defp take_original_env(opts) do
     Keyword.take(Application.get_all_env(:honeybadger), Keyword.keys(opts))
+  end
+
+  # Restore the original values, deleting any keys that weren't set before so
+  # temporary config can't leak into the rest of the run.
+  defp restore_env(opts, original) do
+    opts
+    |> Keyword.keys()
+    |> Enum.each(fn key ->
+      case Keyword.fetch(original, key) do
+        {:ok, val} -> Application.put_env(:honeybadger, key, val)
+        :error -> Application.delete_env(:honeybadger, key)
+      end
+    end)
   end
 
   defp put_all_env(opts) do

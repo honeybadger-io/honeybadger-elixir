@@ -287,4 +287,88 @@ defmodule Honeybadger.NoticeTest do
 
     Notice.new(exception, metadata, backtrace)
   end
+
+  describe "component derivation" do
+    # Use real Honeybadger modules since Application.get_application/1 only works
+    # for modules that are part of a loaded OTP application.
+
+    test "derives _component from stacktrace when no plug_env component" do
+      exception = %RuntimeError{message: "Oops"}
+
+      # Stacktrace with a real Honeybadger module (part of :honeybadger app)
+      stacktrace = [
+        {Honeybadger.Notice, :new, 4, [file: ~c"lib/honeybadger/notice.ex", line: 42]}
+      ]
+
+      # No plug_env means no web component
+      metadata = %{context: %{user_id: 1}}
+
+      with_config([app: :honeybadger], fn ->
+        notice = Notice.new(exception, metadata, stacktrace)
+        assert notice.request[:context][:_component] == "Honeybadger.Notice"
+      end)
+    end
+
+    test "does not override existing plug_env component" do
+      exception = %RuntimeError{message: "Oops"}
+
+      stacktrace = [
+        {Honeybadger.Notice, :new, 4, [file: ~c"lib/honeybadger/notice.ex", line: 42]}
+      ]
+
+      plug_env = %{
+        component: "ExistingController",
+        action: :show
+      }
+
+      metadata = %{plug_env: plug_env, context: %{}}
+
+      with_config([app: :honeybadger], fn ->
+        notice = Notice.new(exception, metadata, stacktrace)
+        # Should NOT have _component since plug_env has a component
+        refute notice.request[:context][:_component]
+        assert notice.request[:component] == "ExistingController"
+      end)
+    end
+
+    test "does not override user-set _component in context" do
+      exception = %RuntimeError{message: "Oops"}
+
+      stacktrace = [
+        {Honeybadger.Notice, :new, 4, [file: ~c"lib/honeybadger/notice.ex", line: 42]}
+      ]
+
+      # User explicitly set _component
+      metadata = %{context: %{_component: "UserSetComponent"}}
+
+      with_config([app: :honeybadger], fn ->
+        notice = Notice.new(exception, metadata, stacktrace)
+        assert notice.request[:context][:_component] == "UserSetComponent"
+      end)
+    end
+
+    test "does not add _component when stacktrace has no suitable module" do
+      exception = %RuntimeError{message: "Oops"}
+
+      # Only Ecto modules which should be skipped
+      stacktrace = [
+        {Ecto.Repo, :insert, 2, [file: ~c"lib/ecto/repo.ex", line: 100]}
+      ]
+
+      metadata = %{context: %{}}
+
+      with_config([app: :honeybadger], fn ->
+        notice = Notice.new(exception, metadata, stacktrace)
+        refute Map.has_key?(notice.request[:context], :_component)
+      end)
+    end
+
+    test "handles empty stacktrace gracefully" do
+      exception = %RuntimeError{message: "Oops"}
+      metadata = %{context: %{}}
+
+      notice = Notice.new(exception, metadata, [])
+      refute Map.has_key?(notice.request[:context], :_component)
+    end
+  end
 end
