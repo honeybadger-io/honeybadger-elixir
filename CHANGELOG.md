@@ -6,6 +6,22 @@ adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- %% CHANGELOG_ENTRIES %% -->
 
+## [0.30.0](https://github.com/honeybadger-io/honeybadger-elixir/compare/v0.29.0...v0.30.0) (2026-08-17)
+
+
+### ⚠ BREAKING CHANGES
+
+* **deps:** require hackney 4.0+ ([#732](https://github.com/honeybadger-io/honeybadger-elixir/issues/732))
+
+### Features
+
+* derive _component from stacktrace for better error grouping ([#672](https://github.com/honeybadger-io/honeybadger-elixir/issues/672)) ([51c2267](https://github.com/honeybadger-io/honeybadger-elixir/commit/51c226730849d46e004298c1a77b8a2ad3e68891))
+
+
+### Miscellaneous Chores
+
+* **deps:** require hackney 4.0+ ([#732](https://github.com/honeybadger-io/honeybadger-elixir/issues/732)) ([faf9486](https://github.com/honeybadger-io/honeybadger-elixir/commit/faf948620810a65aa5d53fd66242e2b98bed23c5))
+
 ## [0.29.0](https://github.com/honeybadger-io/honeybadger-elixir/compare/v0.28.0...v0.29.0) (2026-08-13)
 
 
