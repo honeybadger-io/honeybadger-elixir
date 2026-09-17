@@ -6,6 +6,13 @@ adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- %% CHANGELOG_ENTRIES %% -->
 
+## [0.30.1](https://github.com/honeybadger-io/honeybadger-elixir/compare/v0.30.0...v0.30.1) (2026-09-17)
+
+
+### Bug Fixes
+
+* handle Finch streaming error results ([#678](https://github.com/honeybadger-io/honeybadger-elixir/issues/678)) ([#751](https://github.com/honeybadger-io/honeybadger-elixir/issues/751)) ([3b9450a](https://github.com/honeybadger-io/honeybadger-elixir/commit/3b9450ae1f6d3104fb41ac6ce8f6582108a9f297))
+
 ## [0.30.0](https://github.com/honeybadger-io/honeybadger-elixir/compare/v0.29.0...v0.30.0) (2026-08-17)
 
 
