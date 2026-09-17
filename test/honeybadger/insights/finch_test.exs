@@ -57,6 +57,62 @@ defmodule Honeybadger.Insights.FinchTest do
       assert event["duration"] == 25
     end
 
+    for {error_module, reason} <- [
+          {Mint.TransportError, :timeout},
+          {Finch.TransportError, :closed}
+        ] do
+      test "captures streaming #{reason} errors without detaching the handler" do
+        error = unquote(error_module).exception(reason: unquote(reason))
+        measurements = %{duration: System.convert_time_unit(25, :microsecond, :native)}
+
+        metadata = %{
+          name: :my_client,
+          request: %{
+            method: "GET",
+            scheme: :https,
+            host: "api.example.com",
+            port: 443,
+            path: "/stream"
+          },
+          result: {:error, error, %{private_body: "partial response"}}
+        }
+
+        event = send_and_receive([:finch, :request, :stop], measurements, metadata)
+
+        assert Map.delete(event, "ts") == %{
+                 "event_type" => "finch.request.stop",
+                 "name" => "my_client",
+                 "method" => "GET",
+                 "host" => "api.example.com",
+                 "error" => Exception.message(error),
+                 "duration" => 25
+               }
+
+        assert Enum.any?(:telemetry.list_handlers([:finch, :request, :stop]), fn handler ->
+                 handler.id == "finch.request.stop"
+               end)
+
+        non_streaming_event =
+          send_and_receive(
+            [:finch, :request, :stop],
+            measurements,
+            %{metadata | result: {:error, error}}
+          )
+
+        assert Map.delete(non_streaming_event, "ts") == Map.delete(event, "ts")
+
+        success_event =
+          send_and_receive(
+            [:finch, :request, :stop],
+            measurements,
+            %{metadata | result: {:ok, %Finch.Response{status: 200}}}
+          )
+
+        assert success_event["status"] == 200
+        refute success_event["error"]
+      end
+    end
+
     test "captures streaming responses" do
       event =
         send_and_receive(
