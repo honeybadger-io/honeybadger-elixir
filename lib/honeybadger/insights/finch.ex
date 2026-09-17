@@ -58,6 +58,9 @@ defmodule Honeybadger.Insights.Finch do
 
       {:error, error} ->
         Map.put(metadata, :error, Exception.message(error))
+
+      {:error, error, _acc} ->
+        Map.put(metadata, :error, Exception.message(error))
     end
   end
 
