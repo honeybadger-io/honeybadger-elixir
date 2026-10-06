@@ -33,6 +33,15 @@ PR titles must follow the [conventional commits](https://www.conventionalcommits
 
 ### Running the tests
 
+To run the same tests as CI (the main suite plus the `dummy/mixapp` tests):
+
+```sh
+mix deps.ci
+mix test.ci
+```
+
+To run only the main test suite:
+
 ```sh
 mix deps.get
 mix test

@@ -68,7 +68,7 @@ defmodule Mix.Tasks.Honeybadger.Test do
         Your api_key is not set
         Set it either in your config file or using the HONEYBADGER_API_KEY environment variable
 
-        For more info visit: https://github.com/honeybadger-io/honeybadger-elixir#2-set-your-api-key-and-environment-name
+        For more info visit: https://docs.honeybadger.io/lib/elixir/reference/configuration/
         """)
 
         :error
