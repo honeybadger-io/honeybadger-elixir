@@ -6,6 +6,14 @@ adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- %% CHANGELOG_ENTRIES %% -->
 
+## [0.30.2](https://github.com/honeybadger-io/honeybadger-elixir/compare/v0.30.1...v0.30.2) (2026-10-12)
+
+
+### Bug Fixes
+
+* send the `mix honeybadger.test` notice in excluded environments ([42f87ac](https://github.com/honeybadger-io/honeybadger-elixir/commit/42f87ac430d0ed428b1daa43901a8f7fa105c855))
+* use `proxy` and `proxy_auth` config with the hackney adapter. These were ignored since 0.23.0; if you set them, check the proxy is still correct. ([42f87ac](https://github.com/honeybadger-io/honeybadger-elixir/commit/42f87ac430d0ed428b1daa43901a8f7fa105c855))
+
 ## [0.30.1](https://github.com/honeybadger-io/honeybadger-elixir/compare/v0.30.0...v0.30.1) (2026-09-17)
 
 
