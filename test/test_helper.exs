@@ -79,8 +79,11 @@ defmodule Honeybadger.Case do
 
     put_all_env(opts)
 
+    # Restart after restoring so the client doesn't keep the test's config
     on_exit(fn ->
+      :ok = Application.stop(:honeybadger)
       restore_env(opts, original)
+      :ok = Application.ensure_started(:honeybadger)
     end)
 
     :ok = Application.ensure_started(:honeybadger)
