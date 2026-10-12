@@ -89,6 +89,7 @@ defmodule Honeybadger.HTTPAdapter do
           {:ok, HTTPResponse.t()} | {:error, HTTPResponse.t()} | {:error, term()}
   def request(method, url, body, headers, opts) do
     {http_adapter, http_adapter_opts} = get_adapter(opts)
+    http_adapter_opts = put_proxy_opts(http_adapter, http_adapter_opts, opts)
 
     with {:ok, response} <- http_adapter.request(method, url, body, headers, http_adapter_opts),
          {:ok, decoded_response} <- http_adapter.decode_response_body(response, opts) do
@@ -115,6 +116,19 @@ defmodule Honeybadger.HTTPAdapter do
       http_adapter when is_atom(http_adapter) -> {http_adapter, nil}
     end
   end
+
+  # The `:proxy` and `:proxy_auth` config only applies to hackney. Options set on
+  # the adapter itself take precedence.
+  defp put_proxy_opts(Honeybadger.HTTPAdapter.Hackney, adapter_opts, opts) do
+    proxy_opts =
+      opts
+      |> Keyword.take([:proxy, :proxy_auth])
+      |> Enum.reject(fn {_key, value} -> value in [nil, {nil, nil}] end)
+
+    Keyword.merge(proxy_opts, adapter_opts || [])
+  end
+
+  defp put_proxy_opts(_http_adapter, adapter_opts, _opts), do: adapter_opts
 
   defp installed_adapter do
     key = {__MODULE__, :installed_adapter}
