@@ -31,6 +31,23 @@ defmodule Honeybadger.ProxyTest do
     assert Base.decode64!(credentials) == "user:pass"
   end
 
+  test "prefers proxy options on the hackney adapter over top-level config" do
+    restart_with_config(
+      exclude_envs: [],
+      origin: "http://honeybadger.invalid",
+      http_adapter:
+        {Honeybadger.HTTPAdapter.Hackney,
+         [proxy: TestServer.url(), proxy_auth: {"adapter", "pass"}]},
+      proxy: "http://proxy.invalid:8080",
+      proxy_auth: {"config", "pass"}
+    )
+
+    Honeybadger.notify("proxy test")
+
+    assert_receive {:received, "honeybadger.invalid", ["Basic " <> credentials]}
+    assert Base.decode64!(credentials) == "adapter:pass"
+  end
+
   test "ignores proxy config with the Req adapter" do
     restart_with_config(
       exclude_envs: [],
