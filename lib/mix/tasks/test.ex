@@ -16,8 +16,9 @@ defmodule Mix.Tasks.Honeybadger.Test do
   end
 
   defp send_notice do
-    # mute excluded envs
+    # mute excluded envs, restarting so the client picks up the change
     Application.put_env(:honeybadger, :exclude_envs, [])
+    _ = Application.stop(:honeybadger)
 
     {:ok, _started} = Application.ensure_all_started(:honeybadger)
 
